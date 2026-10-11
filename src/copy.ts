@@ -228,6 +228,33 @@ export const copy = {
     loadError: "We couldn't load your passport. Check your connection and try again.",
   },
 
+  friends: {
+    title: 'Friends',
+    addLabel: 'Add by username',
+    addPlaceholder: 'username',
+    add: 'Send request',
+    outcomes: {
+      sent: (username: string) => `Request sent to @${username}.`,
+      not_found: (username: string) => `No explorer named @${username}. Check the spelling.`,
+      self: () => "That's you! Try a friend's username.",
+      already_friends: (username: string) => `You and @${username} are already friends.`,
+      already_sent: (username: string) => `You already sent @${username} a request.`,
+      they_asked: (username: string) => `@${username} already sent you a request — accept it below.`,
+    },
+    requests: (count: number) => `REQUESTS (${count})`,
+    accept: (username: string) => `Accept @${username}`,
+    decline: (username: string) => `Decline @${username}`,
+    sent: 'SENT',
+    waiting: 'Waiting',
+    leaderboard: 'LEADERBOARD',
+    you: 'You',
+    stats: (spots: number, badges: number) => `${spots} · ${badges}`,
+    rowLabel: (rank: number, name: string, spots: number, badges: number) =>
+      `Rank ${rank}: ${name}. ${spots} ${spots === 1 ? 'spot' : 'spots'}, ${badges} ${badges === 1 ? 'badge' : 'badges'}.`,
+    empty: 'Add a friend to compare passports.',
+    loadError: "We couldn't load your friends. Check your connection and try again.",
+  },
+
   placeholder: {
     comingSoon: 'Placeholder screen — built in a later step.',
   },

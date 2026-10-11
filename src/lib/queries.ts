@@ -375,3 +375,140 @@ export function usePassportContent() {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Friends
+// ---------------------------------------------------------------------------
+
+export type FriendProfile = { id: string; username: string; avatarKey: string | null };
+
+export type Friendships = {
+  /** Requests other explorers sent to me, waiting for my answer. */
+  incoming: FriendProfile[];
+  /** Requests I sent that haven't been accepted yet. */
+  outgoing: FriendProfile[];
+  /** Ids of everyone I'm already friends with. */
+  friendIds: Set<string>;
+};
+
+export type LeaderboardRow = {
+  userId: string;
+  username: string;
+  avatarKey: string | null;
+  spotsFound: number;
+  badges: number;
+  isMe: boolean;
+};
+
+export const friendKeys = {
+  friendships: (userId: string | undefined) => ['friendships', userId] as const,
+  leaderboard: (userId: string | undefined) => ['leaderboard', userId] as const,
+};
+
+export function useFriendships(userId: string | undefined) {
+  return useQuery({
+    queryKey: friendKeys.friendships(userId),
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<Friendships> => {
+      const { data, error } = await supabase.from('friendships').select(`
+        requester, addressee, status,
+        requester_profile:profiles!friendships_requester_fkey ( id, username, avatar_key ),
+        addressee_profile:profiles!friendships_addressee_fkey ( id, username, avatar_key )
+      `);
+      if (error) throw error;
+
+      const toFriend = (p: { id: string; username: string; avatar_key: string | null }): FriendProfile => ({
+        id: p.id,
+        username: p.username,
+        avatarKey: p.avatar_key,
+      });
+      const result: Friendships = { incoming: [], outgoing: [], friendIds: new Set() };
+      for (const row of data) {
+        const iAmRequester = row.requester === userId;
+        if (row.status === 'accepted') {
+          result.friendIds.add(iAmRequester ? row.addressee : row.requester);
+        } else if (iAmRequester) {
+          result.outgoing.push(toFriend(row.addressee_profile));
+        } else {
+          result.incoming.push(toFriend(row.requester_profile));
+        }
+      }
+      return result;
+    },
+  });
+}
+
+export function useLeaderboard(userId: string | undefined) {
+  return useQuery({
+    queryKey: friendKeys.leaderboard(userId),
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<LeaderboardRow[]> => {
+      const { data, error } = await supabase.rpc('friends_leaderboard');
+      if (error) throw error;
+      return data.map((row) => ({
+        userId: row.user_id,
+        username: row.username,
+        avatarKey: row.avatar_key ?? null,
+        spotsFound: row.spots_found,
+        badges: row.badges,
+        isMe: row.is_me,
+      }));
+    },
+  });
+}
+
+export type AddFriendOutcome = 'sent' | 'not_found' | 'self' | 'already_friends' | 'already_sent' | 'they_asked';
+
+/** Escape LIKE wildcards so "lamp_lighter" matches only itself. */
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+export function useAddFriend(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (username: string): Promise<AddFriendOutcome> => {
+      if (!userId) throw new Error('Not signed in');
+      const { data: match, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('username', escapeLike(username.trim()))
+        .maybeSingle();
+      if (error) throw error;
+      if (!match) return 'not_found';
+      if (match.id === userId) return 'self';
+
+      const current = queryClient.getQueryData<Friendships>(friendKeys.friendships(userId));
+      if (current?.friendIds.has(match.id)) return 'already_friends';
+      if (current?.outgoing.some((f) => f.id === match.id)) return 'already_sent';
+      if (current?.incoming.some((f) => f.id === match.id)) return 'they_asked';
+
+      const insert = await supabase.from('friendships').insert({ requester: userId, addressee: match.id });
+      if (insert.error) {
+        if (insert.error.code === '23505') return 'already_sent';
+        throw insert.error;
+      }
+      return 'sent';
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: friendKeys.friendships(userId) }),
+  });
+}
+
+export function useRespondToRequest(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ requesterId, accept }: { requesterId: string; accept: boolean }) => {
+      if (!userId) throw new Error('Not signed in');
+      const query = accept
+        ? supabase.from('friendships').update({ status: 'accepted' })
+        : supabase.from('friendships').delete();
+      const { error } = await query.eq('requester', requesterId).eq('addressee', userId);
+      if (error) throw error;
+    },
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: friendKeys.friendships(userId) }),
+        queryClient.invalidateQueries({ queryKey: friendKeys.leaderboard(userId) }),
+      ]),
+  });
+}

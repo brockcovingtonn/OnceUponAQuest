@@ -24,3 +24,8 @@ export const stampAvatars: StampAvatar[] = [
   { key: 'stamp_bell', label: 'Bell stamp', icon: 'notifications-outline', color: colors.storybookGold },
   { key: 'stamp_book', label: 'Book stamp', icon: 'book-outline', color: colors.rose },
 ];
+
+/** The stamp avatar for a saved key, falling back to the first one. */
+export function avatarFor(key: string | null | undefined): StampAvatar {
+  return stampAvatars.find((a) => a.key === key) ?? stampAvatars[0];
+}
