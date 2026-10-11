@@ -1,34 +1,79 @@
-# Once Upon a Quest — open items before launch
+# Once Upon a Quest — come back later
 
-What's left after the Step 9 polish pass. Code is done for everything in Steps 1–9 except the items marked **(code)**.
+The single list of everything still open before the app goes public. Items marked **(code)** need more building; Claude can do those. Everything else needs you, a visit to the park, or your attorney.
 
-## Needs the field walk (Step 10)
-- [ ] GPS pin (`lat`, `lng`) for all 20 spots — the dev-only "Set pin here" button comes in Step 10. Until then, no spot checks location.
-- [ ] Confirm every answer, the cannon count and the candy shop names on site; fix any that changed.
-- [ ] Your own hint photo for each spot. **(code)** Spots have a `photo_path` column, but there's no storage bucket or screen section for hint photos yet.
-- [ ] Your own cover photo for each quest. **(code)** Needs a `cover_photo_path` column on `quests` and a public content bucket; the cards and quest screen are text-only today.
-- [ ] Set `verified_on_site = true` for each confirmed spot.
+_Last updated: October 11, 2026_
 
-## Needs a decision or content from you
-- [ ] **Terms of Service** and **Privacy Policy** text (location, photos, account deletion, 13+). The screens exist and show a placeholder.
-- [ ] **Feedback email** — set `feedbackEmail` in `src/copy.ts` to show "Send feedback" in Settings.
-- [ ] **"Use my own photo" avatar** (wireframe, onboarding step 1) — left out. **(code)** Needs an avatars bucket that friends can read.
-- [ ] Review the three extra tips in `copy.safety.extra` (Quest safety rules screen) — written by Claude.
+---
 
-## Hosted Supabase (before real users)
-- [ ] Custom SMTP sender (e.g. Resend) — the free built-in sender only reaches your team's emails and can't use custom templates.
-- [ ] Then set the **Confirm signup** and **Magic Link** templates to `supabase/templates/otp-code.html` (shows the 6-digit `{{ .Token }}`).
-- [ ] Switch the app back with `npm run db:use-hosted` and restart Expo with `--clear`.
+## 1. Field walk (in the park)
 
-## IP attorney review (README "Before launch")
+Use a development build (Expo Go) signed in as an **admin**. Each spot screen then shows a dashed **Field tools** panel; each quest screen has **Take cover photo**.
+
+- [ ] Make yourself an admin on the database you're using. Local is already done for `covington.brock@gmail.com`. For hosted, run this in Supabase → SQL Editor:
+  ```sql
+  insert into private.admins (user_id)
+  select id from auth.users where email = 'covington.brock@gmail.com';
+  ```
+- [ ] At each of the 20 spots, stand where a guest should stand, then:
+  - [ ] **Set pin here** (it refuses GPS fixes worse than 25 m — step into open sky and retry)
+  - [ ] **Take hint photo** (replaces the storybook placeholder)
+  - [ ] Confirm the answer, the cannon count and candy shop names; tell Claude about anything that changed so the answer keys can be updated
+  - [ ] **Mark verified**
+- [ ] On each of the 4 quest screens: **Take cover photo** (replaces the storybook scene on the card and quest page)
+- [ ] Note: once a spot has a pin, check-ins there require being on site — test at-home check-ins on unpinned spots.
+
+## 2. Domain, email and web pages (after you buy the domain)
+
+- [ ] Buy the domain (e.g. `onceuponaquest.app`).
+- [ ] Set up a custom SMTP sender (e.g. Resend) for the hosted Supabase project → Authentication → Emails → SMTP Settings. The free built-in sender only reaches your Supabase team's emails and blocks custom templates.
+- [ ] Then set **Confirm signup** and **Magic Link** templates to `supabase/templates/otp-code.html` (subject "Your Once Upon a Quest code"). It shows the 6-digit `{{ .Token }}`.
+- [ ] Host the Terms and Privacy Policy on the domain (`npm run legal:export` writes `docs/legal/TERMS.md` and `docs/legal/PRIVACY.md`). Both app stores require a privacy policy URL.
+- [ ] Optional: switch the feedback/contact address from `higherthinkingconsulting@gmail.com` to a domain address — change `feedbackEmail` in `src/copy.ts` and `contactEmail` in `src/legal/info.ts`, then re-export.
+- [ ] Point the app at hosted: `npm run db:use-hosted`, then `npx expo start --clear`.
+
+## 3. Attorney review (before going public)
+
+- [ ] **Terms of Service** and **Privacy Policy** (`src/legal/terms.ts`, `src/legal/privacy.ts`). Drafted by Claude to match how the app actually works — not legal advice.
+- [ ] Confirm the facts in `src/legal/info.ts`: operator legal name (**"Higher Thinking Consulting"** was assumed — add LLC/Inc. if applicable), governing state (**California**), court venue (**Orange County**), effective date.
+- [ ] Decide whether to add an arbitration clause / class-action waiver (left out on purpose).
 - [ ] App name "Once Upon a Quest" — trademark search.
-- [ ] App icon, logo, stamp avatars and badge art (all original, `src/art/shapes.ts`).
-- [ ] Disclaimer wording (sign-in, About, store listings).
-- [ ] Spot titles that name real people or places, e.g. "Elias Disney window", "Walt's window", "Walt's lamp".
-- [ ] The "Ears Everywhere" quest: it asks players to find hidden three-circle shapes. The app describes them in text only and never draws the shape, but the concept itself should be reviewed.
+- [ ] App icon, logo, stamp avatars, badge art and storybook scenes (all original, in `src/art/`).
+- [ ] Disclaimer wording (sign-in, About, Terms, store listings).
+- [ ] Spot titles naming real people or places, e.g. "Elias Disney window", "Walt's window", "Walt's lamp".
+- [ ] The "Ears Everywhere" quest concept (finding hidden three-circle shapes — described in text only; the app never draws the shape).
 - [ ] Menu item names in the Snack Passport (e.g. "Walt's Chili").
 - [ ] Store screenshots before submission.
 
-## Check on real phones
-- [ ] Largest system text size (iOS: Settings → Accessibility → Display & Text Size → Larger Text; Android: Font size) — every screen should still read and nothing should be cut off.
-- [ ] VoiceOver (iOS) and TalkBack (Android) pass through sign-in, a check-in and the Passport.
+## 4. Required before App Store / Google Play submission
+
+- [ ] **(code) Report and block users.** Usernames and profile photos are user-generated content, and Apple (Guideline 1.2) requires a way to report offensive content and block abusive users, plus a way for you to act on reports within 24 hours.
+- [ ] **(code) Photo moderation plan** — profile photos are visible to every signed-in user. Either add reporting + review (above) or limit profile photos to accepted friends.
+- [ ] **(code) EAS Build** setup, then TestFlight and Google Play internal testing (build plan Step 10). Apple's developer program has a yearly fee; Google Play a one-time fee.
+- [ ] App Store privacy "nutrition label" and Google Play Data safety form: email, user ID, photos, precise location (app functionality only, not stored), user content; no tracking, no ads.
+- [ ] Age rating questionnaires (13+, user-generated content, location).
+
+## 5. Check on real phones
+
+- [ ] Largest system text size on every screen (iOS: Settings → Accessibility → Display & Text Size → Larger Text; Android: Font size).
+- [ ] VoiceOver (iOS) and TalkBack (Android) through sign-in, a check-in and the Passport.
+- [ ] Reduce Motion on: the intro should just show the logo briefly and fade.
+- [ ] Intro and sparkle animations feel smooth on an older phone.
+
+## 6. Small decisions you can make any time
+
+- [ ] Review the three extra safety tips in `copy.safety.extra` (`src/copy.ts`).
+- [ ] Review all wording in `src/copy.ts`.
+
+---
+
+## Done (for reference)
+
+- Steps 1–9 of the build plan, plus Remove friend.
+- Feedback email → `higherthinkingconsulting@gmail.com`.
+- Terms of Service and Privacy Policy drafted (in-app + Markdown export).
+- "Use my own photo" profile avatars (private storage, own-folder only, removed with the account).
+- Storybook placeholder hint photos and quest covers, replaced automatically when real photos are uploaded.
+- Animated intro, twinkling stars, sparkle bursts (respect Reduce Motion).
+- Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
+- Hosted Supabase is up to date with all migrations (48 tests pass there).
