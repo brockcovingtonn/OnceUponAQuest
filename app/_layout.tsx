@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { copy } from '@/copy';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { ParadeModeProvider } from '@/lib/paradeMode';
 import { useProfile } from '@/lib/queries';
 import { colors, fontAssets, fonts, spacing, type } from '@/theme';
 
@@ -27,8 +28,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <StatusBar style="dark" />
-          {fontsReady ? <RootNavigator /> : null}
+          <ParadeModeProvider>
+            <StatusBar style="dark" />
+            {fontsReady ? <RootNavigator /> : null}
+          </ParadeModeProvider>
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
@@ -67,6 +70,7 @@ function RootNavigator() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.parchment },
         headerTintColor: colors.midnight,
+        headerBackTitle: copy.common.back,
         headerTitleStyle: { fontFamily: fonts.headingSemiBold },
         contentStyle: { backgroundColor: colors.parchment },
       }}>

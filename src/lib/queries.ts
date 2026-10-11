@@ -56,3 +56,127 @@ export function useCreateProfile() {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Quests and progress
+// ---------------------------------------------------------------------------
+
+const questListSelect = `
+  id, slug, title, story, est_minutes, sort_order, is_premium, season,
+  land:lands ( id, name, sort_order ),
+  badge:badges ( id, slug, title, art_key ),
+  spots ( count )
+` as const;
+
+const questDetailSelect = `
+  id, slug, title, story, est_minutes,
+  badge:badges ( id, slug, title, description, art_key ),
+  spots ( id, sort_order, teaser, title, method, pause_during_parades, holiday_note )
+` as const;
+
+export type QuestSummary = {
+  id: string;
+  slug: string;
+  title: string;
+  story: string | null;
+  estMinutes: number;
+  isPremium: boolean;
+  season: string | null;
+  land: { id: string; name: string; sortOrder: number };
+  badge: { id: string; slug: string; title: string; artKey: string } | null;
+  spotCount: number;
+};
+
+export type QuestDetail = Awaited<ReturnType<typeof fetchQuestDetail>>;
+export type QuestSpot = NonNullable<QuestDetail>['spots'][number];
+
+export type MyProgress = {
+  /** Spot ids the user has found, with the date found. */
+  foundSpots: Map<string, string>;
+  /** Number of found spots per quest id. */
+  foundByQuest: Map<string, number>;
+  /** Badge ids the user has earned. */
+  badgeIds: Set<string>;
+};
+
+export const questKeys = {
+  all: ['quests'] as const,
+  detail: (slug: string) => ['quest', slug] as const,
+  progress: (userId: string | undefined) => ['progress', userId] as const,
+};
+
+export function useQuests() {
+  return useQuery({
+    queryKey: questKeys.all,
+    queryFn: async (): Promise<QuestSummary[]> => {
+      const { data, error } = await supabase
+        .from('quests')
+        .select(questListSelect)
+        .order('sort_order');
+      if (error) throw error;
+      return data.map((q) => ({
+          id: q.id,
+          slug: q.slug,
+          title: q.title,
+          story: q.story,
+          estMinutes: q.est_minutes,
+          isPremium: q.is_premium,
+          season: q.season,
+          land: { id: q.land.id, name: q.land.name, sortOrder: q.land.sort_order },
+          badge: q.badge
+            ? { id: q.badge.id, slug: q.badge.slug, title: q.badge.title, artKey: q.badge.art_key }
+            : null,
+          spotCount: q.spots[0]?.count ?? 0,
+      }));
+    },
+  });
+}
+
+async function fetchQuestDetail(slug: string) {
+  const { data, error } = await supabase
+    .from('quests')
+    .select(questDetailSelect)
+    .eq('slug', slug)
+    .order('sort_order', { referencedTable: 'spots' })
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** One quest with its spots in walking order, or null if it doesn't exist or isn't live. */
+export function useQuest(slug: string | undefined) {
+  return useQuery({
+    queryKey: questKeys.detail(slug ?? ''),
+    enabled: Boolean(slug),
+    queryFn: () => fetchQuestDetail(slug ?? ''),
+  });
+}
+
+/** The signed-in user's own check-ins and badges (friends' rows are filtered out). */
+export function useMyProgress(userId: string | undefined) {
+  return useQuery({
+    queryKey: questKeys.progress(userId),
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<MyProgress> => {
+      const [checkins, badges] = await Promise.all([
+        supabase
+          .from('checkins')
+          .select('spot_id, created_at, spot:spots ( quest_id )')
+          .eq('user_id', userId ?? ''),
+        supabase.from('user_badges').select('badge_id').eq('user_id', userId ?? ''),
+      ]);
+      if (checkins.error) throw checkins.error;
+      if (badges.error) throw badges.error;
+
+      const foundSpots = new Map<string, string>();
+      const foundByQuest = new Map<string, number>();
+      for (const row of checkins.data) {
+        foundSpots.set(row.spot_id, row.created_at);
+        if (row.spot) {
+          foundByQuest.set(row.spot.quest_id, (foundByQuest.get(row.spot.quest_id) ?? 0) + 1);
+        }
+      }
+      return { foundSpots, foundByQuest, badgeIds: new Set(badges.data.map((b) => b.badge_id)) };
+    },
+  });
+}

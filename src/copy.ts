@@ -90,6 +90,44 @@ export const copy = {
     comingSoon: 'The full text will be published here before launch.',
   },
 
+  paradeMode: {
+    label: 'Parade mode',
+    hint: 'Pauses spots that sit on the parade route.',
+    banner: 'Paused during parades and fireworks — check back after.',
+    paused: 'Paused',
+  },
+
+  quests: {
+    greeting: (hour: number, username: string) =>
+      `${hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'}, ${username}`,
+    spotsAndTime: (spots: number, minutes: number) =>
+      `${spots} ${spots === 1 ? 'spot' : 'spots'} · ~${minutes} min`,
+    foundOf: (found: number, total: number) => `${found}/${total} found`,
+    start: 'Start',
+    continue: 'Continue',
+    badgeEarned: 'Badge',
+    moreLands: 'More lands coming soon ✦',
+    empty: 'No quests here yet.',
+    loadError: "We couldn't load quests. Check your connection and try again.",
+    statusNotStarted: (spots: number, minutes: number) =>
+      `${spots} spots, about ${minutes} minutes. Not started.`,
+    statusInProgress: (found: number, total: number) => `${found} of ${total} spots found.`,
+    statusComplete: 'Complete. Badge earned.',
+  },
+
+  questDetail: {
+    progress: (found: number, total: number) => `${found} of ${total}`,
+    minutes: (minutes: number) => `~${minutes} min`,
+    badgeForFinishing: 'Badge for finishing',
+    badgeEarned: 'Badge earned!',
+    notFound: "We couldn't find that quest.",
+    loadError: "We couldn't load this quest. Check your connection and try again.",
+    spotLabel: (order: number, name: string, state: 'found' | 'open' | 'paused') =>
+      `Spot ${order}: ${name}. ${
+        state === 'found' ? 'Found.' : state === 'paused' ? 'Paused for parades.' : 'Not found yet.'
+      }`,
+  },
+
   placeholder: {
     comingSoon: 'Placeholder screen — built in a later step.',
   },
