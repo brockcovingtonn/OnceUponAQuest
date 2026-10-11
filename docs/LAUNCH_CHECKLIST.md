@@ -49,7 +49,14 @@ Use a development build (Expo Go) signed in as an **admin**. Each spot screen th
 
 - [ ] **(code) Report and block users.** Usernames and profile photos are user-generated content, and Apple (Guideline 1.2) requires a way to report offensive content and block abusive users, plus a way for you to act on reports within 24 hours.
 - [ ] **(code) Photo moderation plan** — profile photos are visible to every signed-in user. Either add reporting + review (above) or limit profile photos to accepted friends.
-- [ ] **(code) EAS Build** setup, then TestFlight and Google Play internal testing (build plan Step 10). Apple's developer program has a yearly fee; Google Play a one-time fee.
+- [ ] Enroll in the **Apple Developer Program** (yearly fee) — needed for any iPhone build you install, TestFlight and the App Store.
+- [ ] Create a **Google Play Console** account (one-time fee) — needed for Play internal testing and the store. (Android test builds can be installed without it.)
+- [ ] First builds — run these in the VS Code terminal, because they ask questions (Apple sign-in, signing keys):
+  - `npm run build:dev:android` — development build for Android (works today, no store account needed)
+  - `npm run build:dev:ios` — development build for iPhone (needs the Apple Developer Program; registers your phone)
+  - `npm run build:preview` — standalone test builds (sign-in needs the hosted email set up first — section 2)
+  - `npm run build:production` then `npm run submit:ios` / `npm run submit:android` — store builds
+- [ ] Preview and production builds use the **hosted** Supabase project (values stored in EAS, not in the repo). Sign-in there needs the custom SMTP + code templates from section 2.
 - [ ] App Store privacy "nutrition label" and Google Play Data safety form: email, user ID, photos, precise location (app functionality only, not stored), user content; no tracking, no ads.
 - [ ] Age rating questionnaires (13+, user-generated content, location).
 
@@ -77,3 +84,4 @@ Use a development build (Expo Go) signed in as an **admin**. Each spot screen th
 - Animated intro, twinkling stars, sparkle bursts (respect Reduce Motion).
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
+- EAS Build set up: project `@brockieboy/once-upon-a-quest`, app ID `app.onceuponaquest`, profiles development / development-simulator / preview / production, hosted Supabase values stored as EAS environment variables.
