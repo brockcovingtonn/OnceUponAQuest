@@ -13,6 +13,7 @@ import { StampCelebration } from '@/components/StampCelebration';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
+import { formatDate } from '@/lib/format';
 import {
   type Coords,
   distanceMeters,
@@ -39,10 +40,6 @@ type LocationIssue =
 type Feedback = { text: string; tone: 'error' | 'info' | 'warning'; showSettings?: boolean };
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function formatFoundDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export default function SpotScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -206,9 +203,9 @@ export default function SpotScreen() {
           </Text>
 
           {foundAt ? (
-            <View style={styles.foundRow} accessible accessibilityLabel={copy.spot.foundOn(formatFoundDate(foundAt))}>
+            <View style={styles.foundRow} accessible accessibilityLabel={copy.spot.foundOn(formatDate(foundAt))}>
               <Stamp icon="checkmark" inked size={40} />
-              <Text style={styles.foundText}>{copy.spot.foundOn(formatFoundDate(foundAt))}</Text>
+              <Text style={styles.foundText}>{copy.spot.foundOn(formatDate(foundAt))}</Text>
             </View>
           ) : null}
 

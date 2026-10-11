@@ -97,6 +97,8 @@ export type MyProgress = {
   foundByQuest: Map<string, number>;
   /** Badge ids the user has earned. */
   badgeIds: Set<string>;
+  /** Snack check-ins (Snack Passport), oldest first. */
+  snacks: { spotId: string; foundAt: string }[];
 };
 
 export const questKeys = {
@@ -161,7 +163,7 @@ export function useMyProgress(userId: string | undefined) {
       const [checkins, badges] = await Promise.all([
         supabase
           .from('checkins')
-          .select('spot_id, created_at, spot:spots ( quest_id )')
+          .select('spot_id, method, created_at, spot:spots ( quest_id )')
           .eq('user_id', userId ?? ''),
         supabase.from('user_badges').select('badge_id').eq('user_id', userId ?? ''),
       ]);
@@ -170,13 +172,21 @@ export function useMyProgress(userId: string | undefined) {
 
       const foundSpots = new Map<string, string>();
       const foundByQuest = new Map<string, number>();
+      const snacks: MyProgress['snacks'] = [];
       for (const row of checkins.data) {
         foundSpots.set(row.spot_id, row.created_at);
+        if (row.method === 'snack') snacks.push({ spotId: row.spot_id, foundAt: row.created_at });
         if (row.spot) {
           foundByQuest.set(row.spot.quest_id, (foundByQuest.get(row.spot.quest_id) ?? 0) + 1);
         }
       }
-      return { foundSpots, foundByQuest, badgeIds: new Set(badges.data.map((b) => b.badge_id)) };
+      snacks.sort((a, b) => a.foundAt.localeCompare(b.foundAt));
+      return {
+        foundSpots,
+        foundByQuest,
+        badgeIds: new Set(badges.data.map((b) => b.badge_id)),
+        snacks,
+      };
     },
   });
 }
@@ -303,6 +313,65 @@ export function useBadge(slug: string | undefined) {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Passport
+// ---------------------------------------------------------------------------
+
+export type PassportSpot = {
+  id: string;
+  teaser: string;
+  title: string;
+  method: Tables<'spots'>['method'];
+};
+
+export type PassportLand = { id: string; name: string; spots: PassportSpot[] };
+
+export type PassportBadge = { id: string; slug: string; title: string; artKey: string };
+
+export type PassportContent = { lands: PassportLand[]; badges: PassportBadge[] };
+
+/** Every live spot grouped by land (walking order), and every badge for a live quest. */
+export function usePassportContent() {
+  return useQuery({
+    queryKey: ['passport-content'] as const,
+    queryFn: async (): Promise<PassportContent> => {
+      const [spots, badges] = await Promise.all([
+        supabase
+          .from('spots')
+          .select('id, sort_order, teaser, title, method, quest:quests ( sort_order, land:lands ( id, name, sort_order ) )'),
+        supabase.from('badges').select('id, slug, title, art_key, quests ( sort_order )'),
+      ]);
+      if (spots.error) throw spots.error;
+      if (badges.error) throw badges.error;
+
+      const ordered = [...spots.data].sort(
+        (a, b) =>
+          a.quest.land.sort_order - b.quest.land.sort_order ||
+          a.quest.sort_order - b.quest.sort_order ||
+          a.sort_order - b.sort_order,
+      );
+      const lands = new Map<string, PassportLand>();
+      for (const spot of ordered) {
+        const land = lands.get(spot.quest.land.id) ?? {
+          id: spot.quest.land.id,
+          name: spot.quest.land.name,
+          spots: [],
+        };
+        land.spots.push({ id: spot.id, teaser: spot.teaser, title: spot.title, method: spot.method });
+        lands.set(land.id, land);
+      }
+
+      // RLS only returns live quests, so badges with no quests belong to drafts.
+      const liveBadges = badges.data
+        .filter((b) => b.quests.length > 0)
+        .sort((a, b) => a.quests[0].sort_order - b.quests[0].sort_order)
+        .map((b) => ({ id: b.id, slug: b.slug, title: b.title, artKey: b.art_key }));
+
+      return { lands: [...lands.values()], badges: liveBadges };
     },
   });
 }

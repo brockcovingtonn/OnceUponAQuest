@@ -212,6 +212,22 @@ export const copy = {
     notFound: "We couldn't find that badge.",
   },
 
+  passport: {
+    title: 'My Passport',
+    summary: (spots: number, badges: number, snacks: number) =>
+      `${spots} ${spots === 1 ? 'spot' : 'spots'} · ${badges} ${badges === 1 ? 'badge' : 'badges'} · ${snacks} ${snacks === 1 ? 'snack' : 'snacks'}`,
+    badges: 'BADGES',
+    stamps: (land: string) => `${land.toUpperCase()} STAMPS`,
+    snackPassport: 'SNACK PASSPORT',
+    noSnacks: 'Log a snack on a quest to start your Snack Passport.',
+    firstStampHint: 'Find your first spot to collect a stamp.',
+    badgeLabel: (title: string, earned: boolean) => `${title} badge. ${earned ? 'Earned.' : 'Not earned yet.'}`,
+    foundStampLabel: (title: string, date: string) => `${title}. Found ${date}. Open spot.`,
+    lockedStampLabel: (teaser: string) => `${teaser}. Not found yet.`,
+    snackLabel: (title: string, date: string) => `${title}, ${date}. Open spot.`,
+    loadError: "We couldn't load your passport. Check your connection and try again.",
+  },
+
   placeholder: {
     comingSoon: 'Placeholder screen — built in a later step.',
   },
