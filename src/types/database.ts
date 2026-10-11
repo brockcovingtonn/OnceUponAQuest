@@ -139,14 +139,14 @@ isOneToOne: false
                   ]
                 },"quests": {
                   Row: {
-                    "badge_id": string | null,"created_at": string,"est_minutes": number,"id": string,"is_premium": boolean,"land_id": string,"season": string | null,"slug": string,"sort_order": number,"status": Database["public"]['Enums']["quest_status"],"story": string | null,"title": string
+                    "badge_id": string | null,"cover_photo_path": string | null,"created_at": string,"est_minutes": number,"id": string,"is_premium": boolean,"land_id": string,"season": string | null,"slug": string,"sort_order": number,"status": Database["public"]['Enums']["quest_status"],"story": string | null,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "badge_id"?: string | null,"created_at"?: string,"est_minutes"?: number,"id"?: string,"is_premium"?: boolean,"land_id": string,"season"?: string | null,"slug": string,"sort_order"?: number,"status"?: Database["public"]['Enums']["quest_status"],"story"?: string | null,"title": string
+                    "badge_id"?: string | null,"cover_photo_path"?: string | null,"created_at"?: string,"est_minutes"?: number,"id"?: string,"is_premium"?: boolean,"land_id": string,"season"?: string | null,"slug": string,"sort_order"?: number,"status"?: Database["public"]['Enums']["quest_status"],"story"?: string | null,"title": string
                   }
                   Update: {
-                    "badge_id"?: string | null,"created_at"?: string,"est_minutes"?: number,"id"?: string,"is_premium"?: boolean,"land_id"?: string,"season"?: string | null,"slug"?: string,"sort_order"?: number,"status"?: Database["public"]['Enums']["quest_status"],"story"?: string | null,"title"?: string
+                    "badge_id"?: string | null,"cover_photo_path"?: string | null,"created_at"?: string,"est_minutes"?: number,"id"?: string,"is_premium"?: boolean,"land_id"?: string,"season"?: string | null,"slug"?: string,"sort_order"?: number,"status"?: Database["public"]['Enums']["quest_status"],"story"?: string | null,"title"?: string
                   }
                   Relationships: [
                     {

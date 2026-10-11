@@ -20,7 +20,7 @@ import { Input } from '@/components/Input';
 import { ProgressDots } from '@/components/ProgressDots';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { stampAvatars } from '@/lib/avatars';
+import { useAvatarChoice } from '@/lib/useAvatarChoice';
 import { USERNAME_PATTERN, useCreateProfile, useUsernameAvailable } from '@/lib/queries';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { colors, minTouchTarget, spacing, type } from '@/theme';
@@ -36,7 +36,9 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
   const [username, setUsername] = useState('');
   const [usernameConflict, setUsernameConflict] = useState(false);
-  const [avatarKey, setAvatarKey] = useState(stampAvatars[0].key);
+  const avatar = useAvatarChoice();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const [is13OrOlder, setIs13OrOlder] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -68,17 +70,31 @@ export default function OnboardingScreen() {
     usernameStatus = { text: copy.onboarding.usernameAvailable, tone: 'success' };
   }
 
-  function finish() {
+  async function finish() {
     if (!session) return;
+    const userId = session.user.id;
+    setAvatarError(false);
+    setUploadingAvatar(true);
+    let saved;
+    try {
+      saved = await avatar.resolve(userId);
+    } catch {
+      setAvatarError(true);
+      return;
+    } finally {
+      setUploadingAvatar(false);
+    }
     createProfile.mutate(
       {
-        id: session.user.id,
+        id: userId,
         username: trimmed,
-        avatar_key: avatarKey,
+        avatar_key: saved.avatarKey,
+        avatar_url: saved.avatarUrl,
         age_confirmed_13: true,
         terms_accepted_at: new Date().toISOString(),
       },
       {
+        onSuccess: () => avatar.cleanUp(userId, saved),
         onError: (error) => {
           if (isUniqueViolation(error)) {
             setUsernameConflict(true);
@@ -144,7 +160,14 @@ export default function OnboardingScreen() {
               />
 
               <Text style={styles.subtitle}>{copy.onboarding.avatarTitle}</Text>
-              <AvatarPicker value={avatarKey} onChange={setAvatarKey} />
+              <AvatarPicker
+                choice={avatar.choice}
+                onSelectStamp={avatar.selectStamp}
+                onSelectPhoto={avatar.selectPhoto}
+                onPickPhoto={avatar.pickPhoto}
+                picking={avatar.picking}
+              />
+              <Text style={styles.note}>{copy.avatarPhoto.note}</Text>
             </>
           ) : null}
 
@@ -185,6 +208,7 @@ export default function OnboardingScreen() {
                 <Button variant="text" label={copy.onboarding.privacy} onPress={() => router.push('/privacy')} />
               </View>
               {showSaveError ? <Banner message={copy.common.networkError} /> : null}
+              {avatarError ? <Banner message={copy.avatarPhoto.uploadFailed} /> : null}
             </>
           ) : null}
         </ScrollView>
@@ -200,7 +224,7 @@ export default function OnboardingScreen() {
                 label={copy.onboarding.start}
                 onPress={finish}
                 disabled={!is13OrOlder || !agreedToTerms}
-                loading={createProfile.isPending}
+                loading={uploadingAvatar || createProfile.isPending}
               />
               <Button
                 variant="text"
@@ -267,6 +291,10 @@ const styles = StyleSheet.create({
     ...type.body,
     color: colors.ink,
     flex: 1,
+  },
+  note: {
+    ...type.caption,
+    color: colors.inkMuted,
   },
   legalLinks: {
     flexDirection: 'row',

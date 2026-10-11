@@ -6,11 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { SettingsRow } from '@/components/SettingsRow';
-import { StampAvatar } from '@/components/StampAvatar';
+import { ProfileAvatar } from '@/components/ProfileAvatar';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { avatarFor } from '@/lib/avatars';
 import { openAppSettings } from '@/lib/location';
 import { getPermissionStatuses, type PermissionStatuses } from '@/lib/permissions';
 import { useDeleteAccount, useProfile } from '@/lib/queries';
@@ -68,7 +67,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <StampAvatar avatar={avatarFor(p.avatar_key)} size={96} />
+          <ProfileAvatar avatarKey={p.avatar_key} avatarPath={p.avatar_url} size={96} />
           <Text style={styles.name} accessibilityRole="header">
             {p.display_name ?? p.username}
           </Text>

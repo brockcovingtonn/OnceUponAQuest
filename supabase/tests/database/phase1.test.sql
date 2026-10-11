@@ -7,7 +7,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 set local role postgres;
 
-select plan(40);
+select plan(42);
 
 -- ---------------------------------------------------------------------------
 -- Helpers (temporary, dropped with the rollback)
@@ -154,6 +154,18 @@ select is(public.check_in(pg_temp.spot('windows-of-legends', 3), 'Broggie', 33.8
   'too_far', 'pinned spot ~1 km away -> too_far');
 select is(public.check_in(pg_temp.spot('windows-of-legends', 3), 'Broggie', 33.81105, -117.91905) ->> 'ok',
   'true', 'pinned spot a few meters away -> ok');
+
+-- ---------------------------------------------------------------------------
+-- Profile photos must live in the user's own avatars folder
+-- ---------------------------------------------------------------------------
+select throws_ok(
+  $$ update public.profiles set avatar_url = '22222222-2222-2222-2222-222222222222/me.jpg'
+     where id = '11111111-1111-1111-1111-111111111111' $$,
+  '23514', null, 'avatar path in someone else''s folder is rejected');
+select lives_ok(
+  $$ update public.profiles set avatar_url = '11111111-1111-1111-1111-111111111111/avatar.jpg'
+     where id = '11111111-1111-1111-1111-111111111111' $$,
+  'avatar path in own folder is accepted');
 
 -- ---------------------------------------------------------------------------
 -- Friends + leaderboard

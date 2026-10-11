@@ -16,11 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { StampAvatar } from '@/components/StampAvatar';
+import { ProfileAvatar } from '@/components/ProfileAvatar';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { avatarFor } from '@/lib/avatars';
 import {
   type AddFriendOutcome,
   type FriendProfile,
@@ -74,7 +73,7 @@ function IconButton({
 function PersonRow({ friend, children }: { friend: FriendProfile; children: ReactNode }) {
   return (
     <View style={styles.personRow}>
-      <StampAvatar avatar={avatarFor(friend.avatarKey)} size={40} />
+      <ProfileAvatar avatarKey={friend.avatarKey} avatarPath={friend.avatarUrl} size={40} />
       <Text style={styles.personName} numberOfLines={1}>
         @{friend.username}
       </Text>
@@ -226,7 +225,7 @@ export default function FriendsScreen() {
                   accessible
                   accessibilityLabel={copy.friends.rowLabel(index + 1, name, row.spotsFound, row.badges)}>
                   <Text style={styles.rank}>{index + 1}</Text>
-                  <StampAvatar avatar={avatarFor(row.avatarKey)} size={40} />
+                  <ProfileAvatar avatarKey={row.avatarKey} avatarPath={row.avatarUrl} size={40} />
                   <Text style={[styles.personName, row.isMe && styles.meName]} numberOfLines={1}>
                     {name}
                   </Text>

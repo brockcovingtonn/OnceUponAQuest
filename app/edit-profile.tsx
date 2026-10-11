@@ -9,8 +9,8 @@ import { Input } from '@/components/Input';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { avatarFor } from '@/lib/avatars';
 import { type Profile, useProfile, useUpdateProfile } from '@/lib/queries';
+import { useAvatarChoice } from '@/lib/useAvatarChoice';
 import { colors, spacing, type } from '@/theme';
 
 export default function EditProfileScreen() {
@@ -19,19 +19,38 @@ export default function EditProfileScreen() {
   const profile = useProfile(userId);
 
   if (profile.isPending) return <StateView kind="loading" />;
-  if (profile.isError || !profile.data) {
+  if (profile.isError || !profile.data || !userId) {
     return <StateView kind="error" message={copy.profile.loadError} onRetry={() => profile.refetch()} />;
   }
   return <EditProfileForm profile={profile.data} userId={userId} />;
 }
 
-function EditProfileForm({ profile, userId }: { profile: Profile; userId: string | undefined }) {
+function EditProfileForm({ profile, userId }: { profile: Profile; userId: string }) {
   const update = useUpdateProfile(userId);
+  const avatar = useAvatarChoice({ avatarKey: profile.avatar_key, avatarUrl: profile.avatar_url });
   const [displayName, setDisplayName] = useState(profile.display_name ?? '');
-  const [avatarKey, setAvatarKey] = useState(avatarFor(profile.avatar_key).key);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>();
 
-  function save() {
-    update.mutate({ displayName, avatarKey }, { onSuccess: () => router.back() });
+  async function save() {
+    setError(undefined);
+    setSaving(true);
+    try {
+      let saved;
+      try {
+        saved = await avatar.resolve(userId);
+      } catch {
+        setError(copy.avatarPhoto.uploadFailed);
+        return;
+      }
+      await update.mutateAsync({ displayName, avatarKey: saved.avatarKey, avatarUrl: saved.avatarUrl });
+      await avatar.cleanUp(userId, saved);
+      router.back();
+    } catch {
+      setError(copy.editProfile.saveFailed);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -50,10 +69,17 @@ function EditProfileForm({ profile, userId }: { profile: Profile; userId: string
         />
 
         <Text style={styles.subtitle}>{copy.editProfile.avatarTitle}</Text>
-        <AvatarPicker value={avatarKey} onChange={setAvatarKey} />
+        <AvatarPicker
+          choice={avatar.choice}
+          onSelectStamp={avatar.selectStamp}
+          onSelectPhoto={avatar.selectPhoto}
+          onPickPhoto={avatar.pickPhoto}
+          picking={avatar.picking}
+        />
+        <Text style={styles.note}>{copy.avatarPhoto.note}</Text>
 
-        {update.isError ? <Banner message={copy.editProfile.saveFailed} /> : null}
-        <Button label={copy.editProfile.save} onPress={save} loading={update.isPending} />
+        {error ? <Banner message={error} /> : null}
+        <Button label={copy.editProfile.save} onPress={save} loading={saving} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -293,6 +293,14 @@ export const copy = {
   /** Set to an address to show "Send feedback" in Settings; null hides the row. */
   feedbackEmail: null as string | null,
 
+  avatarPhoto: {
+    use: 'Use my own photo',
+    change: 'Choose a different photo',
+    optionLabel: 'Your own photo',
+    note: 'Friends and other explorers can see your profile photo. Keep it friendly — no photos of other people without their OK.',
+    uploadFailed: "We couldn't upload your photo. Check your connection and try again.",
+  },
+
   editProfile: {
     title: 'Edit profile',
     username: (username: string) => `@${username}`,

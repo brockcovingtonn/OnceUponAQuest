@@ -380,7 +380,7 @@ export function usePassportContent() {
 // Friends
 // ---------------------------------------------------------------------------
 
-export type FriendProfile = { id: string; username: string; avatarKey: string | null };
+export type FriendProfile = { id: string; username: string; avatarKey: string | null; avatarUrl: string | null };
 
 export type Friendships = {
   /** Requests other explorers sent to me, waiting for my answer. */
@@ -395,6 +395,7 @@ export type LeaderboardRow = {
   userId: string;
   username: string;
   avatarKey: string | null;
+  avatarUrl: string | null;
   spotsFound: number;
   badges: number;
   isMe: boolean;
@@ -412,15 +413,21 @@ export function useFriendships(userId: string | undefined) {
     queryFn: async (): Promise<Friendships> => {
       const { data, error } = await supabase.from('friendships').select(`
         requester, addressee, status,
-        requester_profile:profiles!friendships_requester_fkey ( id, username, avatar_key ),
-        addressee_profile:profiles!friendships_addressee_fkey ( id, username, avatar_key )
+        requester_profile:profiles!friendships_requester_fkey ( id, username, avatar_key, avatar_url ),
+        addressee_profile:profiles!friendships_addressee_fkey ( id, username, avatar_key, avatar_url )
       `);
       if (error) throw error;
 
-      const toFriend = (p: { id: string; username: string; avatar_key: string | null }): FriendProfile => ({
+      const toFriend = (p: {
+        id: string;
+        username: string;
+        avatar_key: string | null;
+        avatar_url: string | null;
+      }): FriendProfile => ({
         id: p.id,
         username: p.username,
         avatarKey: p.avatar_key,
+        avatarUrl: p.avatar_url,
       });
       const result: Friendships = { incoming: [], outgoing: [], friendIds: new Set() };
       for (const row of data) {
@@ -449,6 +456,7 @@ export function useLeaderboard(userId: string | undefined) {
         userId: row.user_id,
         username: row.username,
         avatarKey: row.avatar_key ?? null,
+        avatarUrl: row.avatar_url ?? null,
         spotsFound: row.spots_found,
         badges: row.badges,
         isMe: row.is_me,
@@ -542,12 +550,20 @@ export function useRemoveFriend(userId: string | undefined) {
 export function useUpdateProfile(userId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (changes: { displayName: string; avatarKey: string }): Promise<Profile> => {
+    mutationFn: async (changes: {
+      displayName: string;
+      avatarKey: string;
+      avatarUrl: string | null;
+    }): Promise<Profile> => {
       if (!userId) throw new Error('Not signed in');
       const displayName = changes.displayName.trim();
       const { data, error } = await supabase
         .from('profiles')
-        .update({ display_name: displayName === '' ? null : displayName, avatar_key: changes.avatarKey })
+        .update({
+          display_name: displayName === '' ? null : displayName,
+          avatar_key: changes.avatarKey,
+          avatar_url: changes.avatarUrl,
+        })
         .eq('id', userId)
         .select()
         .single();
@@ -561,15 +577,14 @@ export function useUpdateProfile(userId: string | undefined) {
   });
 }
 
-const PHOTO_BUCKET = 'checkin-photos';
 const PHOTO_PAGE = 100;
 
 /**
- * Delete every file in the user's photo folder. Storage files can't be removed
- * from SQL, so this runs before delete_my_account() removes the database rows.
+ * Delete every file in the user's folder of a bucket. Storage files can't be
+ * removed from SQL, so this runs before delete_my_account() removes the rows.
  */
-async function removeAllCheckinPhotos(userId: string) {
-  const bucket = supabase.storage.from(PHOTO_BUCKET);
+async function removeAllUserFiles(bucketName: 'checkin-photos' | 'avatars', userId: string) {
+  const bucket = supabase.storage.from(bucketName);
   for (;;) {
     const { data: files, error } = await bucket.list(userId, { limit: PHOTO_PAGE });
     if (error) throw error;
@@ -582,13 +597,14 @@ async function removeAllCheckinPhotos(userId: string) {
   }
 }
 
-/** Removes the user's photos, then their account and all progress, then signs out. */
+/** Removes the user's check-in and profile photos, then their account and all progress, then signs out. */
 export function useDeleteAccount(userId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error('Not signed in');
-      await removeAllCheckinPhotos(userId);
+      await removeAllUserFiles('checkin-photos', userId);
+      await removeAllUserFiles('avatars', userId);
       const { error } = await supabase.rpc('delete_my_account');
       if (error) throw error;
       await supabase.auth.signOut({ scope: 'local' });
