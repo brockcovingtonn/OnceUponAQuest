@@ -512,3 +512,25 @@ export function useRespondToRequest(userId: string | undefined) {
       ]),
   });
 }
+
+/** Remove an accepted friendship, whichever of us sent the original request. */
+export function useRemoveFriend(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (friendId: string) => {
+      if (!userId) throw new Error('Not signed in');
+      const { error } = await supabase
+        .from('friendships')
+        .delete()
+        .or(
+          `and(requester.eq.${userId},addressee.eq.${friendId}),and(requester.eq.${friendId},addressee.eq.${userId})`,
+        );
+      if (error) throw error;
+    },
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: friendKeys.friendships(userId) }),
+        queryClient.invalidateQueries({ queryKey: friendKeys.leaderboard(userId) }),
+      ]),
+  });
+}

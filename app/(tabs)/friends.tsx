@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { type ReactNode, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -26,6 +27,7 @@ import {
   useAddFriend,
   useFriendships,
   useLeaderboard,
+  useRemoveFriend,
   useRespondToRequest,
 } from '@/lib/queries';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
@@ -46,7 +48,7 @@ function IconButton({
   disabled,
   tone,
 }: {
-  icon: 'checkmark' | 'close';
+  icon: 'checkmark' | 'close' | 'person-remove-outline';
   label: string;
   onPress: () => void;
   disabled: boolean;
@@ -88,9 +90,27 @@ export default function FriendsScreen() {
   const leaderboard = useLeaderboard(userId);
   const addFriend = useAddFriend(userId);
   const respond = useRespondToRequest(userId);
+  const removeFriend = useRemoveFriend(userId);
   const [username, setUsername] = useState('');
   const [addMessage, setAddMessage] = useState<AddMessage>();
+  const [removeMessage, setRemoveMessage] = useState<AddMessage>();
   const [refreshing, setRefreshing] = useState(false);
+
+  function confirmRemove(friendId: string, friendName: string) {
+    setRemoveMessage(undefined);
+    Alert.alert(copy.friends.removeConfirmTitle(friendName), copy.friends.removeConfirmBody, [
+      { text: copy.friends.removeCancel, style: 'cancel' },
+      {
+        text: copy.friends.removeConfirm,
+        style: 'destructive',
+        onPress: () =>
+          removeFriend.mutate(friendId, {
+            onSuccess: () => setRemoveMessage({ text: copy.friends.removed(friendName), tone: 'info' }),
+            onError: () => setRemoveMessage({ text: copy.common.networkError, tone: 'error' }),
+          }),
+      },
+    ]);
+  }
 
   async function refresh() {
     setRefreshing(true);
@@ -200,23 +220,36 @@ export default function FriendsScreen() {
           {rows.map((row, index) => {
             const name = row.isMe ? copy.friends.you : row.username;
             return (
-              <View
-                key={row.userId}
-                style={[styles.leaderRow, row.isMe && styles.leaderRowMe]}
-                accessible
-                accessibilityLabel={copy.friends.rowLabel(index + 1, name, row.spotsFound, row.badges)}>
-                <Text style={styles.rank}>{index + 1}</Text>
-                <StampAvatar avatar={avatarFor(row.avatarKey)} size={40} />
-                <Text style={[styles.personName, row.isMe && styles.meName]} numberOfLines={1}>
-                  {name}
-                </Text>
-                <View style={styles.stats}>
-                  <Text style={styles.statsText}>{copy.friends.stats(row.spotsFound, row.badges)}</Text>
-                  <Ionicons name="ribbon" size={16} color={colors.storybookGold} />
+              <View key={row.userId} style={[styles.leaderRow, row.isMe && styles.leaderRowMe]}>
+                <View
+                  style={styles.leaderInfo}
+                  accessible
+                  accessibilityLabel={copy.friends.rowLabel(index + 1, name, row.spotsFound, row.badges)}>
+                  <Text style={styles.rank}>{index + 1}</Text>
+                  <StampAvatar avatar={avatarFor(row.avatarKey)} size={40} />
+                  <Text style={[styles.personName, row.isMe && styles.meName]} numberOfLines={1}>
+                    {name}
+                  </Text>
+                  <View style={styles.stats}>
+                    <Text style={styles.statsText}>{copy.friends.stats(row.spotsFound, row.badges)}</Text>
+                    <Ionicons name="ribbon" size={16} color={colors.storybookGold} />
+                  </View>
                 </View>
+                {row.isMe ? (
+                  <View style={styles.iconButtonSpacer} />
+                ) : (
+                  <IconButton
+                    icon="person-remove-outline"
+                    tone="decline"
+                    label={copy.friends.remove(row.username)}
+                    disabled={removeFriend.isPending}
+                    onPress={() => confirmRemove(row.userId, row.username)}
+                  />
+                )}
               </View>
             );
           })}
+          {removeMessage ? <Banner tone={removeMessage.tone} message={removeMessage.text} /> : null}
           {rows.length <= 1 ? <Text style={styles.empty}>{copy.friends.empty}</Text> : null}
         </View>
       </ScrollView>
@@ -303,6 +336,15 @@ const styles = StyleSheet.create({
     minHeight: minTouchTarget + 12,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.md,
+  },
+  leaderInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  iconButtonSpacer: {
+    width: minTouchTarget,
   },
   leaderRowMe: {
     backgroundColor: colors.white,

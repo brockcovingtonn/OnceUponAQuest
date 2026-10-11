@@ -253,6 +253,12 @@ export const copy = {
       `Rank ${rank}: ${name}. ${spots} ${spots === 1 ? 'spot' : 'spots'}, ${badges} ${badges === 1 ? 'badge' : 'badges'}.`,
     empty: 'Add a friend to compare passports.',
     loadError: "We couldn't load your friends. Check your connection and try again.",
+    remove: (username: string) => `Remove @${username} as a friend`,
+    removeConfirmTitle: (username: string) => `Remove @${username}?`,
+    removeConfirmBody: "You'll stop seeing each other's progress. You can send a new request any time.",
+    removeConfirm: 'Remove',
+    removeCancel: 'Cancel',
+    removed: (username: string) => `@${username} was removed from your friends.`,
   },
 
   placeholder: {
