@@ -8,13 +8,12 @@ _Last updated: October 11, 2026_
 
 ## 1. Field walk (in the park)
 
-Use a development build (Expo Go) signed in as an **admin**. Each spot screen then shows a dashed **Field tools** panel; each quest screen has **Take cover photo**.
+The walk happens on cellular, so use the **hosted** database (pins and photos land in the real project). `covington.brock@gmail.com` is already an admin on both local and hosted (`npm run admin:add -- email` adds others). Each spot screen shows a dashed **Field tools** panel; each quest screen has **Take cover photo**.
 
-- [ ] Make yourself an admin on the database you're using. Local is already done for `covington.brock@gmail.com`. For hosted, run this in Supabase → SQL Editor:
-  ```sql
-  insert into private.admins (user_id)
-  select id from auth.users where email = 'covington.brock@gmail.com';
-  ```
+- [ ] Pick how the app reaches your phone on cellular:
+  - **Option A — "field" build (recommended; needs the Apple Developer Program):** `npm run build:field`, install it on your iPhone from the EAS link. Standalone, no Mac needed.
+  - **Option B — free, Mac stays home:** `npm run db:use-hosted`, then `caffeinate -dis npx expo start --tunnel --clear`; open it in Expo Go before you leave. Works on cellular while the Mac stays awake and online.
+- [ ] Sign in on the hosted database before you leave home: in the app enter your email and tap **Send my code**, then on the Mac run `npm run auth:code -- covington.brock@gmail.com` and type the code it prints (valid 1 hour). You'll finish onboarding once; the sign-in then lasts the whole walk.
 - [ ] At each of the 20 spots, stand where a guest should stand, then:
   - [ ] **Set pin here** (it refuses GPS fixes worse than 25 m — step into open sky and retry)
   - [ ] **Take hint photo** (replaces the storybook placeholder)

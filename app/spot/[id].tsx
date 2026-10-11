@@ -25,6 +25,7 @@ import {
   openAppSettings,
   requestLocationPermission,
 } from '@/lib/location';
+import { fieldToolsEnabled } from '@/lib/fieldTools';
 import { useParadeMode } from '@/lib/paradeMode';
 import { uploadCheckinPhoto } from '@/lib/photos';
 import { type CheckInResult, useCheckIn, useIsAdmin, useMyProgress, useSpot } from '@/lib/queries';
@@ -297,7 +298,7 @@ export default function SpotScreen() {
 
           <Button variant="text" label={`${copy.report.open} ›`} onPress={() => setReportOpen(true)} />
 
-          {__DEV__ && isAdmin.data ? <SpotFieldTools spot={s} /> : null}
+          {fieldToolsEnabled && isAdmin.data ? <SpotFieldTools spot={s} /> : null}
         </ScrollView>
       </KeyboardAvoidingView>
 

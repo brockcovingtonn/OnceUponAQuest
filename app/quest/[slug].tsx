@@ -10,6 +10,7 @@ import { type SpotState, SpotRow } from '@/components/SpotRow';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
+import { fieldToolsEnabled } from '@/lib/fieldTools';
 import { useParadeMode } from '@/lib/paradeMode';
 import { useIsAdmin, useMyProgress, useQuest } from '@/lib/queries';
 import { colors, radius, spacing, type } from '@/theme';
@@ -104,7 +105,7 @@ export default function QuestDetailScreen() {
           </View>
         ) : null}
 
-        {__DEV__ && isAdmin.data ? <QuestFieldTools questId={quest.data.id} /> : null}
+        {fieldToolsEnabled && isAdmin.data ? <QuestFieldTools questId={quest.data.id} /> : null}
       </ScrollView>
     </>
   );

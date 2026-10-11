@@ -25,6 +25,12 @@
     "production": {
       "environment": "production",
       "autoIncrement": true
+    },
+    "field": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_FIELD_TOOLS": "true"
+      }
     }
   },
   "submit": {
