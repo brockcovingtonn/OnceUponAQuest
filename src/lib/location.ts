@@ -45,3 +45,20 @@ export const LOCATION_TOLERANCE_M = 25;
 export function openAppSettings() {
   Linking.openSettings();
 }
+
+export type LocationFix = Coords & { accuracyM: number | null };
+
+/** Current position plus its accuracy, for setting spot pins in the field. */
+export async function getCurrentFix(): Promise<LocationFix> {
+  const position = await Promise.race([
+    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.BestForNavigation }),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Location timed out')), LOCATION_TIMEOUT_MS),
+    ),
+  ]);
+  return {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude,
+    accuracyM: position.coords.accuracy,
+  };
+}

@@ -91,7 +91,7 @@ export const copy = {
   legal: {
     termsTitle: 'Terms of Service',
     privacyTitle: 'Privacy Policy',
-    comingSoon: 'The full text will be published here before launch.',
+    effective: (date: string) => `Effective ${date}`,
   },
 
   paradeMode: {
@@ -297,7 +297,26 @@ export const copy = {
   },
 
   /** Set to an address to show "Send feedback" in Settings; null hides the row. */
-  feedbackEmail: null as string | null,
+  feedbackEmail: 'higherthinkingconsulting@gmail.com' as string | null,
+
+  fieldTools: {
+    title: 'Field tools (admins, dev builds only)',
+    pin: (lat: number, lng: number) => `Pin: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+    noPin: 'No pin yet — check-in skips the location check.',
+    radius: (meters: number) => `Check-in radius: ${meters} m (+25 m tolerance)`,
+    setPin: 'Set pin here',
+    pinSaved: (accuracy: number | null) =>
+      accuracy === null ? 'Pin saved.' : `Pin saved (accuracy about ${Math.round(accuracy)} m).`,
+    pinWeak: (accuracy: number) =>
+      `GPS accuracy is about ${Math.round(accuracy)} m. Wait a moment in open sky and try again for a better pin.`,
+    hintPhoto: 'Take hint photo',
+    coverPhoto: 'Take cover photo',
+    photoSaved: 'Photo saved.',
+    verified: 'Verified on site',
+    markVerified: 'Mark verified',
+    markUnverified: 'Mark not verified',
+    failed: 'That did not save. Check your connection and try again.',
+  },
 
   avatarPhoto: {
     use: 'Use my own photo',

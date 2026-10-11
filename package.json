@@ -59,7 +59,8 @@
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
     "db:test:remote": "supabase test db --linked",
     "db:use-local": "node scripts/use-supabase.mjs local",
-    "db:use-hosted": "node scripts/use-supabase.mjs hosted"
+    "db:use-hosted": "node scripts/use-supabase.mjs hosted",
+    "legal:export": "node scripts/export-legal.mjs"
   },
   "private": true
 }

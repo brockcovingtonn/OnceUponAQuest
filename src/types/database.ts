@@ -241,7 +241,16 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "check_in":
+            "admin_set_quest_cover":
+{ Args: { "p_photo_path": string,"p_quest_id": string }; Returns: undefined
+                           },
+"admin_update_spot":
+{ Args: { "p_lat"?: number,"p_lng"?: number,"p_photo_path"?: string,"p_spot_id": string,"p_verified"?: boolean }; Returns: undefined
+                           },
+"am_i_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"check_in":
 { Args: { "p_answer"?: string,"p_lat"?: number,"p_lng"?: number,"p_parade_mode"?: boolean,"p_photo_path"?: string,"p_spot_id": string }; Returns: Json
                            },
 "delete_my_account":

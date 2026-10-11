@@ -103,3 +103,23 @@ export async function removeOldAvatars(userId: string, keepPath: string | null) 
   const stale = files.map((f) => `${userId}/${f.name}`).filter((p) => p !== keepPath);
   if (stale.length > 0) await bucket.remove(stale);
 }
+
+// ---------------------------------------------------------------------------
+// Founder content photos (field walk): spot hint photos and quest covers
+// ---------------------------------------------------------------------------
+
+/** Upload to spot-photos at `<spots|quests>/<id>-<timestamp>.jpg` and return that path. */
+export async function uploadContentPhoto(
+  folder: 'spots' | 'quests',
+  id: string,
+  photo: CapturedPhoto,
+): Promise<string> {
+  const uri = await compressPhoto(photo);
+  const path = `${folder}/${id}-${Date.now()}.jpg`;
+  const body = await new File(uri).arrayBuffer();
+  const { error } = await supabase.storage
+    .from('spot-photos')
+    .upload(path, body, { contentType: 'image/jpeg', upsert: false });
+  if (error) throw error;
+  return path;
+}

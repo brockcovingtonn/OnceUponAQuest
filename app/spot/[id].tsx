@@ -7,6 +7,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { CheckInCard, type CheckInSubmission } from '@/components/CheckInCard';
+import { SpotFieldTools } from '@/components/FieldTools';
 import { ReportProblemSheet } from '@/components/ReportProblemSheet';
 import { SpotPhoto } from '@/components/SpotPhoto';
 import { Stamp } from '@/components/Stamp';
@@ -26,7 +27,7 @@ import {
 } from '@/lib/location';
 import { useParadeMode } from '@/lib/paradeMode';
 import { uploadCheckinPhoto } from '@/lib/photos';
-import { type CheckInResult, useCheckIn, useMyProgress, useSpot } from '@/lib/queries';
+import { type CheckInResult, useCheckIn, useIsAdmin, useMyProgress, useSpot } from '@/lib/queries';
 import { colors, radius, spacing, type } from '@/theme';
 
 const CELEBRATION_MS = 1400;
@@ -50,6 +51,7 @@ export default function SpotScreen() {
   const progress = useMyProgress(userId);
   const { paradeMode } = useParadeMode();
   const checkIn = useCheckIn(userId);
+  const isAdmin = useIsAdmin(userId);
 
   const [submitting, setSubmitting] = useState(false);
   const [misses, setMisses] = useState(0);
@@ -294,6 +296,8 @@ export default function SpotScreen() {
           ) : null}
 
           <Button variant="text" label={`${copy.report.open} ›`} onPress={() => setReportOpen(true)} />
+
+          {__DEV__ && isAdmin.data ? <SpotFieldTools spot={s} /> : null}
         </ScrollView>
       </KeyboardAvoidingView>
 

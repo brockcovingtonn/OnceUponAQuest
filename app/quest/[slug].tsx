@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
+import { QuestFieldTools } from '@/components/FieldTools';
 import { ProgressRing } from '@/components/ProgressRing';
 import { QuestCover } from '@/components/QuestCover';
 import { type SpotState, SpotRow } from '@/components/SpotRow';
@@ -10,7 +11,7 @@ import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useParadeMode } from '@/lib/paradeMode';
-import { useMyProgress, useQuest } from '@/lib/queries';
+import { useIsAdmin, useMyProgress, useQuest } from '@/lib/queries';
 import { colors, radius, spacing, type } from '@/theme';
 
 export default function QuestDetailScreen() {
@@ -19,6 +20,7 @@ export default function QuestDetailScreen() {
   const quest = useQuest(slug);
   const progress = useMyProgress(session?.user.id);
   const { paradeMode } = useParadeMode();
+  const isAdmin = useIsAdmin(session?.user.id);
 
   if (quest.isPending || progress.isPending) return <StateView kind="loading" />;
   if (quest.isError || progress.isError) {
@@ -101,6 +103,8 @@ export default function QuestDetailScreen() {
             </View>
           </View>
         ) : null}
+
+        {__DEV__ && isAdmin.data ? <QuestFieldTools questId={quest.data.id} /> : null}
       </ScrollView>
     </>
   );

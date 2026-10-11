@@ -200,7 +200,7 @@ export function useMyProgress(userId: string | undefined) {
 // source_url is internal research only and is never selected by the app.
 const spotDetailSelect = `
   id, quest_id, sort_order, teaser, title, where_to_stand, clue, hint, prompt, method,
-  lat, lng, radius_m, pause_during_parades, holiday_note, photo_path,
+  lat, lng, radius_m, pause_during_parades, holiday_note, photo_path, verified_on_site,
   quest:quests ( slug, title, spots ( count ) )
 ` as const;
 
@@ -612,5 +612,58 @@ export function useDeleteAccount(userId: string | undefined) {
       await supabase.auth.signOut({ scope: 'local' });
       queryClient.clear();
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Field tools (admin only; the database enforces this too)
+// ---------------------------------------------------------------------------
+
+export function useIsAdmin(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['is-admin', userId] as const,
+    enabled: Boolean(userId),
+    staleTime: Infinity,
+    queryFn: async (): Promise<boolean> => {
+      const { data, error } = await supabase.rpc('am_i_admin');
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useAdminUpdateSpot(spotId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (changes: { lat?: number; lng?: number; photoPath?: string; verified?: boolean }) => {
+      const { error } = await supabase.rpc('admin_update_spot', {
+        p_spot_id: spotId,
+        p_lat: changes.lat,
+        p_lng: changes.lng,
+        p_photo_path: changes.photoPath,
+        p_verified: changes.verified,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: spotKeys.detail(spotId) }),
+        queryClient.invalidateQueries({ queryKey: ['quest'] }),
+      ]),
+  });
+}
+
+export function useAdminSetQuestCover(questId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (photoPath: string) => {
+      const { error } = await supabase.rpc('admin_set_quest_cover', { p_quest_id: questId, p_photo_path: photoPath });
+      if (error) throw error;
+    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: questKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['quest'] }),
+      ]),
   });
 }

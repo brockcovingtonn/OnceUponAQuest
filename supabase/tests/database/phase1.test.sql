@@ -7,7 +7,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 set local role postgres;
 
-select plan(42);
+select plan(48);
 
 -- ---------------------------------------------------------------------------
 -- Helpers (temporary, dropped with the rollback)
@@ -197,6 +197,26 @@ select results_eq(
   $$ select username, is_me from public.friends_leaderboard() $$,
   $$ values ('lampLighter'::text, false), ('castleCrumb'::text, true) $$,
   'leaderboard ranks friends by spots found and flags the current user');
+
+-- ---------------------------------------------------------------------------
+-- Field tools are admin-only
+-- ---------------------------------------------------------------------------
+select pg_temp.act_as('11111111-1111-1111-1111-111111111111');
+select is(public.am_i_admin(), false, 'regular user is not an admin');
+select throws_ok(
+  $$ select public.admin_update_spot((select elias from t_spots), 33.8, -117.9) $$,
+  '42501', null, 'regular user cannot set a spot pin');
+select throws_ok($$ select * from private.admins $$, '42501', null, 'admin list is not readable');
+set local role postgres;
+insert into private.admins (user_id) values ('11111111-1111-1111-1111-111111111111');
+select pg_temp.act_as('11111111-1111-1111-1111-111111111111');
+select is(public.am_i_admin(), true, 'admin is recognised');
+select lives_ok(
+  $$ select public.admin_update_spot((select sherman from t_spots), 33.81, -117.919, 'spots/sherman.jpg', true) $$,
+  'admin can set pin, hint photo and verified');
+select throws_ok(
+  $$ select public.admin_update_spot((select sherman from t_spots), 33.81, null) $$,
+  '22023', null, 'lat without lng is rejected');
 
 -- ---------------------------------------------------------------------------
 -- Signed-out users can't call anything
