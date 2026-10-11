@@ -180,3 +180,129 @@ export function useMyProgress(userId: string | undefined) {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Spots, check-ins, reports, badges
+// ---------------------------------------------------------------------------
+
+// source_url is internal research only and is never selected by the app.
+const spotDetailSelect = `
+  id, quest_id, sort_order, teaser, title, where_to_stand, clue, hint, prompt, method,
+  lat, lng, radius_m, pause_during_parades, holiday_note,
+  quest:quests ( slug, title, spots ( count ) )
+` as const;
+
+export const spotKeys = {
+  detail: (id: string) => ['spot', id] as const,
+};
+
+async function fetchSpot(id: string) {
+  const { data, error } = await supabase.from('spots').select(spotDetailSelect).eq('id', id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export type SpotDetail = NonNullable<Awaited<ReturnType<typeof fetchSpot>>>;
+
+export function useSpot(id: string | undefined) {
+  return useQuery({
+    queryKey: spotKeys.detail(id ?? ''),
+    enabled: Boolean(id),
+    queryFn: () => fetchSpot(id ?? ''),
+  });
+}
+
+export const CHECK_IN_REASONS = [
+  'not_found',
+  'paused',
+  'too_far',
+  'location_required',
+  'wrong_answer',
+  'photo_required',
+] as const;
+export type CheckInReason = (typeof CHECK_IN_REASONS)[number];
+
+export type CheckInResult =
+  | { ok: true; questComplete: boolean; badgeSlug: string | null }
+  | { ok: false; reason: CheckInReason; distanceM: number | null };
+
+export type CheckInInput = {
+  spotId: string;
+  answer?: string;
+  lat?: number;
+  lng?: number;
+  photoPath?: string;
+  paradeMode: boolean;
+};
+
+function isReason(value: unknown): value is CheckInReason {
+  return typeof value === 'string' && (CHECK_IN_REASONS as readonly string[]).includes(value);
+}
+
+/** Parse the jsonb returned by public.check_in. */
+export function parseCheckInResult(raw: unknown): CheckInResult {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    throw new Error('Unexpected check_in response');
+  }
+  const r = raw as Record<string, unknown>;
+  if (r.ok === true) {
+    return {
+      ok: true,
+      questComplete: r.quest_complete === true,
+      badgeSlug: typeof r.badge_slug === 'string' ? r.badge_slug : null,
+    };
+  }
+  if (!isReason(r.reason)) throw new Error('Unexpected check_in reason');
+  return { ok: false, reason: r.reason, distanceM: typeof r.distance_m === 'number' ? r.distance_m : null };
+}
+
+export function useCheckIn(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CheckInInput): Promise<CheckInResult> => {
+      const { data, error } = await supabase.rpc('check_in', {
+        p_spot_id: input.spotId,
+        p_answer: input.answer,
+        p_lat: input.lat,
+        p_lng: input.lng,
+        p_photo_path: input.photoPath,
+        p_parade_mode: input.paradeMode,
+      });
+      if (error) throw error;
+      return parseCheckInResult(data);
+    },
+    onSuccess: async (result) => {
+      if (result.ok) await queryClient.invalidateQueries({ queryKey: questKeys.progress(userId) });
+    },
+  });
+}
+
+export type ReportReason = 'spot_changed' | 'unsafe' | 'answer_wrong' | 'other';
+
+export function useReportSpot() {
+  return useMutation({
+    mutationFn: async (input: { spotId: string; reason: ReportReason; note: string }) => {
+      const note = input.note.trim();
+      const { error } = await supabase
+        .from('spot_reports')
+        .insert({ spot_id: input.spotId, reason: input.reason, note: note === '' ? null : note });
+      if (error) throw error;
+    },
+  });
+}
+
+export function useBadge(slug: string | undefined) {
+  return useQuery({
+    queryKey: ['badge', slug ?? ''] as const,
+    enabled: Boolean(slug),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('badges')
+        .select('id, slug, title, description, art_key, quests ( id, slug, title, spots ( count ) )')
+        .eq('slug', slug ?? '')
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}

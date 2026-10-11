@@ -1,13 +1,365 @@
-import { useLocalSearchParams } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Haptics from 'expo-haptics';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { Banner } from '@/components/Banner';
+import { Button } from '@/components/Button';
+import { CheckInCard, type CheckInSubmission } from '@/components/CheckInCard';
+import { ReportProblemSheet } from '@/components/ReportProblemSheet';
+import { Stamp } from '@/components/Stamp';
+import { StampCelebration } from '@/components/StampCelebration';
+import { StateView } from '@/components/StateView';
+import { copy } from '@/copy';
+import { useAuth } from '@/lib/auth';
+import {
+  type Coords,
+  distanceMeters,
+  getCurrentCoords,
+  getLocationPermission,
+  LOCATION_TOLERANCE_M,
+  openAppSettings,
+  requestLocationPermission,
+} from '@/lib/location';
+import { useParadeMode } from '@/lib/paradeMode';
+import { uploadCheckinPhoto } from '@/lib/photos';
+import { type CheckInResult, useCheckIn, useMyProgress, useSpot } from '@/lib/queries';
+import { colors, radius, spacing, type } from '@/theme';
 
-export default function SpotDetailScreen() {
+const CELEBRATION_MS = 1400;
+const MISSES_BEFORE_HINT = 2;
+
+type LocationIssue =
+  | { kind: 'explain' }
+  | { kind: 'denied' }
+  | { kind: 'tooFar'; meters: number }
+  | { kind: 'unavailable' };
+
+type Feedback = { text: string; tone: 'error' | 'info' | 'warning'; showSettings?: boolean };
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function formatFoundDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+export default function SpotScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { session } = useAuth();
+  const userId = session?.user.id;
+  const spot = useSpot(id);
+  const progress = useMyProgress(userId);
+  const { paradeMode } = useParadeMode();
+  const checkIn = useCheckIn(userId);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [misses, setMisses] = useState(0);
+  const [hintShown, setHintShown] = useState(false);
+  const [feedback, setFeedback] = useState<Feedback>();
+  const [locationIssue, setLocationIssue] = useState<LocationIssue>();
+  const [celebrating, setCelebrating] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const pendingSubmission = useRef<CheckInSubmission | null>(null);
+
+  if (spot.isPending || progress.isPending) return <StateView kind="loading" />;
+  if (spot.isError || progress.isError) {
+    return (
+      <StateView
+        kind="error"
+        message={copy.spot.loadError}
+        onRetry={() => {
+          spot.refetch();
+          progress.refetch();
+        }}
+      />
+    );
+  }
+  if (!spot.data) return <StateView kind="empty" message={copy.spot.notFound} />;
+
+  const s = spot.data;
+  const foundAt = progress.data.foundSpots.get(s.id);
+  const paused = !foundAt && paradeMode && s.pause_during_parades;
+  const total = s.quest.spots[0]?.count ?? 0;
+
+  async function celebrate(result: Extract<CheckInResult, { ok: true }>) {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setCelebrating(true);
+    await delay(CELEBRATION_MS);
+    if (result.questComplete && result.badgeSlug) {
+      router.replace({ pathname: '/badge/[slug]', params: { slug: result.badgeSlug } });
+    } else {
+      router.back();
+    }
+  }
+
+  function showFailure(result: Extract<CheckInResult, { ok: false }>) {
+    switch (result.reason) {
+      case 'wrong_answer':
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setMisses((m) => m + 1);
+        setFeedback({ text: copy.checkInReasons.wrong_answer, tone: 'error' });
+        break;
+      case 'too_far':
+        setLocationIssue({ kind: 'tooFar', meters: result.distanceM ?? 0 });
+        break;
+      case 'paused':
+        setFeedback({ text: copy.checkInReasons.paused, tone: 'warning' });
+        break;
+      default:
+        setFeedback({ text: copy.checkInReasons[result.reason], tone: 'error' });
+    }
+  }
+
+  async function submit(submission: CheckInSubmission) {
+    if (!userId || paused || submitting) return;
+    setFeedback(undefined);
+    setLocationIssue(undefined);
+    setSubmitting(true);
+    try {
+      // Location check only for spots with a GPS pin (set during the field walk).
+      let coords: Coords | undefined;
+      if (s.lat !== null && s.lng !== null) {
+        const permission = await getLocationPermission();
+        if (permission === 'undetermined') {
+          pendingSubmission.current = submission;
+          setLocationIssue({ kind: 'explain' });
+          return;
+        }
+        if (permission === 'denied') {
+          setLocationIssue({ kind: 'denied' });
+          return;
+        }
+        try {
+          coords = await getCurrentCoords();
+        } catch {
+          setLocationIssue({ kind: 'unavailable' });
+          return;
+        }
+        // Check distance before uploading a photo; the server checks again.
+        const meters = distanceMeters(coords, { lat: s.lat, lng: s.lng });
+        if (meters > s.radius_m + LOCATION_TOLERANCE_M) {
+          setLocationIssue({ kind: 'tooFar', meters: Math.round(meters) });
+          return;
+        }
+      }
+
+      let photoPath: string | undefined;
+      if (submission.photo) {
+        try {
+          photoPath = await uploadCheckinPhoto(userId, s.id, submission.photo);
+        } catch {
+          setFeedback({ text: copy.spot.photoFailed, tone: 'error' });
+          return;
+        }
+      }
+
+      const result = await checkIn.mutateAsync({
+        spotId: s.id,
+        answer: submission.answer,
+        lat: coords?.lat,
+        lng: coords?.lng,
+        photoPath,
+        paradeMode,
+      });
+      if (result.ok) {
+        await celebrate(result);
+      } else {
+        showFailure(result);
+      }
+    } catch {
+      setFeedback({ text: copy.common.networkError, tone: 'error' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function continueWithLocation() {
+    const granted = await requestLocationPermission();
+    const next = pendingSubmission.current;
+    pendingSubmission.current = null;
+    setLocationIssue(undefined);
+    if (!granted) {
+      setLocationIssue({ kind: 'denied' });
+      return;
+    }
+    if (next) submit(next);
+  }
+
   return (
-    <PlaceholderScreen
-      name={`Spot: ${id}`}
-      links={[{ label: 'Preview badge earned', href: '/badge/sample-badge' }]}
-    />
+    <>
+      <Stack.Screen
+        options={{
+          title: s.quest.title,
+          headerRight: () => (
+            <Text style={styles.position}>{copy.spot.position(s.sort_order, total)}</Text>
+          ),
+        }}
+      />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title} accessibilityRole="header">
+            {foundAt ? s.title : s.teaser}
+          </Text>
+
+          {foundAt ? (
+            <View style={styles.foundRow} accessible accessibilityLabel={copy.spot.foundOn(formatFoundDate(foundAt))}>
+              <Stamp icon="checkmark" inked size={40} />
+              <Text style={styles.foundText}>{copy.spot.foundOn(formatFoundDate(foundAt))}</Text>
+            </View>
+          ) : null}
+
+          {paused ? <Banner tone="warning" message={copy.paradeMode.banner} /> : null}
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="location-outline" size={18} color={colors.midnight} />
+              <Text style={styles.sectionTitle}>{copy.spot.whereToStand}</Text>
+            </View>
+            <Text style={styles.body}>{s.where_to_stand}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{copy.spot.clue}</Text>
+            <Text style={styles.body}>{s.clue}</Text>
+          </View>
+
+          {s.holiday_note ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{copy.spot.holidayNote}</Text>
+              <Text style={styles.body}>{s.holiday_note}</Text>
+            </View>
+          ) : null}
+
+          {!foundAt ? (
+            <>
+              {locationIssue?.kind === 'explain' ? (
+                <View style={styles.notice}>
+                  <Text style={styles.sectionTitle}>{copy.location.explainTitle}</Text>
+                  <Text style={styles.body}>{copy.location.explainBody}</Text>
+                  <Button label={copy.location.explainContinue} onPress={continueWithLocation} />
+                </View>
+              ) : null}
+              {locationIssue?.kind === 'denied' ? (
+                <View style={styles.notice}>
+                  <Text style={styles.body}>📍 {copy.location.off}</Text>
+                  <Button variant="secondary" label={copy.spot.openSettings} onPress={openAppSettings} />
+                </View>
+              ) : null}
+              {locationIssue?.kind === 'tooFar' ? (
+                <Banner tone="info" message={`📍 ${copy.location.tooFar(locationIssue.meters)}`} />
+              ) : null}
+              {locationIssue?.kind === 'unavailable' ? (
+                <Banner tone="info" message={copy.location.unavailable} />
+              ) : null}
+
+              <CheckInCard
+                method={s.method}
+                prompt={s.prompt}
+                busy={submitting}
+                disabled={paused || submitting}
+                wrongAnswerCount={misses}
+                onSubmit={submit}
+                onCameraDenied={() =>
+                  setFeedback({ text: copy.spot.cameraDenied, tone: 'info', showSettings: true })
+                }
+              />
+
+              {feedback ? (
+                <View style={styles.feedback}>
+                  <Banner tone={feedback.tone} message={feedback.text} />
+                  {feedback.showSettings ? (
+                    <Button variant="secondary" label={copy.spot.openSettings} onPress={openAppSettings} />
+                  ) : null}
+                </View>
+              ) : null}
+
+              {s.hint && misses >= MISSES_BEFORE_HINT ? (
+                hintShown ? (
+                  <View style={styles.notice}>
+                    <Text style={styles.sectionTitle}>{copy.spot.hint}</Text>
+                    <Text style={styles.body}>{s.hint}</Text>
+                  </View>
+                ) : (
+                  <Button variant="secondary" label={copy.spot.needHint} onPress={() => setHintShown(true)} />
+                )
+              ) : null}
+            </>
+          ) : null}
+
+          <Button variant="text" label={`${copy.report.open} ›`} onPress={() => setReportOpen(true)} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <ReportProblemSheet
+        spotId={s.id}
+        visible={reportOpen}
+        onClose={() => setReportOpen(false)}
+        onSent={() => {
+          setReportOpen(false);
+          setFeedback({ text: copy.report.thanks, tone: 'info' });
+        }}
+      />
+
+      {celebrating ? <StampCelebration /> : null}
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+    backgroundColor: colors.parchment,
+  },
+  content: {
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  position: {
+    ...type.label,
+    color: colors.inkMuted,
+  },
+  title: {
+    ...type.title,
+    color: colors.midnight,
+  },
+  foundRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  foundText: {
+    ...type.bodyStrong,
+    color: colors.ink,
+  },
+  section: {
+    gap: spacing.xs,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  sectionTitle: {
+    ...type.bodyStrong,
+    color: colors.midnight,
+  },
+  body: {
+    ...type.body,
+    color: colors.ink,
+  },
+  notice: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  feedback: {
+    gap: spacing.sm,
+  },
+});

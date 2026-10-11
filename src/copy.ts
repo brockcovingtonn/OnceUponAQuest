@@ -128,6 +128,90 @@ export const copy = {
       }`,
   },
 
+  spot: {
+    position: (order: number, total: number) => `${order} of ${total}`,
+    whereToStand: 'Where to stand',
+    clue: 'Clue',
+    holidayNote: 'Seasonal note',
+    needHint: 'Need a hint?',
+    hint: 'Hint',
+    foundOn: (date: string) => `Found on ${date}`,
+    notFound: "We couldn't find that spot.",
+    loadError: "We couldn't load this spot. Check your connection and try again.",
+    stampedLabel: 'Stamped! Spot found.',
+
+    answerLabel: 'Your answer',
+    answerPlaceholder: 'Type what you see',
+    checkIn: 'Check in',
+
+    takePhoto: 'Take a photo',
+    retake: 'Retake',
+    usePhoto: 'Use this photo',
+    photoPreviewLabel: 'Your check-in photo',
+    cameraDenied:
+      'Camera access is off. Turn it on in Settings to take a check-in photo.',
+    photoFailed: "We couldn't save that photo. Please try again.",
+
+    listenBody: 'Listen closely, then tap the button.',
+    heardIt: 'I heard it',
+
+    snackBody: 'Order it, enjoy it, log it.',
+    addPhotoOptional: 'Add photo (optional)',
+    stampPassport: 'Stamp my passport',
+    removePhoto: 'Remove photo',
+
+    openSettings: 'Open settings',
+  },
+
+  location: {
+    explainTitle: 'Check in with your location',
+    explainBody:
+      "To check in here, we confirm you're at the spot. We only look at your location when you tap Check in, never in the background.",
+    explainContinue: 'Continue',
+    tooFar: (meters: number) => `You're about ${meters} m away. Walk closer to check in.`,
+    off: 'Location is off. Turn it on to check in here.',
+    unavailable: "We couldn't get your location. Step outside or try again in a moment.",
+  },
+
+  /** Friendly copy for every reason the check_in RPC can return. */
+  checkInReasons: {
+    not_found: "This spot isn't available right now.",
+    paused: 'Paused during parades and fireworks — check back after.',
+    too_far: 'Walk a little closer to the spot, then try again.',
+    location_required: 'We need your location to check in here.',
+    wrong_answer: 'Not quite — look again.',
+    photo_required: 'Take a photo of the spot to check in.',
+  },
+
+  report: {
+    open: 'Report a problem',
+    title: 'Report a problem',
+    intro: "Tell us what's wrong with this spot. We review every report.",
+    reasons: {
+      spot_changed: 'This spot changed',
+      unsafe: 'This spot feels unsafe',
+      answer_wrong: 'The answer seems wrong',
+      other: 'Something else',
+    },
+    noteLabel: 'Details (optional)',
+    notePlaceholder: 'What did you notice?',
+    send: 'Send report',
+    cancel: 'Cancel',
+    thanks: 'Thanks! Your report was sent.',
+  },
+
+  badge: {
+    title: 'Quest complete!',
+    foundAll: (count: number) => `You found all ${count} spots.`,
+    share: 'Share my badge',
+    shareDialogTitle: 'Share your badge',
+    shareUnavailable: "Sharing isn't available on this device.",
+    nextQuest: 'Next quest',
+    done: 'Done',
+    stampLabel: (title: string) => `${title} badge`,
+    notFound: "We couldn't find that badge.",
+  },
+
   placeholder: {
     comingSoon: 'Placeholder screen — built in a later step.',
   },

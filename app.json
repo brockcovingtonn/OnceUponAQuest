@@ -34,7 +34,24 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Once Upon a Quest checks your location only when you tap Check in, to confirm you are at the spot.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Once Upon a Quest uses the camera when you take a photo to check in at a spot.",
+          "microphonePermission": false,
+          "photosPermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
