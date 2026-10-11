@@ -12,6 +12,8 @@ type Props = {
   loading?: boolean;
   accessibilityHint?: string;
   style?: ViewStyle;
+  /** Overrides the label color, e.g. red for destructive text buttons. */
+  labelColor?: string;
 };
 
 export function Button({
@@ -22,6 +24,7 @@ export function Button({
   loading = false,
   accessibilityHint,
   style,
+  labelColor,
 }: Props) {
   const inactive = disabled || loading;
   return (
@@ -42,7 +45,9 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={variant === 'primary' ? colors.midnight : colors.ink} />
       ) : (
-        <Text style={[styles.label, variant === 'text' && styles.textLabel]}>{label}</Text>
+        <Text style={[styles.label, variant === 'text' && styles.textLabel, labelColor ? { color: labelColor } : null]}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );

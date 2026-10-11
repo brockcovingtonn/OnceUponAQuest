@@ -90,6 +90,12 @@ function RootNavigator() {
           name="badge/[slug]"
           options={{ presentation: 'modal', title: 'Badge earned' }}
         />
+        <Stack.Screen
+          name="edit-profile"
+          options={{ presentation: 'modal', title: copy.editProfile.title }}
+        />
+        <Stack.Screen name="safety" options={{ title: copy.safety.title }} />
+        <Stack.Screen name="about" options={{ title: copy.about.title }} />
       </Stack.Protected>
 
       <Stack.Screen name="too-young" options={{ headerShown: false, gestureEnabled: false }} />

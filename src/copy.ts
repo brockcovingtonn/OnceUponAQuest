@@ -261,7 +261,65 @@ export const copy = {
     removed: (username: string) => `@${username} was removed from your friends.`,
   },
 
-  placeholder: {
-    comingSoon: 'Placeholder screen — built in a later step.',
+  profile: {
+    exploringSince: (iso: string) =>
+      `Exploring since ${new Date(iso).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`,
+    editProfile: 'Edit profile',
+    settings: 'SETTINGS',
+    locationPermission: 'Location permission',
+    cameraPermission: 'Camera permission',
+    permissionState: {
+      granted: 'Allowed',
+      denied: 'Off',
+      undetermined: 'Not asked yet',
+    },
+    permissionHint: 'Opens your phone settings',
+    safetyRules: 'Quest safety rules',
+    terms: 'Terms of Service',
+    privacy: 'Privacy Policy',
+    about: 'About & disclaimer',
+    sendFeedback: 'Send feedback',
+    signOut: 'Sign out',
+    deleteAccount: 'Delete my account',
+    deleteConfirmTitle: 'Delete your account?',
+    deleteConfirmBody:
+      'This permanently deletes your profile, stamps, badges, friends and check-in photos. It cannot be undone.',
+    deleteConfirm: 'Delete forever',
+    deleteCancel: 'Cancel',
+    deleteFailed: "We couldn't delete your account. Check your connection and try again.",
+    loadError: "We couldn't load your profile. Check your connection and try again.",
+  },
+
+  /** Set to an address to show "Send feedback" in Settings; null hides the row. */
+  feedbackEmail: null as string | null,
+
+  editProfile: {
+    title: 'Edit profile',
+    username: (username: string) => `@${username}`,
+    usernameNote: "Your explorer name can't be changed.",
+    displayNameLabel: 'Display name (optional)',
+    displayNamePlaceholder: 'How friends see you',
+    avatarTitle: 'Stamp avatar',
+    save: 'Save',
+    saveFailed: "We couldn't save your changes. Check your connection and try again.",
+  },
+
+  safety: {
+    title: 'Quest safety rules',
+    intro: 'Quests happen in a busy park. Please keep these in mind on every quest:',
+    extra: [
+      'Check in only when it is safe to stop. Step aside so others can pass.',
+      'Never climb on railings, planters or props to find a detail.',
+      'Follow cast member instructions and park signs at all times.',
+    ],
+  },
+
+  about: {
+    title: 'About & disclaimer',
+    body: 'Once Upon a Quest turns a walk down the street into a storybook hunt. Find the hidden details, collect stamps and earn badges.',
+    disclaimerTitle: 'Disclaimer',
+    photosNote:
+      'Spot photos are taken by the app founder and by explorers. Clues are written in our own words.',
+    version: (version: string) => `Version ${version}`,
   },
 } as const;

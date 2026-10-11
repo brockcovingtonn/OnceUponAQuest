@@ -12,18 +12,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AvatarPicker } from '@/components/AvatarPicker';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { Checkbox } from '@/components/Checkbox';
 import { Input } from '@/components/Input';
 import { ProgressDots } from '@/components/ProgressDots';
-import { StampAvatar } from '@/components/StampAvatar';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { stampAvatars } from '@/lib/avatars';
 import { USERNAME_PATTERN, useCreateProfile, useUsernameAvailable } from '@/lib/queries';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
+import { colors, minTouchTarget, spacing, type } from '@/theme';
 
 const TOTAL_STEPS = 3;
 
@@ -144,22 +144,7 @@ export default function OnboardingScreen() {
               />
 
               <Text style={styles.subtitle}>{copy.onboarding.avatarTitle}</Text>
-              <View style={styles.avatarGrid} accessibilityRole="radiogroup">
-                {stampAvatars.map((avatar) => {
-                  const selected = avatar.key === avatarKey;
-                  return (
-                    <Pressable
-                      key={avatar.key}
-                      onPress={() => setAvatarKey(avatar.key)}
-                      accessibilityRole="radio"
-                      accessibilityLabel={avatar.label}
-                      accessibilityState={{ selected }}
-                      style={[styles.avatarOption, selected && styles.avatarSelected]}>
-                      <StampAvatar avatar={avatar} size={56} />
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <AvatarPicker value={avatarKey} onChange={setAvatarKey} />
             </>
           ) : null}
 
@@ -271,20 +256,6 @@ const styles = StyleSheet.create({
   body: {
     ...type.body,
     color: colors.ink,
-  },
-  avatarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  avatarOption: {
-    padding: spacing.xs,
-    borderRadius: radius.round,
-    borderWidth: 3,
-    borderColor: 'transparent',
-  },
-  avatarSelected: {
-    borderColor: colors.storybookGold,
   },
   rule: {
     flexDirection: 'row',

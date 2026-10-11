@@ -534,3 +534,65 @@ export function useRemoveFriend(userId: string | undefined) {
       ]),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Profile and account
+// ---------------------------------------------------------------------------
+
+export function useUpdateProfile(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (changes: { displayName: string; avatarKey: string }): Promise<Profile> => {
+      if (!userId) throw new Error('Not signed in');
+      const displayName = changes.displayName.trim();
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ display_name: displayName === '' ? null : displayName, avatar_key: changes.avatarKey })
+        .eq('id', userId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.profile(profile.id), profile);
+      queryClient.invalidateQueries({ queryKey: friendKeys.leaderboard(userId) });
+    },
+  });
+}
+
+const PHOTO_BUCKET = 'checkin-photos';
+const PHOTO_PAGE = 100;
+
+/**
+ * Delete every file in the user's photo folder. Storage files can't be removed
+ * from SQL, so this runs before delete_my_account() removes the database rows.
+ */
+async function removeAllCheckinPhotos(userId: string) {
+  const bucket = supabase.storage.from(PHOTO_BUCKET);
+  for (;;) {
+    const { data: files, error } = await bucket.list(userId, { limit: PHOTO_PAGE });
+    if (error) throw error;
+    if (files.length === 0) return;
+    const { data: removed, error: removeError } = await bucket.remove(
+      files.map((file) => `${userId}/${file.name}`),
+    );
+    if (removeError) throw removeError;
+    if (removed.length === 0) throw new Error('Photos could not be removed');
+  }
+}
+
+/** Removes the user's photos, then their account and all progress, then signs out. */
+export function useDeleteAccount(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error('Not signed in');
+      await removeAllCheckinPhotos(userId);
+      const { error } = await supabase.rpc('delete_my_account');
+      if (error) throw error;
+      await supabase.auth.signOut({ scope: 'local' });
+      queryClient.clear();
+    },
+  });
+}
