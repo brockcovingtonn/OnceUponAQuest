@@ -43,7 +43,8 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
-    "db:types": "supabase gen types typescript --local > src/types/database.ts"
+    "db:types": "supabase gen types typescript --local > src/types/database.ts",
+    "db:test:remote": "supabase test db --linked"
   },
   "private": true
 }

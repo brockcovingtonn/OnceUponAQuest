@@ -3,6 +3,9 @@
 -- Everything runs inside a transaction and is rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
+-- Hosted test connections log in as a helper role with a short search_path.
+set local search_path = public, extensions;
+set local role postgres;
 
 select plan(40);
 
@@ -140,7 +143,7 @@ select is(
 -- ---------------------------------------------------------------------------
 -- Geofence (spot gets a GPS pin; radius 40 m + 25 m tolerance)
 -- ---------------------------------------------------------------------------
-reset role;
+set local role postgres;
 update public.spots set lat = 33.8110, lng = -117.9190
   where id = (select pg_temp.spot('windows-of-legends', 3));
 select pg_temp.act_as('11111111-1111-1111-1111-111111111111');
@@ -186,7 +189,7 @@ select results_eq(
 -- ---------------------------------------------------------------------------
 -- Signed-out users can't call anything
 -- ---------------------------------------------------------------------------
-reset role;
+set local role postgres;
 select set_config('request.jwt.claims', '', true);
 set local role anon;
 select throws_ok($$ select public.check_in(gen_random_uuid()) $$,
@@ -198,7 +201,7 @@ select is((select count(*) from public.quests), 0::bigint, 'anon sees no quests'
 -- ---------------------------------------------------------------------------
 select pg_temp.act_as('11111111-1111-1111-1111-111111111111');
 select lives_ok($$ select public.delete_my_account() $$, 'user can delete their own account');
-reset role;
+set local role postgres;
 select is(
   (select count(*) from public.checkins where user_id = '11111111-1111-1111-1111-111111111111'),
   0::bigint, 'deleting the account removes the user''s check-ins and profile');
