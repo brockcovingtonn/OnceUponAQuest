@@ -126,7 +126,7 @@ export default function ProfileScreen() {
             label={copy.profile.deleteAccount}
             onPress={confirmDelete}
             loading={deleteAccount.isPending}
-            labelColor={colors.rose}
+            labelColor={colors.roseText}
           />
         </View>
       </ScrollView>

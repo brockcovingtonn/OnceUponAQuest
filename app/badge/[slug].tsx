@@ -5,12 +5,11 @@ import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 
 import { Banner } from '@/components/Banner';
+import { BadgeStamp } from '@/components/BadgeStamp';
 import { Button } from '@/components/Button';
-import { Stamp } from '@/components/Stamp';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { badgeIcon } from '@/lib/badgeArt';
 import { useBadge, useMyProgress, useQuests } from '@/lib/queries';
 import { colors, radius, spacing, type } from '@/theme';
 
@@ -75,7 +74,7 @@ export default function BadgeEarnedScreen() {
           accessible
           accessibilityRole="image"
           accessibilityLabel={copy.badge.stampLabel(b.title)}>
-          <Stamp icon={badgeIcon(b.art_key)} inked size={140} />
+          <BadgeStamp artKey={b.art_key} earned size={140} />
         </Animated.View>
         <Text style={styles.badgeTitle}>{b.title}</Text>
         <Text style={styles.title} accessibilityRole="header">

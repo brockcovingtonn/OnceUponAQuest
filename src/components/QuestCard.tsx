@@ -2,9 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ProgressRing } from '@/components/ProgressRing';
-import { Stamp } from '@/components/Stamp';
+import { BadgeStamp } from '@/components/BadgeStamp';
 import { copy } from '@/copy';
-import { badgeIcon } from '@/lib/badgeArt';
 import type { QuestSummary } from '@/lib/queries';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
 
@@ -38,7 +37,7 @@ export function QuestCard({ quest, found, badgeEarned, onPress }: Props) {
         <Text style={styles.title}>{quest.title}</Text>
         {complete ? (
           <View style={styles.badge}>
-            <Stamp icon={badgeIcon(quest.badge?.artKey)} inked size={28} />
+            <BadgeStamp artKey={quest.badge?.artKey} earned size={28} />
             <Text style={styles.badgeText}>{copy.quests.badgeEarned}</Text>
           </View>
         ) : null}

@@ -2,13 +2,12 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
+import { BadgeStamp } from '@/components/BadgeStamp';
 import { ProgressRing } from '@/components/ProgressRing';
 import { type SpotState, SpotRow } from '@/components/SpotRow';
-import { Stamp } from '@/components/Stamp';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { badgeIcon } from '@/lib/badgeArt';
 import { useParadeMode } from '@/lib/paradeMode';
 import { useMyProgress, useQuest } from '@/lib/queries';
 import { colors, spacing, type } from '@/theme';
@@ -91,7 +90,7 @@ export default function QuestDetailScreen() {
             style={styles.badgeRow}
             accessible
             accessibilityLabel={`${badgeEarned ? copy.questDetail.badgeEarned : copy.questDetail.badgeForFinishing} ${badge.title}`}>
-            <Stamp icon={badgeIcon(badge.art_key)} inked={badgeEarned} size={56} />
+            <BadgeStamp artKey={badge.art_key} earned={badgeEarned} size={56} />
             <View style={styles.badgeText}>
               <Text style={styles.badgeLabel}>
                 {badgeEarned ? copy.questDetail.badgeEarned : copy.questDetail.badgeForFinishing}

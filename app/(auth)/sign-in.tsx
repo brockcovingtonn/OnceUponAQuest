@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   error: {
     ...type.label,
-    color: colors.rose,
+    color: colors.roseText,
   },
   disclaimer: {
     ...type.caption,

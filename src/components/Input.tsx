@@ -72,13 +72,13 @@ const styles = StyleSheet.create({
   },
   error: {
     ...type.label,
-    color: colors.rose,
+    color: colors.roseText,
   },
   status: {
     ...type.label,
     color: colors.inkMuted,
   },
   success: {
-    color: colors.fern,
+    color: colors.fernText,
   },
 });

@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   error: {
-    backgroundColor: colors.rose,
+    backgroundColor: colors.roseText,
   },
   info: {
     backgroundColor: colors.border,

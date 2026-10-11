@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BadgeStamp } from '@/components/BadgeStamp';
 import { Stamp } from '@/components/Stamp';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { badgeIcon } from '@/lib/badgeArt';
 import { formatDate } from '@/lib/format';
 import { useMyProgress, usePassportContent } from '@/lib/queries';
 import { colors, minTouchTarget, spacing, type } from '@/theme';
@@ -69,7 +69,7 @@ export default function PassportScreen() {
                   style={styles.badge}
                   accessible
                   accessibilityLabel={copy.passport.badgeLabel(badge.title, earned)}>
-                  <Stamp icon={badgeIcon(badge.artKey)} inked={earned} size={64} />
+                  <BadgeStamp artKey={badge.artKey} earned={earned} size={64} />
                   <Text style={[styles.badgeTitle, !earned && styles.muted]} numberOfLines={2}>
                     {badge.title}
                   </Text>

@@ -1,34 +1,14 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
-import { colors } from '@/theme';
+import { logoGlyph } from '@/art/shapes';
+import { Artwork } from '@/art/Artwork';
+import { logoPalette } from '@/art/palettes';
 
-/** Placeholder mark (open storybook + star) until Step 9's original logo art. */
-export function Logo({ accessibilityLabel }: { accessibilityLabel: string }) {
+/** Original logo mark: an open storybook with a star, on a midnight stamp. */
+export function Logo({ accessibilityLabel, size = 96 }: { accessibilityLabel: string; size?: number }) {
   return (
-    <View
-      style={styles.mark}
-      accessible
-      accessibilityRole="image"
-      accessibilityLabel={accessibilityLabel}>
-      <Ionicons name="book-outline" size={56} color={colors.parchment} />
-      <Ionicons name="star" size={22} color={colors.storybookGold} style={styles.star} />
+    <View accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel}>
+      <Artwork shapes={logoGlyph} palette={logoPalette} size={size} frame="solid" />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  mark: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: colors.midnight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  star: {
-    position: 'absolute',
-    top: 14,
-    right: 18,
-  },
-});
