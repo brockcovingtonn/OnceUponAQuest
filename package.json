@@ -62,15 +62,15 @@
     "db:use-local": "node scripts/use-supabase.mjs local",
     "db:use-hosted": "node scripts/use-supabase.mjs hosted",
     "legal:export": "node scripts/export-legal.mjs",
-    "build:dev:android": "eas build --profile development --platform android",
-    "build:dev:ios": "eas build --profile development --platform ios",
-    "build:preview": "eas build --profile preview --platform all",
-    "build:production": "eas build --profile production --platform all",
-    "submit:ios": "eas submit --profile production --platform ios",
-    "submit:android": "eas submit --profile production --platform android",
+    "build:dev:android": "npx eas-cli@latest build --profile development --platform android",
+    "build:dev:ios": "npx eas-cli@latest build --profile development --platform ios",
+    "build:preview": "npx eas-cli@latest build --profile preview --platform all",
+    "build:production": "npx eas-cli@latest build --profile production --platform all",
+    "submit:ios": "npx eas-cli@latest submit --profile production --platform ios",
+    "submit:android": "npx eas-cli@latest submit --profile production --platform android",
     "auth:code": "node scripts/sign-in-code.mjs",
     "admin:add": "node scripts/make-admin.mjs",
-    "build:field": "eas build --profile field --platform ios"
+    "build:field": "npx eas-cli@latest build --profile field --platform ios"
   },
   "private": true
 }
