@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, StyleSheet, Text } from 'react-native';
+import { AccessibilityInfo, Animated, StyleSheet, Text, View } from 'react-native';
 
+import { SparkleBurst } from '@/components/SparkleBurst';
 import { Stamp } from '@/components/Stamp';
 import { copy } from '@/copy';
 import { colors, spacing, type } from '@/theme';
@@ -20,9 +21,12 @@ export function StampCelebration() {
 
   return (
     <Animated.View style={[styles.overlay, { opacity }]} accessibilityViewIsModal>
-      <Animated.View style={{ transform: [{ scale }, { rotate: '-8deg' }] }}>
-        <Stamp icon="star" inked size={140} />
-      </Animated.View>
+      <View>
+        <Animated.View style={{ transform: [{ scale }, { rotate: '-8deg' }] }}>
+          <Stamp icon="star" inked size={140} />
+        </Animated.View>
+        <SparkleBurst radius={150} delay={120} />
+      </View>
       <Text style={styles.label}>{copy.spot.stampedLabel}</Text>
     </Animated.View>
   );

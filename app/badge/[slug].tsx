@@ -7,6 +7,7 @@ import { captureRef } from 'react-native-view-shot';
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { Button } from '@/components/Button';
+import { SparkleBurst } from '@/components/SparkleBurst';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
@@ -76,6 +77,7 @@ export default function BadgeEarnedScreen() {
           accessibilityLabel={copy.badge.stampLabel(b.title)}>
           <BadgeStamp artKey={b.art_key} earned size={140} />
         </Animated.View>
+        {loaded ? <SparkleBurst radius={160} delay={250} /> : null}
         <Text style={styles.badgeTitle}>{b.title}</Text>
         <Text style={styles.title} accessibilityRole="header">
           {copy.badge.title}

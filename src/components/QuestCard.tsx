@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ProgressRing } from '@/components/ProgressRing';
+import { QuestCover } from '@/components/QuestCover';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { copy } from '@/copy';
 import type { QuestSummary } from '@/lib/queries';
@@ -33,34 +34,37 @@ export function QuestCard({ quest, found, badgeEarned, onPress }: Props) {
       accessibilityLabel={`${quest.title}. ${status}`}
       accessibilityHint={action}
       style={({ pressed }) => [styles.card, complete && styles.cardComplete, pressed && styles.pressed]}>
-      <View style={styles.titleRow}>
-        <Text style={styles.title}>{quest.title}</Text>
-        {complete ? (
-          <View style={styles.badge}>
-            <BadgeStamp artKey={quest.badge?.artKey} earned size={28} />
-            <Text style={styles.badgeText}>{copy.quests.badgeEarned}</Text>
+      <QuestCover slug={quest.slug} coverPhotoPath={quest.coverPhotoPath} height={96} />
+      <View style={styles.body}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{quest.title}</Text>
+          {complete ? (
+            <View style={styles.badge}>
+              <BadgeStamp artKey={quest.badge?.artKey} earned size={28} />
+              <Text style={styles.badgeText}>{copy.quests.badgeEarned}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <Text style={styles.meta}>{copy.quests.spotsAndTime(total, quest.estMinutes)}</Text>
+
+        {!complete ? (
+          <View style={styles.footer}>
+            {started ? (
+              <View style={styles.progress}>
+                <ProgressRing found={found} total={total} accessibilityLabel={status} />
+                <Text style={styles.progressText}>{copy.quests.foundOf(found, total)}</Text>
+              </View>
+            ) : (
+              <View />
+            )}
+            <View style={styles.action}>
+              <Text style={styles.actionText}>{action}</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.midnight} />
+            </View>
           </View>
         ) : null}
       </View>
-
-      <Text style={styles.meta}>{copy.quests.spotsAndTime(total, quest.estMinutes)}</Text>
-
-      {!complete ? (
-        <View style={styles.footer}>
-          {started ? (
-            <View style={styles.progress}>
-              <ProgressRing found={found} total={total} accessibilityLabel={status} />
-              <Text style={styles.progressText}>{copy.quests.foundOf(found, total)}</Text>
-            </View>
-          ) : (
-            <View />
-          )}
-          <View style={styles.action}>
-            <Text style={styles.actionText}>{action}</Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.midnight} />
-          </View>
-        </View>
-      ) : null}
     </Pressable>
   );
 }
@@ -71,9 +75,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
+    minHeight: minTouchTarget,
+  },
+  body: {
     padding: spacing.md,
     gap: spacing.xs,
-    minHeight: minTouchTarget,
   },
   cardComplete: {
     borderColor: colors.storybookGold,

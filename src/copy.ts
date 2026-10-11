@@ -5,6 +5,10 @@ export const copy = {
   appName: 'Once Upon a Quest',
   tagline: 'Find the stories hiding in plain sight.',
 
+  intro: {
+    skip: 'Tap to skip the intro.',
+  },
+
   disclaimer:
     'Once Upon a Quest is an independent fan app. It is not affiliated with, endorsed by, or sponsored by The Walt Disney Company or its affiliates. All park names are used only to describe locations.',
 
@@ -130,6 +134,8 @@ export const copy = {
 
   spot: {
     position: (order: number, total: number) => `${order} of ${total}`,
+    photoComingSoon: 'Hint photo coming soon',
+    photoLabel: (whereToStand: string) => `Hint photo. ${whereToStand}`,
     whereToStand: 'Where to stand',
     clue: 'Clue',
     holidayNote: 'Seasonal note',

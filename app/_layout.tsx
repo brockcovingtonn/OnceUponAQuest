@@ -3,11 +3,12 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { IntroAnimation } from '@/components/IntroAnimation';
 import { copy } from '@/copy';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { ParadeModeProvider } from '@/lib/paradeMode';
@@ -19,6 +20,9 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1 } },
 });
+
+// The storybook intro plays once per app launch.
+let introPlayed = false;
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
@@ -49,6 +53,11 @@ function RootNavigator() {
   const signedIn = Boolean(session);
   const ready = initialized && (!signedIn || !profile.isPending);
   const hasProfile = Boolean(profile.data);
+  const [showIntro, setShowIntro] = useState(!introPlayed);
+  const finishIntro = useCallback(() => {
+    introPlayed = true;
+    setShowIntro(false);
+  }, []);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
@@ -66,46 +75,53 @@ function RootNavigator() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.parchment },
-        headerTintColor: colors.midnight,
-        headerBackTitle: copy.common.back,
-        headerTitleStyle: { fontFamily: fonts.headingSemiBold },
-        contentStyle: { backgroundColor: colors.parchment },
-      }}>
-      <Stack.Protected guard={!signedIn}>
-        <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
-      </Stack.Protected>
+    <View style={styles.root}>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.parchment },
+          headerTintColor: colors.midnight,
+          headerBackTitle: copy.common.back,
+          headerTitleStyle: { fontFamily: fonts.headingSemiBold },
+          contentStyle: { backgroundColor: colors.parchment },
+        }}>
+        <Stack.Protected guard={!signedIn}>
+          <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
+        </Stack.Protected>
 
-      <Stack.Protected guard={signedIn && !hasProfile}>
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      </Stack.Protected>
+        <Stack.Protected guard={signedIn && !hasProfile}>
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        </Stack.Protected>
 
-      <Stack.Protected guard={signedIn && hasProfile}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="quest/[slug]" options={{ title: 'Quest' }} />
-        <Stack.Screen name="spot/[id]" options={{ title: 'Spot' }} />
-        <Stack.Screen
-          name="badge/[slug]"
-          options={{ presentation: 'modal', title: 'Badge earned' }}
-        />
-        <Stack.Screen
-          name="edit-profile"
-          options={{ presentation: 'modal', title: copy.editProfile.title }}
-        />
-        <Stack.Screen name="safety" options={{ title: copy.safety.title }} />
-        <Stack.Screen name="about" options={{ title: copy.about.title }} />
-      </Stack.Protected>
+        <Stack.Protected guard={signedIn && hasProfile}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="quest/[slug]" options={{ title: 'Quest' }} />
+          <Stack.Screen name="spot/[id]" options={{ title: 'Spot' }} />
+          <Stack.Screen
+            name="badge/[slug]"
+            options={{ presentation: 'modal', title: 'Badge earned' }}
+          />
+          <Stack.Screen
+            name="edit-profile"
+            options={{ presentation: 'modal', title: copy.editProfile.title }}
+          />
+          <Stack.Screen name="safety" options={{ title: copy.safety.title }} />
+          <Stack.Screen name="about" options={{ title: copy.about.title }} />
+        </Stack.Protected>
 
-      <Stack.Screen name="too-young" options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="terms" options={{ title: copy.legal.termsTitle }} />
-      <Stack.Screen name="privacy" options={{ title: copy.legal.privacyTitle }} />
-    </Stack>
+        <Stack.Screen name="too-young" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="terms" options={{ title: copy.legal.termsTitle }} />
+        <Stack.Screen name="privacy" options={{ title: copy.legal.privacyTitle }} />
+      </Stack>
+      {showIntro ? <IntroAnimation onDone={finishIntro} /> : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.midnight,
+  },
   error: {
     flex: 1,
     justifyContent: 'center',

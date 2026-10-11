@@ -9,7 +9,10 @@
 /** Semantic colors, resolved per variant at render time. */
 export type Tone = 'bg' | 'frame' | 'line' | 'soft' | 'accent' | 'none';
 
-type Paint = { fill?: Tone; stroke?: Tone; strokeWidth?: number; dash?: string };
+/** A semantic tone, or an exact color for fixed-color scenes. */
+export type Color = Tone | `#${string}`;
+
+type Paint = { fill?: Color; stroke?: Color; strokeWidth?: number; dash?: string; opacity?: number };
 
 export type Shape =
   | ({ kind: 'circle'; cx: number; cy: number; r: number } & Paint)

@@ -62,14 +62,14 @@ export function useCreateProfile() {
 // ---------------------------------------------------------------------------
 
 const questListSelect = `
-  id, slug, title, story, est_minutes, sort_order, is_premium, season,
+  id, slug, title, story, est_minutes, sort_order, is_premium, season, cover_photo_path,
   land:lands ( id, name, sort_order ),
   badge:badges ( id, slug, title, art_key ),
   spots ( count )
 ` as const;
 
 const questDetailSelect = `
-  id, slug, title, story, est_minutes,
+  id, slug, title, story, est_minutes, cover_photo_path,
   badge:badges ( id, slug, title, description, art_key ),
   spots ( id, sort_order, teaser, title, method, pause_during_parades, holiday_note )
 ` as const;
@@ -82,6 +82,7 @@ export type QuestSummary = {
   estMinutes: number;
   isPremium: boolean;
   season: string | null;
+  coverPhotoPath: string | null;
   land: { id: string; name: string; sortOrder: number };
   badge: { id: string; slug: string; title: string; artKey: string } | null;
   spotCount: number;
@@ -124,6 +125,7 @@ export function useQuests() {
           estMinutes: q.est_minutes,
           isPremium: q.is_premium,
           season: q.season,
+          coverPhotoPath: q.cover_photo_path,
           land: { id: q.land.id, name: q.land.name, sortOrder: q.land.sort_order },
           badge: q.badge
             ? { id: q.badge.id, slug: q.badge.slug, title: q.badge.title, artKey: q.badge.art_key }
@@ -198,7 +200,7 @@ export function useMyProgress(userId: string | undefined) {
 // source_url is internal research only and is never selected by the app.
 const spotDetailSelect = `
   id, quest_id, sort_order, teaser, title, where_to_stand, clue, hint, prompt, method,
-  lat, lng, radius_m, pause_during_parades, holiday_note,
+  lat, lng, radius_m, pause_during_parades, holiday_note, photo_path,
   quest:quests ( slug, title, spots ( count ) )
 ` as const;
 

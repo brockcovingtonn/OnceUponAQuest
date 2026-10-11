@@ -8,6 +8,7 @@ import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { CheckInCard, type CheckInSubmission } from '@/components/CheckInCard';
 import { ReportProblemSheet } from '@/components/ReportProblemSheet';
+import { SpotPhoto } from '@/components/SpotPhoto';
 import { Stamp } from '@/components/Stamp';
 import { StampCelebration } from '@/components/StampCelebration';
 import { StateView } from '@/components/StateView';
@@ -198,6 +199,11 @@ export default function SpotScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <SpotPhoto
+            photoPath={s.photo_path}
+            questSlug={s.quest.slug}
+            accessibilityLabel={copy.spot.photoLabel(s.where_to_stand)}
+          />
           <Text style={styles.title} accessibilityRole="header">
             {foundAt ? s.title : s.teaser}
           </Text>

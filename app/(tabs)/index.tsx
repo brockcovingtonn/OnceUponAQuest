@@ -4,12 +4,15 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ParadeModeToggle } from '@/components/ParadeModeToggle';
+import { Scene } from '@/components/Scene';
+import { Twinkle } from '@/components/Twinkle';
 import { QuestCard } from '@/components/QuestCard';
 import { StateView } from '@/components/StateView';
+import { mainStreetNight } from '@/art/scenes';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { type QuestSummary, useMyProgress, useProfile, useQuests } from '@/lib/queries';
-import { colors, spacing, type } from '@/theme';
+import { colors, radius, spacing, type } from '@/theme';
 
 type LandSection = { id: string; name: string; sortOrder: number; quests: QuestSummary[] };
 
@@ -48,11 +51,16 @@ export default function QuestsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
-        {profile.data ? (
-          <Text style={styles.greeting} accessibilityRole="header">
-            {copy.quests.greeting(new Date().getHours(), profile.data.username)}
-          </Text>
-        ) : null}
+        <View style={styles.header}>
+          <Scene shapes={mainStreetNight} height={150} />
+          <Twinkle size={12} style={{ top: 58, right: '16%' }} />
+          <Twinkle size={9} delay={700} style={{ top: 74, left: '46%' }} color={colors.parchment} />
+          {profile.data ? (
+            <Text style={styles.greeting} accessibilityRole="header">
+              {copy.quests.greeting(new Date().getHours(), profile.data.display_name ?? profile.data.username)}
+            </Text>
+          ) : null}
+        </View>
 
         <ParadeModeToggle />
 
@@ -98,9 +106,17 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.lg,
   },
+  header: {
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
   greeting: {
     ...type.title,
-    color: colors.midnight,
+    color: colors.parchment,
+    position: 'absolute',
+    top: spacing.md,
+    left: spacing.md,
+    right: spacing.md,
   },
   section: {
     gap: spacing.md,

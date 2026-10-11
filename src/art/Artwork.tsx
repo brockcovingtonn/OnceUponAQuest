@@ -1,21 +1,38 @@
 import Svg, { Circle, Line, Path, Polygon, Rect } from 'react-native-svg';
 
-import { type Palette, type Shape, stampFrame, type Tone } from '@/art/shapes';
+import { type Color, type Palette, type Shape, stampFrame } from '@/art/shapes';
 
 type Props = {
   shapes: Shape[];
   palette: Palette;
   size: number;
+  /** Canvas size; stamps use 100 × 100. Height follows the aspect ratio unless given. */
+  canvas?: { width: number; height: number };
+  /** Fixed height; with `crop` the drawing fills the box and is trimmed (like cover). */
+  height?: number;
+  crop?: boolean;
   /** Draw the round passport-stamp frame behind the glyph. */
   frame?: 'solid' | 'dashed';
 };
 
 /** Draws artwork shapes (100 × 100 canvas) at the given size. Decorative: label the parent. */
-export function Artwork({ shapes, palette, size, frame }: Props) {
-  const color = (tone: Tone | undefined) => (!tone || tone === 'none' ? 'none' : palette[tone]);
+export function Artwork({
+  shapes,
+  palette,
+  size,
+  frame,
+  canvas = { width: 100, height: 100 },
+  height,
+  crop = false,
+}: Props) {
+  const color = (c: Color | undefined) => (!c || c === 'none' ? 'none' : c.startsWith('#') ? c : palette[c as Exclude<typeof c, `#${string}`>]);
   const all = frame ? [...stampFrame(frame === 'dashed'), ...shapes] : shapes;
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <Svg
+      width={size}
+      height={height ?? (size * canvas.height) / canvas.width}
+      viewBox={`0 0 ${canvas.width} ${canvas.height}`}
+      preserveAspectRatio={crop ? 'xMidYMid slice' : 'xMidYMid meet'} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       {all.map((s, i) => {
         const paint = {
           fill: color(s.fill),
@@ -24,6 +41,7 @@ export function Artwork({ shapes, palette, size, frame }: Props) {
           strokeLinecap: 'round' as const,
           strokeLinejoin: 'round' as const,
           strokeDasharray: s.dash,
+          opacity: s.opacity,
         };
         switch (s.kind) {
           case 'circle':

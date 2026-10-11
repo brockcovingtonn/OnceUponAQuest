@@ -4,13 +4,14 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { ProgressRing } from '@/components/ProgressRing';
+import { QuestCover } from '@/components/QuestCover';
 import { type SpotState, SpotRow } from '@/components/SpotRow';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useParadeMode } from '@/lib/paradeMode';
 import { useMyProgress, useQuest } from '@/lib/queries';
-import { colors, spacing, type } from '@/theme';
+import { colors, radius, spacing, type } from '@/theme';
 
 export default function QuestDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -34,7 +35,7 @@ export default function QuestDetailScreen() {
   }
   if (!quest.data) return <StateView kind="empty" message={copy.questDetail.notFound} />;
 
-  const { title, story, est_minutes: estMinutes, spots, badge } = quest.data;
+  const { title, story, est_minutes: estMinutes, spots, badge, cover_photo_path: coverPhotoPath } = quest.data;
   const { foundSpots, badgeIds } = progress.data;
 
   const rows = spots.map((spot) => {
@@ -54,6 +55,7 @@ export default function QuestDetailScreen() {
     <>
       <Stack.Screen options={{ title: '' }} />
       <ScrollView contentContainerStyle={styles.content}>
+        <QuestCover slug={slug} coverPhotoPath={coverPhotoPath} height={180} style={styles.cover} />
         <Text style={styles.title} accessibilityRole="header">
           {title}
         </Text>
@@ -109,6 +111,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     backgroundColor: colors.parchment,
+  },
+  cover: {
+    borderRadius: radius.lg,
   },
   title: {
     ...type.title,

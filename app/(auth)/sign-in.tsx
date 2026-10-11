@@ -15,8 +15,11 @@ import { Button } from '@/components/Button';
 import { CodeInput } from '@/components/CodeInput';
 import { Input } from '@/components/Input';
 import { Logo } from '@/components/Logo';
+import { Scene } from '@/components/Scene';
+import { Twinkle } from '@/components/Twinkle';
 import { copy } from '@/copy';
 import { supabase } from '@/lib/supabase';
+import { mainStreetNight } from '@/art/scenes';
 import { colors, spacing, type } from '@/theme';
 
 const CODE_LENGTH = 6;
@@ -114,6 +117,12 @@ export default function SignInScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.banner}>
+            <Scene shapes={mainStreetNight} height={190} />
+            <Twinkle size={14} style={{ top: 22, left: '18%' }} />
+            <Twinkle size={10} delay={500} style={{ top: 50, right: '22%' }} />
+            <Twinkle size={12} delay={1000} style={{ top: 16, right: '40%' }} />
+          </View>
           <View style={styles.hero}>
             <Logo accessibilityLabel={copy.signIn.logoLabel} />
             <Text style={styles.title} accessibilityRole="header">
@@ -199,10 +208,14 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.lg,
   },
+  banner: {
+    marginTop: -spacing.lg,
+    marginHorizontal: -spacing.lg,
+  },
   hero: {
     alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.xl,
+    marginTop: -64,
     marginBottom: spacing.md,
   },
   title: {
