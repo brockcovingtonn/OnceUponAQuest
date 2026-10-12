@@ -117,6 +117,7 @@ export const copy = {
       `${spots} spots, about ${minutes} minutes. Not started.`,
     statusInProgress: (found: number, total: number) => `${found} of ${total} spots found.`,
     statusComplete: 'Complete. Badge earned.',
+    chapter: (n: number) => `CHAPTER ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n - 1] ?? n}`,
   },
 
   questDetail: {

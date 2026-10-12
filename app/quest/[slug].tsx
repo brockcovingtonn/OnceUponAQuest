@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
+import { Flourish } from '@/components/Flourish';
 import { QuestFieldTools } from '@/components/FieldTools';
 import { ProgressRing } from '@/components/ProgressRing';
 import { QuestCover } from '@/components/QuestCover';
@@ -62,6 +63,7 @@ export default function QuestDetailScreen() {
         <Text style={styles.title} accessibilityRole="header">
           {title}
         </Text>
+        <Flourish width={160} />
         {story ? <Text style={styles.story}>{story}</Text> : null}
 
         <View style={styles.progressRow}>

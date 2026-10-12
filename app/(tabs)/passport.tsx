@@ -5,6 +5,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BadgeStamp } from '@/components/BadgeStamp';
+import { Flourish } from '@/components/Flourish';
 import { Stamp } from '@/components/Stamp';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
@@ -50,6 +51,7 @@ export default function PassportScreen() {
           <Text style={styles.title} accessibilityRole="header">
             {copy.passport.title}
           </Text>
+          <Flourish width={160} style={styles.flourish} />
           <Text style={styles.summary}>
             {copy.passport.summary(foundSpots.size, earnedCount, snacks.length)}
           </Text>
@@ -160,6 +162,9 @@ const styles = StyleSheet.create({
   title: {
     ...type.title,
     color: colors.midnight,
+  },
+  flourish: {
+    marginVertical: spacing.xs,
   },
   summary: {
     ...type.body,

@@ -6,16 +6,18 @@ import { QuestCover } from '@/components/QuestCover';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { copy } from '@/copy';
 import type { QuestSummary } from '@/lib/queries';
-import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
+import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
 type Props = {
   quest: QuestSummary;
+  /** 1-based position among all quests, shown as "Chapter I". */
+  chapter: number;
   found: number;
   badgeEarned: boolean;
   onPress: () => void;
 };
 
-export function QuestCard({ quest, found, badgeEarned, onPress }: Props) {
+export function QuestCard({ quest, chapter, found, badgeEarned, onPress }: Props) {
   const total = quest.spotCount;
   const complete = badgeEarned || (total > 0 && found >= total);
   const started = found > 0;
@@ -31,11 +33,12 @@ export function QuestCard({ quest, found, badgeEarned, onPress }: Props) {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${quest.title}. ${status}`}
+      accessibilityLabel={`${copy.quests.chapter(chapter)}: ${quest.title}. ${status}`}
       accessibilityHint={action}
       style={({ pressed }) => [styles.card, complete && styles.cardComplete, pressed && styles.pressed]}>
       <QuestCover slug={quest.slug} coverPhotoPath={quest.coverPhotoPath} height={96} />
       <View style={styles.body}>
+        <Text style={styles.chapter}>{copy.quests.chapter(chapter)}</Text>
         <View style={styles.titleRow}>
           <Text style={styles.title}>{quest.title}</Text>
           {complete ? (
@@ -81,6 +84,12 @@ const styles = StyleSheet.create({
   body: {
     padding: spacing.md,
     gap: spacing.xs,
+  },
+  chapter: {
+    ...type.caption,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.inkMuted,
+    letterSpacing: 1.5,
   },
   cardComplete: {
     borderColor: colors.storybookGold,

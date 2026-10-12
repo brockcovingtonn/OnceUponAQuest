@@ -19,7 +19,9 @@ export type Shape =
   | ({ kind: 'rect'; x: number; y: number; w: number; h: number; rx?: number } & Paint)
   | ({ kind: 'path'; d: string } & Paint)
   | ({ kind: 'polygon'; points: string } & Paint)
-  | ({ kind: 'line'; x1: number; y1: number; x2: number; y2: number } & Paint);
+  | ({ kind: 'line'; x1: number; y1: number; x2: number; y2: number } & Paint)
+  /** Rectangle filled with a top-to-bottom gradient (e.g. a night sky). */
+  | { kind: 'gradient'; x: number; y: number; w: number; h: number; from: `#${string}`; to: `#${string}` };
 
 export type Palette = Record<Exclude<Tone, 'none'>, string>;
 

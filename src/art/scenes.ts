@@ -1,34 +1,55 @@
 /**
- * Original storybook scenes (400 × 240 canvas): a Victorian main street at
- * night, plus one vignette per quest used as quest covers and placeholder
- * hint photos until the founder's own photos arrive.
+ * Original storybook scenes (400 × 240 canvas): a turn-of-the-century small-town
+ * main street at night — pastel Victorian shopfronts with white trim, roofline
+ * lights, bunting, scalloped awnings, gas lamps and streetcar rails — plus one
+ * vignette per quest (quest covers + placeholder hint photos).
  *
- * Hard rule: no castles, characters or three-circle shapes — the street ends
- * in open sky on purpose.
+ * Hard rule: no castles, characters, three-circle shapes, or copies of any
+ * specific real building or sign. The street ends in open sky on purpose.
  */
 import type { Shape } from '@/art/shapes';
 
 export const SCENE = { width: 400, height: 240 } as const;
 
+type Hex = `#${string}`;
+
 const C = {
-  sky: '#1B2340',
-  skyLow: '#26305A',
+  skyTop: '#121833',
+  skyLow: '#2C3768',
+  moon: '#F7E4A8',
   gold: '#E2B04A',
-  goldSoft: '#F3D58A',
+  glow: '#F6D58E',
+  bulb: '#FFF4CF',
   parchment: '#FAF5EA',
-  rose: '#D9677A',
-  fern: '#4F9D7A',
-  dark: '#141A31',
-  windowDark: '#2E3966',
-  bricks: ['#3A4677', '#4A3F6B', '#35506E', '#5A4566', '#3F5A73'],
-  trim: '#7E8BC0',
-  sidewalk: '#2A3358',
-  curb: '#3B4778',
+  trim: '#F4EEDF',
+  red: '#C8475A',
+  blue: '#3F5FA8',
+  green: '#4F9D7A',
+  dark: '#1A1F38',
+  windowDark: '#2D3866',
+  roof: '#3A3352',
+  street: '#4A3439',
+  sidewalk: '#6B5A63',
+  rail: '#8C7A80',
 } as const;
 
-const GROUND = 200;
+/** Pastel facades, toned for night. */
+const FACADE = {
+  salmon: '#D28C76',
+  butter: '#D9B86A',
+  mint: '#7FAE9B',
+  lavender: '#A58FBF',
+  sky: '#7F9BCB',
+  rose: '#C9849A',
+} as const;
 
-function sparkle(cx: number, cy: number, r: number, fill: `#${string}`, opacity = 1): Shape {
+const GROUND = 196;
+
+// ---------------------------------------------------------------------------
+// Sky
+// ---------------------------------------------------------------------------
+
+function sparkle(cx: number, cy: number, r: number, fill: Hex, opacity = 1): Shape {
   const s = r * 0.28;
   return {
     kind: 'polygon',
@@ -38,210 +59,310 @@ function sparkle(cx: number, cy: number, r: number, fill: `#${string}`, opacity 
   };
 }
 
-function sky(): Shape[] {
+/** A generic firework burst: rays with bright tips. */
+function firework(cx: number, cy: number, r: number, color: Hex): Shape[] {
+  const shapes: Shape[] = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2;
+    const x2 = cx + Math.cos(a) * r;
+    const y2 = cy + Math.sin(a) * r;
+    shapes.push({
+      kind: 'line',
+      x1: cx + Math.cos(a) * r * 0.35,
+      y1: cy + Math.sin(a) * r * 0.35,
+      x2,
+      y2,
+      stroke: color,
+      strokeWidth: 1.4,
+      opacity: 0.85,
+    });
+    shapes.push({ kind: 'circle', cx: x2, cy: y2, r: 1.3, fill: C.bulb, opacity: 0.9 });
+  }
+  return shapes;
+}
+
+function sky(withFireworks: boolean): Shape[] {
   const dots: [number, number][] = [
-    [22, 30], [64, 18], [108, 44], [150, 14], [196, 36], [238, 20], [282, 46], [362, 24], [386, 60], [40, 70], [128, 76],
+    [22, 26], [64, 14], [108, 40], [150, 12], [196, 30], [238, 18], [282, 42], [366, 22], [388, 58], [40, 66], [130, 70], [256, 64],
   ];
   return [
-    { kind: 'rect', x: 0, y: 0, w: 400, h: 240, fill: C.sky },
-    { kind: 'rect', x: 0, y: 110, w: 400, h: 130, fill: C.skyLow, opacity: 0.6 },
-    ...dots.map(([x, y]): Shape => ({ kind: 'circle', cx: x, cy: y, r: 1.4, fill: C.parchment, opacity: 0.8 })),
-    sparkle(86, 30, 6, C.goldSoft),
-    sparkle(214, 58, 4, C.parchment, 0.9),
-    sparkle(312, 30, 5, C.goldSoft),
-    sparkle(172, 34, 3, C.parchment, 0.8),
+    { kind: 'gradient', x: 0, y: 0, w: 400, h: 240, from: C.skyTop, to: C.skyLow },
+    ...dots.map(([x, y]): Shape => ({ kind: 'circle', cx: x, cy: y, r: 1.3, fill: C.parchment, opacity: 0.75 })),
+    sparkle(86, 26, 5, C.glow),
+    sparkle(214, 50, 3.5, C.parchment, 0.9),
+    sparkle(318, 24, 4.5, C.glow),
+    ...(withFireworks ? [...firework(158, 40, 19, C.gold), ...firework(292, 36, 13, '#E58FA0')] : []),
   ];
 }
 
 function moon(cx: number, cy: number, r: number): Shape[] {
   return [
-    { kind: 'circle', cx, cy, r: r + 8, fill: C.goldSoft, opacity: 0.12 },
-    { kind: 'circle', cx, cy, r, fill: C.goldSoft },
-    { kind: 'circle', cx: cx + r * 0.45, cy: cy - r * 0.2, r: r * 0.85, fill: C.sky },
+    { kind: 'circle', cx, cy, r: r + 10, fill: C.moon, opacity: 0.1 },
+    { kind: 'circle', cx, cy, r, fill: C.moon },
+    { kind: 'circle', cx: cx + r * 0.45, cy: cy - r * 0.2, r: r * 0.85, fill: C.skyTop },
   ];
 }
 
-type Roof = 'flat' | 'gable' | 'mansard';
+// ---------------------------------------------------------------------------
+// Buildings
+// ---------------------------------------------------------------------------
 
-/** A Victorian shopfront: body, roof, cornice, lit upper windows, shop window and door. */
-function building(x: number, w: number, h: number, color: string, roof: Roof, lit: boolean[]): Shape[] {
-  const top = GROUND - h;
-  const shapes: Shape[] = [{ kind: 'rect', x, y: top, w, h, fill: color as `#${string}` }];
-  if (roof === 'gable') {
-    const peak = Math.min(w * 0.38, 30);
-    shapes.push({ kind: 'polygon', points: `${x - 3},${top} ${x + w / 2},${top - peak} ${x + w + 3},${top}`, fill: color as `#${string}` });
-    shapes.push({ kind: 'circle', cx: x + w / 2, cy: top - peak * 0.38, r: Math.min(w * 0.07, 5), fill: C.gold, opacity: 0.9 });
-  } else if (roof === 'mansard') {
-    shapes.push({ kind: 'polygon', points: `${x},${top} ${x + 6},${top - 16} ${x + w - 6},${top - 16} ${x + w},${top}`, fill: C.dark });
-    shapes.push({ kind: 'rect', x: x + w / 2 - 5, y: top - 13, w: 10, h: 10, fill: lit[0] ? C.gold : C.windowDark });
-  }
-  // Cornice
-  shapes.push({ kind: 'rect', x: x - 3, y: top - 3, w: w + 6, h: 6, fill: C.trim });
-  // Upper windows: two rows of arched-top windows
-  const cols = Math.max(2, Math.floor(w / 22));
-  const gap = w / cols;
-  let i = 0;
-  for (let row = 0; row < 2; row++) {
-    const wy = top + 12 + row * 28;
-    if (wy + 20 > GROUND - 50) break;
-    for (let col = 0; col < cols; col++) {
-      const wx = x + col * gap + gap / 2 - 6;
-      const on = lit[i++ % lit.length];
-      shapes.push({ kind: 'rect', x: wx, y: wy, w: 12, h: 18, rx: 6, fill: on ? C.gold : C.windowDark });
-    }
-  }
-  // Shop window and door at street level
-  shapes.push({ kind: 'rect', x: x + 6, y: GROUND - 34, w: w * 0.55, h: 24, fill: C.goldSoft, opacity: 0.85 });
-  shapes.push({ kind: 'rect', x: x + w * 0.68, y: GROUND - 34, w: w * 0.22, h: 34, rx: 2, fill: C.dark });
-  return shapes;
+type Top = 'pediment' | 'arch' | 'mansard' | 'balustrade';
+
+type Facade = {
+  x: number;
+  w: number;
+  h: number;
+  color: Hex;
+  top: Top;
+  awning: Hex;
+  /** Which upper windows glow (cycled). */
+  lit?: boolean[];
+  bunting?: boolean;
+  /** Space per upper window; wide facades read better with more (default 16). */
+  windowSpacing?: number;
+};
+
+/** Small warm bulbs along a line — the roofline lights of a main street at night. */
+function bulbs(x1: number, y1: number, x2: number, y2: number, spacing = 6): Shape[] {
+  const n = Math.max(1, Math.round(Math.hypot(x2 - x1, y2 - y1) / spacing));
+  return Array.from({ length: n + 1 }, (_, i): Shape => ({
+    kind: 'circle',
+    cx: x1 + ((x2 - x1) * i) / n,
+    cy: y1 + ((y2 - y1) * i) / n,
+    r: 1.15,
+    fill: C.bulb,
+  }));
 }
 
-/** Striped awning across a shopfront. */
-function awning(x: number, w: number, y: number, stripe: string): Shape[] {
-  const stripes = Math.max(4, Math.round(w / 9));
+/** Striped awning with a scalloped edge. */
+function awning(x: number, w: number, y: number, stripe: Hex): Shape[] {
+  const stripes = Math.max(4, Math.round(w / 8));
   const sw = w / stripes;
   const shapes: Shape[] = [];
   for (let s = 0; s < stripes; s++) {
+    const sx = x + s * sw;
     shapes.push({
-      kind: 'polygon',
-      points: `${x + s * sw},${y} ${x + (s + 1) * sw},${y} ${x + (s + 1) * sw + 2},${y + 12} ${x + s * sw + 2},${y + 12}`,
-      fill: (s % 2 === 0 ? stripe : C.parchment) as `#${string}`,
+      kind: 'path',
+      d: `M${sx} ${y} L${sx + sw} ${y} L${sx + sw + 1.5} ${y + 9} Q${sx + sw / 2 + 0.75} ${y + 14} ${sx + 1.5} ${y + 9} Z`,
+      fill: s % 2 === 0 ? stripe : C.parchment,
     });
   }
   return shapes;
 }
 
-/** Gas lamp with a soft glow. */
+/** Red-white-blue bunting swags hung across a facade. */
+function bunting(x: number, w: number, y: number): Shape[] {
+  const swags = Math.max(1, Math.round(w / 34));
+  const sw = w / swags;
+  const shapes: Shape[] = [];
+  for (let i = 0; i < swags; i++) {
+    const x0 = x + i * sw;
+    const x1 = x0 + sw;
+    const xm = (x0 + x1) / 2;
+    [C.red, C.parchment, C.blue].forEach((stroke, band) => {
+      shapes.push({
+        kind: 'path',
+        d: `M${x0} ${y + band * 2} Q${xm} ${y + 9 + band * 2} ${x1} ${y + band * 2}`,
+        fill: 'none',
+        stroke,
+        strokeWidth: 2,
+      });
+    });
+    shapes.push({ kind: 'circle', cx: x0, cy: y, r: 1.8, fill: C.gold });
+  }
+  shapes.push({ kind: 'circle', cx: x + w, cy: y, r: 1.8, fill: C.gold });
+  return shapes;
+}
+
+/** A Victorian shopfront: ornate crown, cornice with brackets, framed windows, storefront, awning, lights. */
+function facade(f: Facade): Shape[] {
+  const { x, w, h, color, top: kind } = f;
+  const lit = f.lit ?? [true, false, true];
+  const top = GROUND - h;
+  const shapes: Shape[] = [];
+
+  // Crown above the cornice
+  if (kind === 'pediment') {
+    const peak = Math.min(18, w * 0.26);
+    shapes.push({ kind: 'polygon', points: `${x + 4},${top} ${x + w / 2},${top - peak} ${x + w - 4},${top}`, fill: color, stroke: C.trim, strokeWidth: 2 });
+    shapes.push(sparkle(x + w / 2, top - peak * 0.42, 3, C.gold));
+    shapes.push(...bulbs(x + 4, top - 2, x + w / 2, top - peak - 2), ...bulbs(x + w / 2, top - peak - 2, x + w - 4, top - 2));
+  } else if (kind === 'arch') {
+    const aw = w * 0.56;
+    shapes.push({ kind: 'path', d: `M${x + w / 2 - aw / 2} ${top} Q${x + w / 2} ${top - 28} ${x + w / 2 + aw / 2} ${top} Z`, fill: color, stroke: C.trim, strokeWidth: 2 });
+    shapes.push({ kind: 'rect', x: x + w / 2 - 4, y: top - 10, w: 8, h: 7, rx: 3.5, fill: C.glow });
+  } else if (kind === 'mansard') {
+    shapes.push({ kind: 'polygon', points: `${x + 2},${top} ${x + 9},${top - 17} ${x + w - 9},${top - 17} ${x + w - 2},${top}`, fill: C.roof });
+    shapes.push({ kind: 'rect', x: x + w / 2 - 5, y: top - 14, w: 10, h: 11, rx: 5, fill: C.glow });
+    shapes.push({ kind: 'line', x1: x + w / 2, y1: top - 17, x2: x + w / 2, y2: top - 24, stroke: C.trim, strokeWidth: 1.5 });
+    shapes.push(...bulbs(x + 9, top - 18, x + w - 9, top - 18));
+  } else {
+    for (let px = x + 3; px <= x + w - 3; px += 5) {
+      shapes.push({ kind: 'rect', x: px - 0.8, y: top - 9, w: 1.6, h: 6, fill: C.trim });
+    }
+    shapes.push({ kind: 'rect', x, y: top - 11, w, h: 2.5, fill: C.trim });
+  }
+
+  // Body, cornice with brackets, corner pilasters
+  shapes.push({ kind: 'rect', x, y: top, w, h, fill: color });
+  shapes.push({ kind: 'rect', x: x - 3, y: top - 4, w: w + 6, h: 5, fill: C.trim });
+  for (let bx = x + 3; bx < x + w - 3; bx += 7) {
+    shapes.push({ kind: 'rect', x: bx, y: top + 1, w: 2.2, h: 4, fill: C.trim });
+  }
+  shapes.push({ kind: 'rect', x, y: top, w: 3, h, fill: C.trim, opacity: 0.85 });
+  shapes.push({ kind: 'rect', x: x + w - 3, y: top, w: 3, h, fill: C.trim, opacity: 0.85 });
+
+  // Upper windows: white-framed arches with sills, row by row
+  const cols = Math.max(2, Math.floor((w - 8) / (f.windowSpacing ?? 16)));
+  const gap = (w - 8) / cols;
+  let i = 0;
+  for (let wy = top + 13; wy + 22 <= GROUND - 62; wy += 30) {
+    for (let col = 0; col < cols; col++) {
+      const wx = x + 4 + col * gap + gap / 2 - 5;
+      shapes.push({ kind: 'rect', x: wx - 1.6, y: wy - 1.6, w: 13.2, h: 23, rx: 6.6, fill: C.trim });
+      shapes.push({ kind: 'rect', x: wx, y: wy, w: 10, h: 20, rx: 5, fill: lit[i++ % lit.length] ? C.glow : C.windowDark });
+      shapes.push({ kind: 'rect', x: wx - 2.5, y: wy + 21, w: 15, h: 2, fill: C.trim });
+    }
+  }
+  if (f.bunting) shapes.push(...bunting(x + 4, w - 8, GROUND - 68));
+
+  // Storefront: sign band, display window with mullions, door with transom
+  shapes.push({ kind: 'rect', x: x + 4, y: GROUND - 58, w: w - 8, h: 9, fill: C.dark });
+  shapes.push({ kind: 'rect', x: x + w / 2 - w * 0.2, y: GROUND - 54.5, w: w * 0.4, h: 2, rx: 1, fill: C.gold });
+  const shopW = (w - 12) * 0.64;
+  shapes.push({ kind: 'rect', x: x + 5, y: GROUND - 34, w: shopW, h: 30, fill: C.glow, opacity: 0.92 });
+  shapes.push({ kind: 'line', x1: x + 5 + shopW / 3, y1: GROUND - 34, x2: x + 5 + shopW / 3, y2: GROUND - 4, stroke: C.trim, strokeWidth: 1.5 });
+  shapes.push({ kind: 'line', x1: x + 5 + (2 * shopW) / 3, y1: GROUND - 34, x2: x + 5 + (2 * shopW) / 3, y2: GROUND - 4, stroke: C.trim, strokeWidth: 1.5 });
+  shapes.push({ kind: 'rect', x: x + 3, y: GROUND - 4, w: w - 6, h: 4, fill: C.trim });
+  const doorX = x + 8 + shopW;
+  const doorW = w - 13 - shopW;
+  shapes.push({ kind: 'rect', x: doorX, y: GROUND - 36, w: doorW, h: 5, fill: C.glow, opacity: 0.8 });
+  shapes.push({ kind: 'rect', x: doorX, y: GROUND - 30, w: doorW, h: 30, rx: 1.5, fill: C.dark });
+  shapes.push(...awning(x + 3, w - 6, GROUND - 47, f.awning));
+
+  // Roofline and corner lights
+  shapes.push(...bulbs(x - 3, top - 5, x + w + 3, top - 5));
+  shapes.push(...bulbs(x + 1.5, top + 6, x + 1.5, GROUND - 60, 7));
+  shapes.push(...bulbs(x + w - 1.5, top + 6, x + w - 1.5, GROUND - 60, 7));
+  return shapes;
+}
+
+/** Ornate gas lamp with a warm glow, standing on the sidewalk. */
 function lamp(x: number): Shape[] {
+  const g = GROUND + 10;
   return [
-    { kind: 'circle', cx: x, cy: GROUND - 58, r: 11, fill: C.gold, opacity: 0.22 },
-    { kind: 'rect', x: x - 1.5, y: GROUND - 52, w: 3, h: 52, fill: C.dark },
-    { kind: 'rect', x: x - 5, y: GROUND - 4, w: 10, h: 4, fill: C.dark },
-    { kind: 'polygon', points: `${x - 6},${GROUND - 64} ${x + 6},${GROUND - 64} ${x + 4},${GROUND - 52} ${x - 4},${GROUND - 52}`, fill: C.gold },
-    { kind: 'polygon', points: `${x - 7},${GROUND - 64} ${x + 7},${GROUND - 64} ${x},${GROUND - 71}`, fill: C.dark },
+    { kind: 'circle', cx: x, cy: g - 62, r: 10, fill: C.glow, opacity: 0.4 },
+    { kind: 'rect', x: x - 6, y: g - 4, w: 12, h: 4, rx: 1, fill: C.dark },
+    { kind: 'polygon', points: `${x - 4},${g - 4} ${x + 4},${g - 4} ${x + 2},${g - 14} ${x - 2},${g - 14}`, fill: C.dark },
+    { kind: 'rect', x: x - 1.4, y: g - 52, w: 2.8, h: 40, fill: C.dark },
+    { kind: 'rect', x: x - 3.5, y: g - 54, w: 7, h: 3, rx: 1, fill: C.dark },
+    { kind: 'polygon', points: `${x - 6},${g - 70} ${x + 6},${g - 70} ${x + 4},${g - 55} ${x - 4},${g - 55}`, fill: C.glow },
+    { kind: 'line', x1: x, y1: g - 70, x2: x, y2: g - 55, stroke: C.dark, strokeWidth: 1 },
+    { kind: 'polygon', points: `${x - 7.5},${g - 70} ${x + 7.5},${g - 70} ${x},${g - 77}`, fill: C.dark },
+    { kind: 'circle', cx: x, cy: g - 79, r: 1.6, fill: C.dark },
   ];
 }
 
+/** Sidewalk, brick-red street and streetcar rails. */
 function street(): Shape[] {
   return [
-    { kind: 'rect', x: 0, y: GROUND, w: 400, h: 40, fill: C.sidewalk },
-    { kind: 'rect', x: 0, y: GROUND, w: 400, h: 3, fill: C.curb },
-    ...[30, 110, 190, 270, 350].map((x): Shape => ({ kind: 'rect', x, y: GROUND + 20, w: 40, h: 2, rx: 1, fill: C.curb })),
+    { kind: 'rect', x: 0, y: GROUND, w: 400, h: 12, fill: C.sidewalk },
+    { kind: 'rect', x: 0, y: GROUND + 12, w: 400, h: 2, fill: C.trim, opacity: 0.5 },
+    { kind: 'rect', x: 0, y: GROUND + 14, w: 400, h: 30, fill: C.street },
+    ...Array.from({ length: 20 }, (_, i): Shape => ({ kind: 'rect', x: i * 20 + 4, y: GROUND + 22, w: 3, h: 13, fill: C.rail, opacity: 0.45 })),
+    { kind: 'rect', x: 0, y: GROUND + 24, w: 400, h: 1.5, fill: C.rail },
+    { kind: 'rect', x: 0, y: GROUND + 32, w: 400, h: 1.5, fill: C.rail },
   ];
 }
 
-/** The full street at night: used behind sign-in, the intro and the Quests header. */
+// ---------------------------------------------------------------------------
+// The main street at night (sign-in, intro, Quests header)
+// ---------------------------------------------------------------------------
+
 export const mainStreetNight: Shape[] = [
-  ...sky(),
-  ...moon(346, 44, 16),
-  ...building(-4, 62, 118, C.bricks[0], 'gable', [true, false, true, true]),
-  ...building(62, 72, 138, C.bricks[1], 'mansard', [true, true, false, true, true, false]),
-  ...building(138, 56, 104, C.bricks[2], 'flat', [false, true, true, false]),
-  ...building(198, 80, 146, C.bricks[3], 'gable', [true, false, true, true, false, true]),
-  ...building(282, 60, 112, C.bricks[4], 'mansard', [true, true, false, true]),
-  ...building(346, 58, 126, C.bricks[0], 'flat', [false, true, true, true]),
-  ...awning(66, 64, GROUND - 46, C.rose),
-  ...awning(202, 72, GROUND - 46, C.fern),
-  ...awning(350, 50, GROUND - 46, C.rose),
+  ...sky(true),
+  ...moon(354, 40, 14),
+  ...facade({ x: -6, w: 66, h: 122, color: FACADE.mint, top: 'pediment', awning: C.red, lit: [true, false, true, true] }),
+  ...facade({ x: 64, w: 76, h: 140, color: FACADE.salmon, top: 'mansard', awning: C.green, lit: [true, true, false], bunting: true }),
+  ...facade({ x: 144, w: 58, h: 112, color: FACADE.butter, top: 'balustrade', awning: C.red, lit: [false, true, true] }),
+  ...facade({ x: 206, w: 80, h: 146, color: FACADE.lavender, top: 'arch', awning: C.blue, lit: [true, false, true, true, false], bunting: true }),
+  ...facade({ x: 290, w: 60, h: 118, color: FACADE.sky, top: 'pediment', awning: C.red, lit: [true, true, false] }),
+  ...facade({ x: 354, w: 54, h: 128, color: FACADE.rose, top: 'balustrade', awning: C.green, lit: [false, true, true] }),
   ...street(),
-  ...lamp(56),
-  ...lamp(196),
-  ...lamp(340),
+  ...lamp(62),
+  ...lamp(204),
+  ...lamp(352),
 ];
 
 // ---------------------------------------------------------------------------
 // Quest vignettes (covers + placeholder hint photos)
 // ---------------------------------------------------------------------------
 
-function nightBackdrop(): Shape[] {
-  return [...sky(), ...moon(352, 40, 13)];
-}
-
-/** Windows of Legends: a tall facade with names painted on glowing upper windows. */
+/** Windows of Legends: one grand facade with names painted on glowing upper windows. */
+const windowsFacade = facade({ x: 50, w: 300, h: 158, color: FACADE.lavender, top: 'pediment', awning: C.red, lit: [true], windowSpacing: 32 });
 const windowsVignette: Shape[] = [
-  ...nightBackdrop(),
-  { kind: 'rect', x: 70, y: 40, w: 260, h: 160, fill: C.bricks[1] },
-  { kind: 'rect', x: 64, y: 34, w: 272, h: 8, fill: C.trim },
-  ...[0, 1, 2].flatMap((col): Shape[] => {
-    const x = 92 + col * 80;
-    return [
-      { kind: 'path', d: `M${x} 130 L${x} 74 C${x} 60 ${x + 10} 54 ${x + 28} 54 C${x + 46} 54 ${x + 56} 60 ${x + 56} 74 L${x + 56} 130 Z`, fill: C.gold },
-      { kind: 'line', x1: x + 28, y1: 54, x2: x + 28, y2: 130, stroke: C.bricks[1], strokeWidth: 3 },
-      { kind: 'line', x1: x, y1: 92, x2: x + 56, y2: 92, stroke: C.bricks[1], strokeWidth: 3 },
-      { kind: 'rect', x: x + 6, y: 102, w: 18, h: 3, rx: 1.5, fill: C.sky },
-      { kind: 'rect', x: x + 32, y: 102, w: 16, h: 3, rx: 1.5, fill: C.sky },
-      { kind: 'rect', x: x + 6, y: 110, w: 14, h: 3, rx: 1.5, fill: C.sky },
-      { kind: 'rect', x: x + 32, y: 110, w: 18, h: 3, rx: 1.5, fill: C.sky },
-      { kind: 'rect', x: x - 4, y: 130, w: 64, h: 5, fill: C.trim },
-    ];
-  }),
-  ...awning(84, 232, 150, C.rose),
-  { kind: 'rect', x: 92, y: 166, w: 140, h: 34, fill: C.goldSoft, opacity: 0.85 },
-  { kind: 'rect', x: 252, y: 162, w: 52, h: 38, rx: 2, fill: C.dark },
+  ...sky(false),
+  ...moon(358, 34, 11),
+  ...windowsFacade,
+  // Painted lettering across the glowing panes
+  ...windowsFacade
+    .filter((s): s is Extract<Shape, { kind: 'rect' }> => s.kind === 'rect' && s.fill === C.glow && s.w === 10)
+    .flatMap((pane): Shape[] => [
+      { kind: 'rect', x: pane.x + 2, y: pane.y + 9, w: 6, h: 1.4, rx: 0.7, fill: C.dark },
+      { kind: 'rect', x: pane.x + 2.5, y: pane.y + 12, w: 5, h: 1.4, rx: 0.7, fill: C.dark },
+    ]),
   ...street(),
-  ...lamp(40),
-  ...lamp(362),
+  ...lamp(26),
+  ...lamp(374),
 ];
 
-/** Walt Was Here: one upstairs window with a lamp left burning. */
+/** Walt Was Here: an upstairs window with a lamp left burning. */
 const lampVignette: Shape[] = [
-  ...nightBackdrop(),
-  { kind: 'rect', x: 40, y: 50, w: 320, h: 150, fill: C.bricks[2] },
-  { kind: 'rect', x: 34, y: 44, w: 332, h: 8, fill: C.trim },
-  { kind: 'rect', x: 76, y: 74, w: 40, h: 56, rx: 20, fill: C.windowDark },
-  { kind: 'rect', x: 284, y: 74, w: 40, h: 56, rx: 20, fill: C.windowDark },
-  { kind: 'circle', cx: 200, cy: 102, r: 54, fill: C.goldSoft, opacity: 0.16 },
-  { kind: 'rect', x: 168, y: 66, w: 64, h: 80, rx: 32, fill: C.gold },
-  { kind: 'line', x1: 200, y1: 66, x2: 200, y2: 146, stroke: C.bricks[2], strokeWidth: 3 },
-  { kind: 'polygon', points: '190,118 210,118 207,134 193,134', fill: C.sky },
-  { kind: 'polygon', points: '188,118 212,118 200,108', fill: C.sky },
-  { kind: 'path', d: 'M200 120 C203 124 203 128 200 130 C197 128 197 124 200 120 Z', fill: C.parchment },
-  { kind: 'rect', x: 160, y: 146, w: 80, h: 5, fill: C.trim },
-  ...awning(56, 288, 160, C.fern),
-  { kind: 'rect', x: 70, y: 176, w: 170, h: 24, fill: C.goldSoft, opacity: 0.85 },
-  { kind: 'rect', x: 262, y: 172, w: 50, h: 28, rx: 2, fill: C.dark },
+  ...sky(false),
+  ...moon(356, 36, 11),
+  ...facade({ x: 30, w: 340, h: 150, color: FACADE.sky, top: 'balustrade', awning: C.green, lit: [false], windowSpacing: 30 }),
+  { kind: 'circle', cx: 200, cy: 96, r: 46, fill: C.glow, opacity: 0.2 },
+  { kind: 'rect', x: 178, y: 68, w: 44, h: 58, rx: 22, fill: C.trim },
+  { kind: 'rect', x: 182, y: 72, w: 36, h: 50, rx: 18, fill: C.gold },
+  { kind: 'polygon', points: '193,104 207,104 205,116 195,116', fill: C.dark },
+  { kind: 'polygon', points: '191,104 209,104 200,96', fill: C.dark },
+  { kind: 'path', d: 'M200 106 C202.5 109 202.5 112 200 114 C197.5 112 197.5 109 200 106 Z', fill: C.bulb },
   ...street(),
-  ...lamp(24),
+  ...lamp(18),
 ];
 
 /** Ears Everywhere: a magnifying glass sweeping over facade details. */
 const magnifierVignette: Shape[] = [
-  ...nightBackdrop(),
-  ...building(30, 110, 150, C.bricks[3], 'gable', [true, false, true, true, false, true]),
-  ...building(146, 108, 132, C.bricks[0], 'mansard', [false, true, true, false, true, true]),
-  ...building(260, 110, 144, C.bricks[4], 'flat', [true, true, false, true, true, false]),
+  ...sky(false),
+  ...moon(358, 34, 11),
+  ...facade({ x: 18, w: 118, h: 146, color: FACADE.butter, top: 'pediment', awning: C.red, lit: [true, false, true, true], windowSpacing: 26 }),
+  ...facade({ x: 140, w: 120, h: 132, color: FACADE.mint, top: 'mansard', awning: C.blue, lit: [false, true, true], bunting: true, windowSpacing: 26 }),
+  ...facade({ x: 264, w: 118, h: 150, color: FACADE.salmon, top: 'arch', awning: C.green, lit: [true, true, false], windowSpacing: 26 }),
   ...street(),
-  { kind: 'circle', cx: 214, cy: 108, r: 50, fill: C.parchment, opacity: 0.18 },
-  { kind: 'line', x1: 250, y1: 144, x2: 290, y2: 184, stroke: C.dark, strokeWidth: 14 },
-  { kind: 'line', x1: 250, y1: 144, x2: 290, y2: 184, stroke: C.gold, strokeWidth: 8 },
-  { kind: 'circle', cx: 214, cy: 108, r: 50, fill: 'none', stroke: C.gold, strokeWidth: 8 },
-  sparkle(214, 108, 12, C.goldSoft),
-  sparkle(190, 88, 5, C.parchment),
-  sparkle(238, 126, 4, C.parchment),
+  { kind: 'circle', cx: 212, cy: 104, r: 48, fill: C.parchment, opacity: 0.2 },
+  { kind: 'line', x1: 246, y1: 138, x2: 284, y2: 176, stroke: C.dark, strokeWidth: 14 },
+  { kind: 'line', x1: 246, y1: 138, x2: 284, y2: 176, stroke: C.gold, strokeWidth: 8 },
+  { kind: 'circle', cx: 212, cy: 104, r: 48, fill: 'none', stroke: C.gold, strokeWidth: 8 },
+  sparkle(212, 104, 12, C.glow),
+  sparkle(188, 84, 5, C.parchment),
+  sparkle(236, 122, 4, C.parchment),
 ];
 
-/** Main Street Senses: candy shop awning, a mailbox and music in the air. */
+/** Main Street Senses: candy-striped awnings, a mailbox and music in the air. */
 const sensesVignette: Shape[] = [
-  ...nightBackdrop(),
-  ...building(20, 170, 140, C.bricks[3], 'flat', [true, true, false, true, true, true]),
-  ...building(198, 182, 150, C.bricks[2], 'gable', [true, false, true, true, true, false]),
-  ...awning(24, 162, GROUND - 46, C.rose),
-  ...awning(204, 170, GROUND - 46, C.rose),
-  // Mailbox
-  { kind: 'rect', x: 176, y: 168, w: 26, h: 32, rx: 4, fill: C.rose },
-  { kind: 'path', d: 'M176 172 C176 160 202 160 202 172 Z', fill: C.rose },
-  { kind: 'rect', x: 182, y: 174, w: 14, h: 3, rx: 1.5, fill: C.dark },
-  // Music notes drifting in the sky
-  { kind: 'circle', cx: 132, cy: 40, r: 5, fill: C.goldSoft },
-  { kind: 'rect', x: 135.5, y: 18, w: 2.5, h: 22, fill: C.goldSoft },
-  { kind: 'polygon', points: '135.5,18 149,23 149,28 138,24', fill: C.goldSoft },
-  { kind: 'circle', cx: 252, cy: 30, r: 4, fill: C.goldSoft },
-  { kind: 'rect', x: 255, y: 12, w: 2, h: 18, fill: C.goldSoft },
-  // Steam from a cup of something warm
-  { kind: 'path', d: 'M150 150 C144 142 156 136 150 128', fill: 'none', stroke: C.parchment, strokeWidth: 2, opacity: 0.7 },
-  { kind: 'path', d: 'M160 150 C154 142 166 136 160 128', fill: 'none', stroke: C.parchment, strokeWidth: 2, opacity: 0.7 },
+  ...sky(true),
+  ...moon(358, 34, 11),
+  ...facade({ x: 14, w: 170, h: 136, color: FACADE.rose, top: 'balustrade', awning: C.red, lit: [true, true, false, true], bunting: true, windowSpacing: 26 }),
+  ...facade({ x: 216, w: 170, h: 144, color: FACADE.butter, top: 'pediment', awning: C.red, lit: [true, false, true, true], windowSpacing: 26 }),
+  { kind: 'rect', x: 188, y: 168, w: 24, h: 28, rx: 3, fill: C.red },
+  { kind: 'path', d: 'M188 172 C188 160 212 160 212 172 Z', fill: C.red },
+  { kind: 'rect', x: 193, y: 174, w: 14, h: 3, rx: 1.5, fill: C.dark },
+  { kind: 'circle', cx: 120, cy: 34, r: 4.5, fill: C.glow },
+  { kind: 'rect', x: 123.2, y: 14, w: 2.2, h: 20, fill: C.glow },
+  { kind: 'polygon', points: '123.2,14 136,19 136,24 125.4,20', fill: C.glow },
   ...street(),
-  ...lamp(380),
+  ...lamp(6),
 ];
 
 /** Vignette per quest slug; unknown quests fall back to the street scene. */

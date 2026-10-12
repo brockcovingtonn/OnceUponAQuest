@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Flourish } from '@/components/Flourish';
 import { ParadeModeToggle } from '@/components/ParadeModeToggle';
 import { Scene } from '@/components/Scene';
 import { Twinkle } from '@/components/Twinkle';
@@ -68,13 +69,17 @@ export default function QuestsScreen() {
 
         {sections.map((land) => (
           <View key={land.id} style={styles.section}>
-            <Text style={styles.landHeader} accessibilityRole="header">
-              {land.name.toUpperCase()}
-            </Text>
+            <View style={styles.landHeading}>
+              <Text style={styles.landHeader} accessibilityRole="header">
+                {land.name.toUpperCase()}
+              </Text>
+              <Flourish width={160} />
+            </View>
             {land.quests.map((quest) => (
               <QuestCard
                 key={quest.id}
                 quest={quest}
+                chapter={quests.data.indexOf(quest) + 1}
                 found={progress.data.foundByQuest.get(quest.id) ?? 0}
                 badgeEarned={quest.badge ? progress.data.badgeIds.has(quest.badge.id) : false}
                 onPress={() =>
@@ -121,10 +126,15 @@ const styles = StyleSheet.create({
   section: {
     gap: spacing.md,
   },
+  landHeading: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   landHeader: {
     ...type.label,
-    color: colors.inkMuted,
-    letterSpacing: 1,
+    color: colors.midnight,
+    letterSpacing: 2,
+    textAlign: 'center',
   },
   empty: {
     ...type.body,

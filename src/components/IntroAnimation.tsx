@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { mainStreetNight } from '@/art/scenes';
+import { Fireworks } from '@/components/Fireworks';
 import { Logo } from '@/components/Logo';
 import { Scene } from '@/components/Scene';
 import { SparkleBurst } from '@/components/SparkleBurst';
@@ -76,6 +77,14 @@ export function IntroAnimation({ onDone }: { onDone: () => void }) {
 
         {!reduced ? (
           <>
+            {burst ? (
+              <Fireworks
+                bursts={[
+                  { top: '12%', left: '20%', radius: 60, delay: 200 },
+                  { top: '8%', left: '76%', radius: 80, delay: 650 },
+                ]}
+              />
+            ) : null}
             <Twinkle size={14} delay={0} style={{ top: height * 0.12, left: '14%' }} />
             <Twinkle size={10} delay={400} style={{ top: height * 0.2, right: '18%' }} />
             <Twinkle size={18} delay={800} style={{ top: height * 0.08, right: '32%' }} color={colors.parchment} />

@@ -7,6 +7,8 @@ import { captureRef } from 'react-native-view-shot';
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { Button } from '@/components/Button';
+import { Fireworks } from '@/components/Fireworks';
+import { Flourish } from '@/components/Flourish';
 import { SparkleBurst } from '@/components/SparkleBurst';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
@@ -67,6 +69,7 @@ export default function BadgeEarnedScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <View ref={shareCard} collapsable={false} style={styles.card}>
+        {loaded ? <Fireworks /> : null}
         <Text style={styles.sparkles} importantForAccessibility="no" accessibilityElementsHidden>
           ✦ ✦ ✦
         </Text>
@@ -82,6 +85,7 @@ export default function BadgeEarnedScreen() {
         <Text style={styles.title} accessibilityRole="header">
           {copy.badge.title}
         </Text>
+        <Flourish width={180} />
         {quest ? <Text style={styles.quest}>{quest.title}</Text> : null}
         {spotCount > 0 ? <Text style={styles.body}>{copy.badge.foundAll(spotCount)}</Text> : null}
         <Text style={styles.brand}>{copy.appName}</Text>
