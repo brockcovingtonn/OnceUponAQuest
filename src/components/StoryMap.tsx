@@ -1,12 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Polyline } from 'react-native-svg';
+import { useEffect, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path, Polyline, Rect } from 'react-native-svg';
 
 import { Artwork } from '@/art/Artwork';
 import { lockedPalette } from '@/art/palettes';
-import { streetMap, streetMapLabels } from '@/art/streetMap';
+import { BALLOON_SPOT, STREETCAR_TRACK, streetMap, streetMapLabels } from '@/art/streetMap';
+import { Twinkle } from '@/components/Twinkle';
 import { copy } from '@/copy';
 import { MAP_CANVAS, type MapPoint } from '@/lib/mapGeometry';
+import { useReducedMotion } from '@/lib/useReducedMotion';
 import { colors, fonts } from '@/theme';
 
 export type StoryMapStamp = {
@@ -29,21 +32,120 @@ type Props = {
 
 const STAMP = 34;
 
-/** The illustrated street map with tappable spot stamps on top. */
+/** Loops 0 → 1 → 0 forever (still at 0.5 with Reduce Motion). */
+function useLoop(durationMs: number, reduced: boolean) {
+  const [v] = useState(() => new Animated.Value(0.5));
+  useEffect(() => {
+    if (reduced) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(v, { toValue: 1, duration: durationMs, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0, duration: durationMs, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [durationMs, reduced, v]);
+  return v;
+}
+
+/** The illustrated street map: a little streetcar on the rails, a bobbing balloon, twinkles, and tappable spot stamps. */
 export function StoryMap({ width, stamps, showRoute, me, onSelect }: Props) {
+  const reduced = useReducedMotion();
   const scale = width / MAP_CANVAS.width;
   const height = MAP_CANVAS.height * scale;
   const route = [...stamps].sort((a, b) => a.order - b.order);
+  const trip = useLoop(16000, reduced);
+  const bob = useLoop(2600, reduced);
+  const shimmer = useLoop(1400, reduced);
+
+  const car = { w: 14 * scale, h: 30 * scale };
+  const balloon = { w: 28 * scale, h: 36 * scale };
 
   return (
     <View style={{ width, height }}>
       <Artwork shapes={streetMap} palette={lockedPalette} size={width} canvas={MAP_CANVAS} />
+
+      {/* Fountain shimmer */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.shimmer,
+          {
+            left: (180 - 9) * scale,
+            top: (92 - 9) * scale,
+            width: 18 * scale,
+            height: 18 * scale,
+            borderRadius: 9 * scale,
+            opacity: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.7] }),
+            transform: [{ scale: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.25] }) }],
+          },
+        ]}
+      />
+
+      {/* Streetcar trundling up and down the rails */}
+      <Animated.View
+        pointerEvents="none"
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+        style={{
+          position: 'absolute',
+          left: STREETCAR_TRACK.x * scale - car.w / 2,
+          top: 0,
+          transform: [
+            {
+              translateY: trip.interpolate({
+                inputRange: [0, 1],
+                outputRange: [STREETCAR_TRACK.bottom * scale - car.h / 2, STREETCAR_TRACK.top * scale - car.h / 2],
+              }),
+            },
+          ],
+        }}>
+        <Svg width={car.w} height={car.h} viewBox="0 0 14 30">
+          <Rect x={0.75} y={0.75} width={12.5} height={28.5} rx={5} fill={colors.rose} stroke={colors.midnight} strokeWidth={1.5} />
+          <Rect x={3.5} y={5} width={7} height={20} rx={2} fill="#F6D58E" />
+          <Rect x={6} y={2} width={2} height={2} rx={1} fill={colors.white} />
+        </Svg>
+      </Animated.View>
+
+      {/* Hot-air balloon bobbing in the margin */}
+      <Animated.View
+        pointerEvents="none"
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+        style={{
+          position: 'absolute',
+          left: BALLOON_SPOT.x * scale - balloon.w / 2,
+          top: BALLOON_SPOT.y * scale - balloon.h / 2,
+          transform: [
+            { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [-5 * scale, 5 * scale] }) },
+            { rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) },
+          ],
+        }}>
+        <Svg width={balloon.w} height={balloon.h} viewBox="-14 -18 28 36">
+          <Path d="M0 -16 C11 -16 13 -4 7 4 L3 9 L-3 9 L-7 4 C-13 -4 -11 -16 0 -16 Z" fill={colors.rose} stroke={colors.midnight} strokeWidth={1} />
+          <Path d="M0 -16 C4 -12 4 0 2 9 M0 -16 C-4 -12 -4 0 -2 9" fill="none" stroke={colors.parchment} strokeWidth={1} opacity={0.8} />
+          <Path d="M-3 9 L-3 12 M3 9 L3 12" stroke={colors.midnight} strokeWidth={0.8} />
+          <Rect x={-3.5} y={12} width={7} height={5} rx={1} fill="#8A6A4A" />
+        </Svg>
+      </Animated.View>
+
+      {/* Twinkles on the map's painted sparkles */}
+      {!reduced ? (
+        <>
+          <Twinkle size={10 * scale} style={{ left: 113 * scale, top: 35 * scale }} />
+          <Twinkle size={8 * scale} delay={600} style={{ left: 42 * scale, top: 466 * scale }} />
+          <Twinkle size={9 * scale} delay={1200} style={{ left: 329 * scale, top: 155 * scale }} />
+          <Twinkle size={8 * scale} delay={300} style={{ left: 147 * scale, top: 556 * scale }} />
+        </>
+      ) : null}
 
       {streetMapLabels.map((label) => (
         <Text
           key={label.text}
           style={[
             styles.label,
+            label.style === 'title' ? styles.titleLabel : label.style === 'place' ? styles.placeLabel : null,
             { left: label.x * scale - 60, top: label.y * scale - 8, fontSize: label.size * Math.max(scale, 0.9) },
           ]}
           importantForAccessibility="no"
@@ -117,6 +219,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.headingSemiBold,
     color: colors.midnight,
+  },
+  titleLabel: {
+    fontFamily: fonts.heading,
+  },
+  placeLabel: {
+    backgroundColor: 'rgba(243, 233, 210, 0.92)',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  shimmer: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: colors.white,
   },
   stamp: {
     position: 'absolute',
