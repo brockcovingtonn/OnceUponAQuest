@@ -63,6 +63,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"client_errors": {
+                  Row: {
+                    "app_version": string | null,"created_at": string,"fatal": boolean,"id": string,"message": string,"occurred_at": string,"platform": string | null,"runtime_version": string | null,"screen": string | null,"stack": string | null,"update_id": string | null,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_version"?: string | null,"created_at"?: string,"fatal"?: boolean,"id"?: string,"message": string,"occurred_at"?: string,"platform"?: string | null,"runtime_version"?: string | null,"screen"?: string | null,"stack"?: string | null,"update_id"?: string | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "app_version"?: string | null,"created_at"?: string,"fatal"?: boolean,"id"?: string,"message"?: string,"occurred_at"?: string,"platform"?: string | null,"runtime_version"?: string | null,"screen"?: string | null,"stack"?: string | null,"update_id"?: string | null,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"friendships": {
                   Row: {
                     "addressee": string,"created_at": string,"requester": string,"status": Database["public"]['Enums']["friendship_status"]
@@ -293,7 +307,15 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_resolve_report":
+            "admin_metrics":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"admin_recent_errors":
+{ Args: { "p_days"?: number }; Returns: {
+              "app_version": string,"fatal": boolean,"last_seen": string,"message": string,"occurrences": number,"platform": string,"screen": string,"stack": string,"update_id": string,"users": number
+            }[]
+                           },
+"admin_resolve_report":
 { Args: { "p_action": string,"p_report_id": string }; Returns: string
                            },
 "admin_set_quest_cover":
@@ -309,7 +331,7 @@ isOneToOne: false
 { Args: { "p_user_id": string }; Returns: undefined
                            },
 "check_in":
-{ Args: { "p_answer"?: string,"p_lat"?: number,"p_lng"?: number,"p_parade_mode"?: boolean,"p_photo_path"?: string,"p_spot_id": string }; Returns: Json
+{ Args: { "p_answer"?: string,"p_found_at"?: string,"p_lat"?: number,"p_lng"?: number,"p_parade_mode"?: boolean,"p_photo_path"?: string,"p_spot_id": string }; Returns: Json
                            },
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: undefined

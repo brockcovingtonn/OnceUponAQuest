@@ -125,6 +125,8 @@ export function OfflineQueueProvider({ children }: { children: ReactNode }) {
             p_lng: item.lng,
             p_photo_path: photoPath,
             p_parade_mode: item.paradeMode,
+            // When it actually happened, so park-day metrics stay right.
+            p_found_at: item.createdAt,
           });
           if (error) throw error;
           return parseCheckInResult(data);

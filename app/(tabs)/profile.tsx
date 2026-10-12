@@ -116,6 +116,13 @@ export default function ProfileScreen() {
           />
           {isAdmin.data ? (
             <SettingsRow
+              icon="stats-chart-outline"
+              label={copy.insights.settingsRow}
+              onPress={() => router.push('/insights')}
+            />
+          ) : null}
+          {isAdmin.data ? (
+            <SettingsRow
               icon="shield-checkmark-outline"
               label={copy.moderation.settingsRow(openReports.data?.length ?? 0)}
               onPress={() => router.push('/moderation')}

@@ -842,3 +842,117 @@ export function useResolveReport() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: moderationKeys.reports }),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Insights (admins only; enforced in the database)
+// ---------------------------------------------------------------------------
+
+export type Ratio = { part: number; of: number };
+
+export type Metrics = {
+  generatedAt: string;
+  explorers: number;
+  newExplorers7d: number;
+  activeToday: number;
+  active7d: number;
+  firstVisitFinish: Ratio;
+  cameBack: Ratio;
+  checkinsPerVisit: number | null;
+  visits: number;
+  funnel: { signedUp: number; onboarded: number; firstCheckin: number; firstBadge: number };
+  quests: { title: string; started: number; finished: number }[];
+  spotReports: { title: string; quest: string; reports: number }[];
+  openUserReports: number;
+  errors7d: number;
+};
+
+type JsonObject = { [key: string]: unknown };
+const asObject = (v: unknown): JsonObject => (typeof v === 'object' && v !== null && !Array.isArray(v) ? (v as JsonObject) : {});
+const asNumber = (v: unknown): number => (typeof v === 'number' ? v : typeof v === 'string' && v !== '' ? Number(v) : 0);
+const asString = (v: unknown): string => (typeof v === 'string' ? v : '');
+const asArray = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+
+/** Parse the jsonb returned by public.admin_metrics. */
+export function parseMetrics(raw: unknown): Metrics {
+  const j = asObject(raw);
+  const ratio = (v: unknown, partKey: string): Ratio => {
+    const o = asObject(v);
+    return { part: asNumber(o[partKey]), of: asNumber(o.of) };
+  };
+  const funnel = asObject(j.funnel);
+  return {
+    generatedAt: asString(j.generated_at),
+    explorers: asNumber(j.explorers),
+    newExplorers7d: asNumber(j.new_explorers_7d),
+    activeToday: asNumber(j.active_today),
+    active7d: asNumber(j.active_7d),
+    firstVisitFinish: ratio(j.first_visit_finish, 'finished'),
+    cameBack: ratio(j.came_back, 'returned'),
+    checkinsPerVisit: j.checkins_per_visit === null || j.checkins_per_visit === undefined ? null : asNumber(j.checkins_per_visit),
+    visits: asNumber(j.visits),
+    funnel: {
+      signedUp: asNumber(funnel.signed_up),
+      onboarded: asNumber(funnel.onboarded),
+      firstCheckin: asNumber(funnel.first_checkin),
+      firstBadge: asNumber(funnel.first_badge),
+    },
+    quests: asArray(j.quests).map((q) => {
+      const o = asObject(q);
+      return { title: asString(o.title), started: asNumber(o.started), finished: asNumber(o.finished) };
+    }),
+    spotReports: asArray(j.spot_reports).map((r) => {
+      const o = asObject(r);
+      return { title: asString(o.title), quest: asString(o.quest), reports: asNumber(o.reports) };
+    }),
+    openUserReports: asNumber(j.open_user_reports),
+    errors7d: asNumber(j.errors_7d),
+  };
+}
+
+export function useAdminMetrics(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-metrics'] as const,
+    enabled,
+    queryFn: async (): Promise<Metrics> => {
+      const { data, error } = await supabase.rpc('admin_metrics');
+      if (error) throw error;
+      return parseMetrics(data);
+    },
+  });
+}
+
+export type ErrorGroup = {
+  message: string;
+  occurrences: number;
+  users: number;
+  fatal: boolean;
+  lastSeen: string;
+  appVersion: string | null;
+  updateId: string | null;
+  platform: string | null;
+  screen: string | null;
+  stack: string | null;
+};
+
+export function useRecentErrors(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-errors'] as const,
+    enabled,
+    queryFn: async (): Promise<ErrorGroup[]> => {
+      const { data, error } = await supabase.rpc('admin_recent_errors', { p_days: 14 });
+      if (error) throw error;
+      return data.map((e) => ({
+        message: e.message,
+        occurrences: e.occurrences,
+        users: e.users,
+        fatal: e.fatal,
+        lastSeen: e.last_seen,
+        appVersion: e.app_version ?? null,
+        updateId: e.update_id ?? null,
+        platform: e.platform ?? null,
+        screen: e.screen ?? null,
+        stack: e.stack ?? null,
+      }));
+    },
+  });
+}

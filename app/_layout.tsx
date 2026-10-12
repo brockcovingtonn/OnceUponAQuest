@@ -1,7 +1,7 @@
-import { QueryClient, useIsRestoring } from '@tanstack/react-query';
+import { onlineManager, QueryClient, useIsRestoring } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { type ErrorBoundaryProps, Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
@@ -12,6 +12,7 @@ import { Button } from '@/components/Button';
 import { IntroAnimation } from '@/components/IntroAnimation';
 import { copy } from '@/copy';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { flushPendingErrors, installGlobalErrorHandler, reportError, setCurrentScreen } from '@/lib/errorReporting';
 import '@/lib/network';
 import { OfflineQueueProvider } from '@/lib/offlineQueue';
 import { ParadeModeProvider } from '@/lib/paradeMode';
@@ -22,6 +23,7 @@ import { CACHE_MAX_AGE_MS, persistOptions } from '@/lib/queryPersistence';
 import { colors, fontAssets, fonts, spacing, type } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
+installGlobalErrorHandler();
 
 const queryClient = new QueryClient({
   // Keep data around as long as the on-device cache does, so it works offline.
@@ -33,6 +35,19 @@ let introPlayed = false;
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setCurrentScreen(pathname);
+  }, [pathname]);
+
+  // Send error reports saved after a crash or while offline.
+  useEffect(() => {
+    flushPendingErrors();
+    return onlineManager.subscribe((online) => {
+      if (online) flushPendingErrors();
+    });
+  }, []);
   const fontsReady = fontsLoaded || Boolean(fontError);
 
   return (
@@ -133,6 +148,7 @@ function RootNavigator() {
           <Stack.Screen name="about" options={{ title: copy.about.title }} />
         <Stack.Screen name="blocked" options={{ title: copy.blocked.title }} />
         <Stack.Screen name="moderation" options={{ title: copy.moderation.title }} />
+        <Stack.Screen name="insights" options={{ title: copy.insights.title }} />
         </Stack.Protected>
 
         <Stack.Screen name="too-young" options={{ headerShown: false, gestureEnabled: false }} />
@@ -167,3 +183,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+/** Shown instead of a screen that crashed while rendering (Expo Router error boundary). */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  useEffect(() => {
+    reportError(error);
+  }, [error]);
+
+  return (
+    <View style={styles.error}>
+      <Text style={styles.suspendedTitle} accessibilityRole="header">
+        {copy.errorScreen.title}
+      </Text>
+      <Text style={styles.errorText}>{copy.errorScreen.body}</Text>
+      <Button label={copy.common.retry} onPress={retry} />
+    </View>
+  );
+}

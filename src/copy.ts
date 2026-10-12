@@ -287,6 +287,48 @@ export const copy = {
     loadError: "We couldn't load reports. Check your connection and try again.",
   },
 
+  insights: {
+    title: 'Insights',
+    settingsRow: 'Insights',
+    updated: (time: string) => `Updated ${time} · admins are left out`,
+    goals: 'GOALS FROM THE SPEC',
+    firstVisit: 'Finished a quest on their first visit',
+    cameBack: 'Came back another day for a new quest',
+    perVisit: 'Check-ins per park visit',
+    ratio: (part: number, of: number) => `${part} of ${of} explorers`,
+    visits: (n: number) => `across ${n} visit${n === 1 ? '' : 's'}`,
+    noData: '—',
+    activity: 'ACTIVITY',
+    activeToday: 'Active today',
+    active7d: 'Active this week',
+    new7d: 'New this week',
+    explorers: 'Explorers',
+    funnel: 'FUNNEL',
+    funnelSteps: { signedUp: 'Signed up', onboarded: 'Finished onboarding', firstCheckin: 'First check-in', firstBadge: 'First badge' },
+    quests: 'QUESTS',
+    questRow: (title: string, started: number, finished: number) =>
+      `${title}: ${started} started, ${finished} finished.`,
+    startedFinished: (started: number, finished: number) => `${finished} of ${started} finished`,
+    spotReports: 'MOST-REPORTED SPOTS',
+    noSpotReports: 'No spot reports yet.',
+    reportsCount: (n: number) => `${n} report${n === 1 ? '' : 's'}`,
+    userReports: (n: number) => `${n} open user report${n === 1 ? '' : 's'} — open Moderation`,
+    errors: 'APP ERRORS (14 DAYS)',
+    noErrors: 'No errors reported. ✨',
+    errorMeta: (count: number, users: number, when: string) =>
+      `×${count} · ${users} explorer${users === 1 ? '' : 's'} · last ${when}`,
+    errorWhere: (parts: string) => parts,
+    crash: 'Crash',
+    showStack: 'Show details',
+    hideStack: 'Hide details',
+    loadError: "We couldn't load insights. Check your connection and try again.",
+  },
+
+  errorScreen: {
+    title: 'Something went wrong',
+    body: "Sorry — this page hit a snag. We've been told about it. Try again, or go back and pick up where you left off.",
+  },
+
   suspended: {
     title: 'Your account is suspended',
     body: (email: string) =>

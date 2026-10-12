@@ -70,6 +70,9 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ## 6. Small decisions you can make any time
 
+- [ ] Look at **Profile → Insights** weekly once testers start: the three spec goals, the funnel, and app errors (fix anything marked Crash).
+- [ ] **(code, optional)** Add Sentry if native-level crashes ever show up (the built-in reporting catches JavaScript errors and crashes, which is most of them). Needs a Sentry account; update the Privacy Policy if added.
+
 - [ ] Review the three extra safety tips in `copy.safety.extra` (`src/copy.ts`).
 - [ ] Review all wording in `src/copy.ts`.
 
@@ -96,6 +99,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
 - Report and block users (App Store Guideline 1.2): block/report from the … menu in Friends, Blocked explorers list, admin Moderation queue (remove photo, reset name, suspend, dismiss), suspended-account screen, banned words for names. Enforced in the database (72 tests).
+- Crash reporting (first-party, in Supabase) with a friendly error screen, and the admin Insights screen (Profile → Insights): the spec's success metrics in park time, funnel, per-quest progress, most-reported spots and grouped app errors. Offline check-ins keep their real time.
 - Offline mode: quest content, progress, profile and friends cached on the device (7 days); check-ins (with photos and GPS captured at the spot) queue offline and sync when the connection returns; typed answers are checked at sync time.
 - Over-the-air updates (EAS Update) with channels per build profile and the fingerprint runtime policy.
 - EAS Build set up: project `@brockieboy/once-upon-a-quest`, app ID `app.onceuponaquest`, profiles development / development-simulator / preview / production, hosted Supabase values stored as EAS environment variables.
