@@ -4,6 +4,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Flourish } from '@/components/Flourish';
+import { OfflineStatus } from '@/components/OfflineStatus';
 import { ParadeModeToggle } from '@/components/ParadeModeToggle';
 import { Scene } from '@/components/Scene';
 import { Twinkle } from '@/components/Twinkle';
@@ -63,6 +64,7 @@ export default function QuestsScreen() {
           ) : null}
         </View>
 
+        <OfflineStatus />
         <ParadeModeToggle />
 
         {sections.length === 0 ? <Text style={styles.empty}>{copy.quests.empty}</Text> : null}

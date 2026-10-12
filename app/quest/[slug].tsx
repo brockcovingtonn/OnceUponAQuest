@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
+import { OfflineStatus } from '@/components/OfflineStatus';
 import { Flourish } from '@/components/Flourish';
 import { QuestFieldTools } from '@/components/FieldTools';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -12,6 +13,7 @@ import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { fieldToolsEnabled } from '@/lib/fieldTools';
+import { useOfflineQueue } from '@/lib/offlineQueue';
 import { useParadeMode } from '@/lib/paradeMode';
 import { useIsAdmin, useMyProgress, useQuest } from '@/lib/queries';
 import { colors, radius, spacing, type } from '@/theme';
@@ -23,6 +25,7 @@ export default function QuestDetailScreen() {
   const progress = useMyProgress(session?.user.id);
   const { paradeMode } = useParadeMode();
   const isAdmin = useIsAdmin(session?.user.id);
+  const { items: queuedItems } = useOfflineQueue();
 
   if (quest.isPending || progress.isPending) return <StateView kind="loading" />;
   if (quest.isError || progress.isError) {
@@ -44,11 +47,14 @@ export default function QuestDetailScreen() {
 
   const rows = spots.map((spot) => {
     const found = foundSpots.has(spot.id);
+    const waiting = queuedItems.some((q) => q.spotId === spot.id && q.status === 'waiting');
     const state: SpotState = found
       ? 'found'
-      : paradeMode && spot.pause_during_parades
-        ? 'paused'
-        : 'open';
+      : waiting
+        ? 'pending'
+        : paradeMode && spot.pause_during_parades
+          ? 'paused'
+          : 'open';
     return { spot, state, name: found ? spot.title : spot.teaser };
   });
   const foundCount = rows.filter((r) => r.state === 'found').length;
@@ -59,6 +65,7 @@ export default function QuestDetailScreen() {
     <>
       <Stack.Screen options={{ title: '' }} />
       <ScrollView contentContainerStyle={styles.content}>
+        <OfflineStatus />
         <QuestCover slug={slug} coverPhotoPath={coverPhotoPath} height={180} style={styles.cover} />
         <Text style={styles.title} accessibilityRole="header">
           {title}

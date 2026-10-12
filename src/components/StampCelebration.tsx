@@ -7,27 +7,33 @@ import { copy } from '@/copy';
 import { colors, spacing, type } from '@/theme';
 
 /** Full-screen "stamped!" moment after a successful check-in. */
-export function StampCelebration() {
+type Props = {
+  /** Shown under the stamp; defaults to "Stamped! Spot found." */
+  label?: string;
+  icon?: 'star' | 'hourglass-outline';
+};
+
+export function StampCelebration({ label = copy.spot.stampedLabel, icon = 'star' }: Props) {
   const scale = useState(() => new Animated.Value(2.4))[0];
   const opacity = useState(() => new Animated.Value(0))[0];
 
   useEffect(() => {
-    AccessibilityInfo.announceForAccessibility(copy.spot.stampedLabel);
+    AccessibilityInfo.announceForAccessibility(label);
     Animated.parallel([
       Animated.spring(scale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true }),
     ]).start();
-  }, [scale, opacity]);
+  }, [scale, opacity, label]);
 
   return (
     <Animated.View style={[styles.overlay, { opacity }]} accessibilityViewIsModal>
       <View>
         <Animated.View style={{ transform: [{ scale }, { rotate: '-8deg' }] }}>
-          <Stamp icon="star" inked size={140} />
+          <Stamp icon={icon} inked size={140} />
         </Animated.View>
         <SparkleBurst radius={150} delay={120} />
       </View>
-      <Text style={styles.label}>{copy.spot.stampedLabel}</Text>
+      <Text style={styles.label}>{label}</Text>
     </Animated.View>
   );
 }

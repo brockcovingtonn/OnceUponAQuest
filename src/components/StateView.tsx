@@ -1,7 +1,9 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { copy } from '@/copy';
+import { useIsOnline } from '@/lib/network';
 import { colors, spacing, type } from '@/theme';
 
 type Props =
@@ -9,11 +11,20 @@ type Props =
   | { kind: 'error'; message: string; onRetry: () => void }
   | { kind: 'empty'; message: string };
 
-/** Full-area loading, error and empty states. */
+/** Full-area loading, error and empty states. Loading turns into an offline note when there's no signal. */
 export function StateView(props: Props) {
+  const online = useIsOnline();
+  const offlineLoading = props.kind === 'loading' && !online;
   return (
     <View style={styles.container}>
-      {props.kind === 'loading' ? (
+      {offlineLoading ? (
+        <>
+          <Ionicons name="cloud-offline-outline" size={40} color={colors.inkMuted} style={styles.icon} />
+          <Text style={styles.message} accessibilityLiveRegion="polite">
+            {copy.offline.notCached}
+          </Text>
+        </>
+      ) : props.kind === 'loading' ? (
         <ActivityIndicator size="large" color={colors.midnight} accessibilityLabel="Loading" />
       ) : (
         <Text style={styles.message} accessibilityLiveRegion="polite">
@@ -33,6 +44,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     backgroundColor: colors.parchment,
+  },
+  icon: {
+    alignSelf: 'center',
   },
   message: {
     ...type.body,

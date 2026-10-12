@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { onlineManager } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -7,6 +8,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { CheckInCard, type CheckInSubmission } from '@/components/CheckInCard';
+import { OfflineStatus } from '@/components/OfflineStatus';
 import { SpotFieldTools } from '@/components/FieldTools';
 import { ReportProblemSheet } from '@/components/ReportProblemSheet';
 import { SpotPhoto } from '@/components/SpotPhoto';
@@ -26,6 +28,8 @@ import {
   requestLocationPermission,
 } from '@/lib/location';
 import { fieldToolsEnabled } from '@/lib/fieldTools';
+import { isNetworkError } from '@/lib/network';
+import { useOfflineQueue, useQueuedCheckIn } from '@/lib/offlineQueue';
 import { useParadeMode } from '@/lib/paradeMode';
 import { uploadCheckinPhoto } from '@/lib/photos';
 import { type CheckInResult, useCheckIn, useIsAdmin, useMyProgress, useSpot } from '@/lib/queries';
@@ -53,13 +57,15 @@ export default function SpotScreen() {
   const { paradeMode } = useParadeMode();
   const checkIn = useCheckIn(userId);
   const isAdmin = useIsAdmin(userId);
+  const offlineQueue = useOfflineQueue();
+  const queued = useQueuedCheckIn(id);
 
   const [submitting, setSubmitting] = useState(false);
   const [misses, setMisses] = useState(0);
   const [hintShown, setHintShown] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>();
   const [locationIssue, setLocationIssue] = useState<LocationIssue>();
-  const [celebrating, setCelebrating] = useState(false);
+  const [celebrating, setCelebrating] = useState<'stamped' | 'saved' | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const pendingSubmission = useRef<CheckInSubmission | null>(null);
 
@@ -85,13 +91,35 @@ export default function SpotScreen() {
 
   async function celebrate(result: Extract<CheckInResult, { ok: true }>) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setCelebrating(true);
+    setCelebrating('stamped');
     await delay(CELEBRATION_MS);
     if (result.questComplete && result.badgeSlug) {
       router.replace({ pathname: '/badge/[slug]', params: { slug: result.badgeSlug } });
     } else {
       router.back();
     }
+  }
+
+  /** No signal: keep the check-in on the phone; it syncs (and is checked) when the connection returns. */
+  async function saveForLater(submission: CheckInSubmission, coords: Coords | undefined) {
+    await offlineQueue.enqueue({
+      spotId: s.id,
+      questSlug: s.quest.slug,
+      spotName: s.teaser,
+      answer: submission.answer,
+      photo: submission.photo,
+      lat: coords?.lat,
+      lng: coords?.lng,
+      paradeMode,
+    });
+    setFeedback({
+      text: submission.answer !== undefined ? copy.offline.savedAnswer : copy.offline.savedOther,
+      tone: 'info',
+    });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setCelebrating('saved');
+    await delay(CELEBRATION_MS + 600);
+    router.back();
   }
 
   function showFailure(result: Extract<CheckInResult, { ok: false }>) {
@@ -117,9 +145,11 @@ export default function SpotScreen() {
     setFeedback(undefined);
     setLocationIssue(undefined);
     setSubmitting(true);
+    // Location is captured even without signal (GPS works offline), so it can be checked at sync time.
+    let coords: Coords | undefined;
     try {
+      if (queued) await offlineQueue.remove(queued.id);
       // Location check only for spots with a GPS pin (set during the field walk).
-      let coords: Coords | undefined;
       if (s.lat !== null && s.lng !== null) {
         const permission = await getLocationPermission();
         if (permission === 'undetermined') {
@@ -145,12 +175,18 @@ export default function SpotScreen() {
         }
       }
 
+      if (!onlineManager.isOnline()) {
+        await saveForLater(submission, coords);
+        return;
+      }
+
       let photoPath: string | undefined;
       if (submission.photo) {
         try {
           photoPath = await uploadCheckinPhoto(userId, s.id, submission.photo);
-        } catch {
-          setFeedback({ text: copy.spot.photoFailed, tone: 'error' });
+        } catch (error) {
+          if (isNetworkError(error)) await saveForLater(submission, coords);
+          else setFeedback({ text: copy.spot.photoFailed, tone: 'error' });
           return;
         }
       }
@@ -168,8 +204,9 @@ export default function SpotScreen() {
       } else {
         showFailure(result);
       }
-    } catch {
-      setFeedback({ text: copy.common.networkError, tone: 'error' });
+    } catch (error) {
+      if (isNetworkError(error)) await saveForLater(submission, coords);
+      else setFeedback({ text: copy.common.networkError, tone: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -202,6 +239,7 @@ export default function SpotScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <OfflineStatus />
           <SpotPhoto
             photoPath={s.photo_path}
             questSlug={s.quest.slug}
@@ -219,6 +257,16 @@ export default function SpotScreen() {
           ) : null}
 
           {paused ? <Banner tone="warning" message={copy.paradeMode.banner} /> : null}
+
+          {queued?.status === 'failed' && !foundAt ? (
+            <Banner
+              message={
+                queued.reason === 'wrong_answer' && queued.answer
+                  ? copy.offline.failedAnswer(queued.answer)
+                  : copy.offline.failedOther(copy.checkInReasons[queued.reason ?? 'not_found'])
+              }
+            />
+          ) : null}
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -240,7 +288,14 @@ export default function SpotScreen() {
             </View>
           ) : null}
 
-          {!foundAt ? (
+          {queued?.status === 'waiting' && !foundAt && !celebrating ? (
+            <View style={styles.notice}>
+              <Text style={styles.sectionTitle}>{copy.offline.savedTitle}</Text>
+              <Text style={styles.body}>{copy.offline.pendingNotice}</Text>
+            </View>
+          ) : null}
+
+          {!foundAt && queued?.status !== 'waiting' ? (
             <>
               {locationIssue?.kind === 'explain' ? (
                 <View style={styles.notice}>
@@ -312,7 +367,8 @@ export default function SpotScreen() {
         }}
       />
 
-      {celebrating ? <StampCelebration /> : null}
+      {celebrating === 'stamped' ? <StampCelebration /> : null}
+      {celebrating === 'saved' ? <StampCelebration icon="hourglass-outline" label={copy.offline.savedTitle} /> : null}
     </>
   );
 }

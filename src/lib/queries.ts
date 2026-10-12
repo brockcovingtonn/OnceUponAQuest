@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import type { CheckInReason, CheckInResult } from '@/lib/offlineSync';
 import { supabase } from '@/lib/supabase';
 import type { Tables, TablesInsert } from '@/types/database';
 
@@ -156,12 +157,31 @@ export function useQuest(slug: string | undefined) {
   });
 }
 
+/** Plain rows as fetched (and cached on the device for offline use). */
+type ProgressRows = {
+  checkins: { spotId: string; method: Tables<'checkins'>['method']; foundAt: string; questId: string | null }[];
+  badgeIds: string[];
+};
+
+function toMyProgress(rows: ProgressRows): MyProgress {
+  const foundSpots = new Map<string, string>();
+  const foundByQuest = new Map<string, number>();
+  const snacks: MyProgress['snacks'] = [];
+  for (const row of rows.checkins) {
+    foundSpots.set(row.spotId, row.foundAt);
+    if (row.method === 'snack') snacks.push({ spotId: row.spotId, foundAt: row.foundAt });
+    if (row.questId) foundByQuest.set(row.questId, (foundByQuest.get(row.questId) ?? 0) + 1);
+  }
+  snacks.sort((a, b) => a.foundAt.localeCompare(b.foundAt));
+  return { foundSpots, foundByQuest, badgeIds: new Set(rows.badgeIds), snacks };
+}
+
 /** The signed-in user's own check-ins and badges (friends' rows are filtered out). */
 export function useMyProgress(userId: string | undefined) {
   return useQuery({
     queryKey: questKeys.progress(userId),
     enabled: Boolean(userId),
-    queryFn: async (): Promise<MyProgress> => {
+    queryFn: async (): Promise<ProgressRows> => {
       const [checkins, badges] = await Promise.all([
         supabase
           .from('checkins')
@@ -171,25 +191,17 @@ export function useMyProgress(userId: string | undefined) {
       ]);
       if (checkins.error) throw checkins.error;
       if (badges.error) throw badges.error;
-
-      const foundSpots = new Map<string, string>();
-      const foundByQuest = new Map<string, number>();
-      const snacks: MyProgress['snacks'] = [];
-      for (const row of checkins.data) {
-        foundSpots.set(row.spot_id, row.created_at);
-        if (row.method === 'snack') snacks.push({ spotId: row.spot_id, foundAt: row.created_at });
-        if (row.spot) {
-          foundByQuest.set(row.spot.quest_id, (foundByQuest.get(row.spot.quest_id) ?? 0) + 1);
-        }
-      }
-      snacks.sort((a, b) => a.foundAt.localeCompare(b.foundAt));
       return {
-        foundSpots,
-        foundByQuest,
-        badgeIds: new Set(badges.data.map((b) => b.badge_id)),
-        snacks,
+        checkins: checkins.data.map((row) => ({
+          spotId: row.spot_id,
+          method: row.method,
+          foundAt: row.created_at,
+          questId: row.spot?.quest_id ?? null,
+        })),
+        badgeIds: badges.data.map((b) => b.badge_id),
       };
     },
+    select: toMyProgress,
   });
 }
 
@@ -231,12 +243,8 @@ export const CHECK_IN_REASONS = [
   'location_required',
   'wrong_answer',
   'photo_required',
-] as const;
-export type CheckInReason = (typeof CHECK_IN_REASONS)[number];
-
-export type CheckInResult =
-  | { ok: true; questComplete: boolean; badgeSlug: string | null }
-  | { ok: false; reason: CheckInReason; distanceM: number | null };
+] as const satisfies readonly CheckInReason[];
+export type { CheckInReason, CheckInResult };
 
 export type CheckInInput = {
   spotId: string;
@@ -271,6 +279,8 @@ export function parseCheckInResult(raw: unknown): CheckInResult {
 export function useCheckIn(userId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
+    // Always attempt: a dropped connection should fail fast so the screen can save the check-in offline.
+    networkMode: 'always',
     mutationFn: async (input: CheckInInput): Promise<CheckInResult> => {
       const { data, error } = await supabase.rpc('check_in', {
         p_spot_id: input.spotId,
@@ -408,42 +418,41 @@ export const friendKeys = {
   leaderboard: (userId: string | undefined) => ['leaderboard', userId] as const,
 };
 
+/** Plain rows as fetched (and cached on the device for offline use). */
+type FriendshipRows = { status: 'pending' | 'accepted'; iAmRequester: boolean; other: FriendProfile }[];
+
+function toFriendships(rows: FriendshipRows): Friendships {
+  const result: Friendships = { incoming: [], outgoing: [], friendIds: new Set() };
+  for (const row of rows) {
+    if (row.status === 'accepted') result.friendIds.add(row.other.id);
+    else if (row.iAmRequester) result.outgoing.push(row.other);
+    else result.incoming.push(row.other);
+  }
+  return result;
+}
+
 export function useFriendships(userId: string | undefined) {
   return useQuery({
     queryKey: friendKeys.friendships(userId),
     enabled: Boolean(userId),
-    queryFn: async (): Promise<Friendships> => {
+    queryFn: async (): Promise<FriendshipRows> => {
       const { data, error } = await supabase.from('friendships').select(`
         requester, addressee, status,
         requester_profile:profiles!friendships_requester_fkey ( id, username, avatar_key, avatar_url ),
         addressee_profile:profiles!friendships_addressee_fkey ( id, username, avatar_key, avatar_url )
       `);
       if (error) throw error;
-
-      const toFriend = (p: {
-        id: string;
-        username: string;
-        avatar_key: string | null;
-        avatar_url: string | null;
-      }): FriendProfile => ({
-        id: p.id,
-        username: p.username,
-        avatarKey: p.avatar_key,
-        avatarUrl: p.avatar_url,
-      });
-      const result: Friendships = { incoming: [], outgoing: [], friendIds: new Set() };
-      for (const row of data) {
+      return data.map((row) => {
         const iAmRequester = row.requester === userId;
-        if (row.status === 'accepted') {
-          result.friendIds.add(iAmRequester ? row.addressee : row.requester);
-        } else if (iAmRequester) {
-          result.outgoing.push(toFriend(row.addressee_profile));
-        } else {
-          result.incoming.push(toFriend(row.requester_profile));
-        }
-      }
-      return result;
+        const p = iAmRequester ? row.addressee_profile : row.requester_profile;
+        return {
+          status: row.status,
+          iAmRequester,
+          other: { id: p.id, username: p.username, avatarKey: p.avatar_key, avatarUrl: p.avatar_url },
+        };
+      });
     },
+    select: toFriendships,
   });
 }
 
@@ -488,7 +497,8 @@ export function useAddFriend(userId: string | undefined) {
       if (!match) return 'not_found';
       if (match.id === userId) return 'self';
 
-      const current = queryClient.getQueryData<Friendships>(friendKeys.friendships(userId));
+      const cached = queryClient.getQueryData<FriendshipRows>(friendKeys.friendships(userId));
+      const current = cached ? toFriendships(cached) : undefined;
       if (current?.friendIds.has(match.id)) return 'already_friends';
       if (current?.outgoing.some((f) => f.id === match.id)) return 'already_sent';
       if (current?.incoming.some((f) => f.id === match.id)) return 'they_asked';

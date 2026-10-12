@@ -1,4 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, useIsRestoring } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,14 +12,18 @@ import { Button } from '@/components/Button';
 import { IntroAnimation } from '@/components/IntroAnimation';
 import { copy } from '@/copy';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import '@/lib/network';
+import { OfflineQueueProvider } from '@/lib/offlineQueue';
 import { ParadeModeProvider } from '@/lib/paradeMode';
 import { useProfile } from '@/lib/queries';
+import { CACHE_MAX_AGE_MS, persistOptions } from '@/lib/queryPersistence';
 import { colors, fontAssets, fonts, spacing, type } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1 } },
+  // Keep data around as long as the on-device cache does, so it works offline.
+  defaultOptions: { queries: { retry: 1, gcTime: CACHE_MAX_AGE_MS } },
 });
 
 // The storybook intro plays once per app launch.
@@ -30,14 +35,16 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
         <AuthProvider>
-          <ParadeModeProvider>
-            <StatusBar style="dark" />
-            {fontsReady ? <RootNavigator /> : null}
-          </ParadeModeProvider>
+          <OfflineQueueProvider>
+            <ParadeModeProvider>
+              <StatusBar style="dark" />
+              {fontsReady ? <RootNavigator /> : null}
+            </ParadeModeProvider>
+          </OfflineQueueProvider>
         </AuthProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
 }
@@ -49,9 +56,13 @@ export default function RootLayout() {
 function RootNavigator() {
   const { session, initialized } = useAuth();
   const profile = useProfile(session?.user.id);
+  const restoring = useIsRestoring();
 
   const signedIn = Boolean(session);
-  const ready = initialized && (!signedIn || !profile.isPending);
+  // Wait for the on-device cache so an offline launch can still find the profile.
+  // A profile query paused for lack of signal (and nothing cached) shows the offline message.
+  const waitingForSignal = profile.isPending && profile.fetchStatus === 'paused';
+  const ready = initialized && !restoring && (!signedIn || !profile.isPending || waitingForSignal);
   const hasProfile = Boolean(profile.data);
   const [showIntro, setShowIntro] = useState(!introPlayed);
   const finishIntro = useCallback(() => {
@@ -65,10 +76,10 @@ function RootNavigator() {
 
   if (!ready) return null;
 
-  if (signedIn && profile.isError) {
+  if (signedIn && (profile.isError || waitingForSignal)) {
     return (
       <View style={styles.error}>
-        <Text style={styles.errorText}>{copy.common.networkError}</Text>
+        <Text style={styles.errorText}>{waitingForSignal ? copy.offline.firstLaunch : copy.common.networkError}</Text>
         <Button label={copy.common.retry} onPress={() => profile.refetch()} />
       </View>
     );

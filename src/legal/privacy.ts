@@ -28,7 +28,7 @@ export const privacy: LegalDocument = {
         'Precise location — only at the moment you tap Check in at a spot that has a location pin, and only if you allow location access. It is sent to our server to confirm you are near the spot and is not stored. The App never uses location in the background.',
         'Camera — only when you tap a button to take a photo.',
         'Photo library — only through your phone\'s system picker, and only for the single photo you choose as your profile photo.',
-        'On your device only — your sign-in session (kept in your phone\'s secure storage) and your Parade mode setting.',
+        'On your device only — your sign-in session (kept in your phone\'s secure storage), your Parade mode setting, a copy of quest content and your progress so the App works without signal, and check-ins (including photos) made offline until they upload. Signing out clears the copy and any check-ins waiting to upload.',
         'Server logs — our hosting provider records basic technical data such as IP address, time of request and error messages, to keep the service secure and working.',
         'We do not use advertising identifiers, third-party analytics, or tracking pixels.',
       ],

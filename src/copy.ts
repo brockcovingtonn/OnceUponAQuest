@@ -94,6 +94,25 @@ export const copy = {
     effective: (date: string) => `Effective ${date}`,
   },
 
+  offline: {
+    banner: "You're offline. Quests still work — check-ins will sync when you're back online.",
+    waiting: (n: number) => `${n} check-in${n === 1 ? '' : 's'} waiting to sync.`,
+    syncing: 'Syncing your check-ins…',
+    synced: (n: number) => `${n} offline check-in${n === 1 ? '' : 's'} synced.`,
+    badgeEarned: 'You earned a badge while offline!',
+    seeBadge: 'See badge',
+    needsLook: (n: number) => `${n} offline check-in${n === 1 ? '' : 's'} need${n === 1 ? 's' : ''} another look.`,
+    dismiss: 'Dismiss',
+    firstLaunch: "You're offline. Connect once to load your quests — after that, they work without signal.",
+    notCached: "You're offline, and this hasn't been saved on your phone yet. It will load when you're back online.",
+    savedTitle: 'Saved for later!',
+    savedAnswer: "You're offline, so we saved your answer. We'll check it as soon as you're back online.",
+    savedOther: "You're offline, so we saved this check-in. It will be stamped as soon as you're back online.",
+    pendingNotice: 'This check-in is saved on your phone and will sync when you’re back online.',
+    failedAnswer: (answer: string) => `Your offline answer “${answer}” wasn't quite right — look again.`,
+    failedOther: (reason: string) => `Your offline check-in didn't count: ${reason}`,
+  },
+
   paradeMode: {
     label: 'Parade mode',
     hint: 'Pauses spots that sit on the parade route.',
@@ -127,10 +146,17 @@ export const copy = {
     badgeEarned: 'Badge earned!',
     notFound: "We couldn't find that quest.",
     loadError: "We couldn't load this quest. Check your connection and try again.",
-    spotLabel: (order: number, name: string, state: 'found' | 'open' | 'paused') =>
+    spotLabel: (order: number, name: string, state: 'found' | 'open' | 'paused' | 'pending') =>
       `Spot ${order}: ${name}. ${
-        state === 'found' ? 'Found.' : state === 'paused' ? 'Paused for parades.' : 'Not found yet.'
+        state === 'found'
+          ? 'Found.'
+          : state === 'paused'
+            ? 'Paused for parades.'
+            : state === 'pending'
+              ? 'Saved offline, waiting to sync.'
+              : 'Not found yet.'
       }`,
+    pending: 'Waiting to sync',
   },
 
   spot: {

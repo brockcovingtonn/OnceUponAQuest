@@ -1,4 +1,4 @@
-import { File } from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -122,4 +122,38 @@ export async function uploadContentPhoto(
     .upload(path, body, { contentType: 'image/jpeg', upsert: false });
   if (error) throw error;
   return path;
+}
+
+// ---------------------------------------------------------------------------
+// Offline check-ins: keep the compressed photo on the device until it syncs
+// ---------------------------------------------------------------------------
+
+function pendingPhotoDir(): Directory {
+  const dir = new Directory(Paths.document, 'pending-checkins');
+  if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
+  return dir;
+}
+
+/** Compress now and keep a copy in the app's documents folder (survives restarts). */
+export async function savePhotoForLater(photo: CapturedPhoto): Promise<string> {
+  const compressed = new File(await compressPhoto(photo));
+  const saved = new File(pendingPhotoDir(), `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`);
+  await compressed.copy(saved);
+  return saved.uri;
+}
+
+/** Upload an already-compressed check-in photo saved by savePhotoForLater. */
+export async function uploadSavedCheckinPhoto(userId: string, spotId: string, uri: string): Promise<string> {
+  const path = `${userId}/${spotId}-${Date.now()}.jpg`;
+  const body = await new File(uri).arrayBuffer();
+  const { error } = await supabase.storage
+    .from('checkin-photos')
+    .upload(path, body, { contentType: 'image/jpeg', upsert: false });
+  if (error) throw error;
+  return path;
+}
+
+export function deleteSavedPhoto(uri: string) {
+  const file = new File(uri);
+  if (file.exists) file.delete();
 }

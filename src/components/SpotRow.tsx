@@ -5,7 +5,7 @@ import { Stamp } from '@/components/Stamp';
 import { copy } from '@/copy';
 import { colors, fonts, minTouchTarget, spacing, type } from '@/theme';
 
-export type SpotState = 'found' | 'open' | 'paused';
+export type SpotState = 'found' | 'open' | 'paused' | 'pending';
 
 type Props = {
   order: number;
@@ -24,6 +24,8 @@ export function SpotRow({ order, name, state, onPress }: Props) {
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
       {state === 'found' ? (
         <Stamp icon="checkmark" inked size={32} />
+      ) : state === 'pending' ? (
+        <Stamp icon="hourglass-outline" inked={false} size={32} />
       ) : state === 'paused' ? (
         <Stamp icon="pause" inked={false} size={32} />
       ) : (
@@ -33,6 +35,7 @@ export function SpotRow({ order, name, state, onPress }: Props) {
       <View style={styles.text}>
         <Text style={[styles.name, state === 'paused' && styles.muted]}>{name}</Text>
         {state === 'paused' ? <Text style={styles.paused}>{copy.paradeMode.paused}</Text> : null}
+        {state === 'pending' ? <Text style={styles.paused}>{copy.questDetail.pending}</Text> : null}
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.inkMuted} />
     </Pressable>

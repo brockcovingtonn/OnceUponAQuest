@@ -61,6 +61,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ## 5. Check on real phones
 
+- [ ] Offline: open each quest once with signal, then turn on Airplane mode — quests, spots, Passport and Friends should still open; check in at a photo spot and a typed-answer spot (both say "Saved for later"); turn Airplane mode off and confirm the "synced" banner, the stamps, and any badge.
 - [ ] Largest system text size on every screen (iOS: Settings → Accessibility → Display & Text Size → Larger Text; Android: Font size).
 - [ ] VoiceOver (iOS) and TalkBack (Android) through sign-in, a check-in and the Passport.
 - [ ] Reduce Motion on: the intro should just show the logo briefly and fade.
@@ -93,5 +94,6 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Animated intro, twinkling stars, sparkle bursts (respect Reduce Motion).
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
+- Offline mode: quest content, progress, profile and friends cached on the device (7 days); check-ins (with photos and GPS captured at the spot) queue offline and sync when the connection returns; typed answers are checked at sync time.
 - Over-the-air updates (EAS Update) with channels per build profile and the fingerprint runtime policy.
 - EAS Build set up: project `@brockieboy/once-upon-a-quest`, app ID `app.onceuponaquest`, profiles development / development-simulator / preview / production, hosted Supabase values stored as EAS environment variables.
