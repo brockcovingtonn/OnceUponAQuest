@@ -149,6 +149,7 @@ function RootNavigator() {
         <Stack.Screen name="blocked" options={{ title: copy.blocked.title }} />
         <Stack.Screen name="moderation" options={{ title: copy.moderation.title }} />
         <Stack.Screen name="insights" options={{ title: copy.insights.title }} />
+        <Stack.Screen name="walkthrough" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         </Stack.Protected>
 
         <Stack.Screen name="too-young" options={{ headerShown: false, gestureEnabled: false }} />

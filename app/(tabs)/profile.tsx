@@ -106,6 +106,12 @@ export default function ProfileScreen() {
             label={copy.blocked.title}
             onPress={() => router.push('/blocked')}
           />
+          <SettingsRow
+            icon="book-outline"
+            label={copy.walkthrough.open}
+            accessibilityHint={copy.walkthrough.openHint}
+            onPress={() => router.push('/walkthrough')}
+          />
           <SettingsRow icon="walk-outline" label={copy.profile.safetyRules} onPress={() => router.push('/safety')} />
           <SettingsRow icon="document-text-outline" label={copy.profile.terms} onPress={() => router.push('/terms')} />
           <SettingsRow icon="lock-closed-outline" label={copy.profile.privacy} onPress={() => router.push('/privacy')} />

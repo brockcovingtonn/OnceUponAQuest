@@ -62,6 +62,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ## 5. Check on real phones
 
+- [ ] Walkthrough (Profile → How quests work, or the ? on the Quests banner): all 8 pages read well, the animations loop smoothly, nothing overlaps at the largest text size, and with Reduce Motion on each page shows a still final picture.
 - [ ] Offline: open each quest once with signal, then turn on Airplane mode — quests, spots, Passport and Friends should still open; check in at a photo spot and a typed-answer spot (both say "Saved for later"); turn Airplane mode off and confirm the "synced" banner, the stamps, and any badge.
 - [ ] Largest system text size on every screen (iOS: Settings → Accessibility → Display & Text Size → Larger Text; Android: Font size).
 - [ ] VoiceOver (iOS) and TalkBack (Android) through sign-in, a check-in and the Passport.
@@ -99,6 +100,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
 - Report and block users (App Store Guideline 1.2): block/report from the … menu in Friends, Blocked explorers list, admin Moderation queue (remove photo, reset name, suspend, dismiss), suspended-account screen, banned words for names. Enforced in the database (72 tests).
+- First-time walkthrough "How quests work": 8 pages with looping animated examples (quest progress, finding a spot, four check-in types, stamps and badges, hints and Parade mode, offline sync, friends, safety); shown once after onboarding, reopen from Profile or the ? on the Quests banner; respects Reduce Motion.
 - Crash reporting (first-party, in Supabase) with a friendly error screen, and the admin Insights screen (Profile → Insights): the spec's success metrics in park time, funnel, per-quest progress, most-reported spots and grouped app errors. Offline check-ins keep their real time.
 - Offline mode: quest content, progress, profile and friends cached on the device (7 days); check-ins (with photos and GPS captured at the spot) queue offline and sync when the connection returns; typed answers are checked at sync time.
 - Over-the-air updates (EAS Update) with channels per build profile and the fingerprint runtime policy.

@@ -1,6 +1,7 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Flourish } from '@/components/Flourish';
@@ -14,7 +15,8 @@ import { mainStreetNight } from '@/art/scenes';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { type QuestSummary, useMyProgress, useProfile, useQuests } from '@/lib/queries';
-import { colors, radius, spacing, type } from '@/theme';
+import { hasSeenWalkthrough } from '@/lib/walkthrough';
+import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
 
 type LandSection = { id: string; name: string; sortOrder: number; quests: QuestSummary[] };
 
@@ -35,6 +37,18 @@ export default function QuestsScreen() {
   const quests = useQuests();
   const progress = useMyProgress(userId);
   const [refreshing, setRefreshing] = useState(false);
+
+  // First visit after onboarding: show "How quests work" once.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    hasSeenWalkthrough(userId).then((seen) => {
+      if (!seen && !cancelled) router.push('/walkthrough');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   async function refresh() {
     setRefreshing(true);
@@ -62,6 +76,14 @@ export default function QuestsScreen() {
               {copy.quests.greeting(new Date().getHours(), profile.data.display_name ?? profile.data.username)}
             </Text>
           ) : null}
+          <Pressable
+            onPress={() => router.push('/walkthrough')}
+            accessibilityRole="button"
+            accessibilityLabel={copy.walkthrough.open}
+            accessibilityHint={copy.walkthrough.openHint}
+            style={styles.help}>
+            <Ionicons name="help-circle-outline" size={26} color={colors.parchment} />
+          </Pressable>
         </View>
 
         <OfflineStatus />
@@ -123,7 +145,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.md,
     left: spacing.md,
-    right: spacing.md,
+    right: spacing.md + minTouchTarget,
+  },
+  help: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+    width: minTouchTarget,
+    height: minTouchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   section: {
     gap: spacing.md,
