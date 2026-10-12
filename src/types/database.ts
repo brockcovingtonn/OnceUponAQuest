@@ -307,7 +307,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_metrics":
+            "admin_get_spot_answers":
+{ Args: { "p_spot_id": string }; Returns: (string)[]
+                           },
+"admin_metrics":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "admin_recent_errors":
@@ -321,8 +324,14 @@ isOneToOne: false
 "admin_set_quest_cover":
 { Args: { "p_photo_path": string,"p_quest_id": string }; Returns: undefined
                            },
+"admin_update_quest_content":
+{ Args: { "p_quest_id": string,"p_story": string,"p_title": string }; Returns: undefined
+                           },
 "admin_update_spot":
 { Args: { "p_lat"?: number,"p_lng"?: number,"p_photo_path"?: string,"p_spot_id": string,"p_verified"?: boolean }; Returns: undefined
+                           },
+"admin_update_spot_content":
+{ Args: { "p_changes": Json,"p_spot_id": string }; Returns: undefined
                            },
 "am_i_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean

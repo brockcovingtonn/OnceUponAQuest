@@ -15,8 +15,10 @@ import { StateView } from '@/components/StateView';
 import { mainStreetNight } from '@/art/scenes';
 import { copy } from '@/copy';
 import { useAppUpdate } from '@/lib/appUpdates';
+import { useIsOnline } from '@/lib/network';
 import { useAuth } from '@/lib/auth';
 import { type QuestSummary, useMyProgress, useProfile, useQuests } from '@/lib/queries';
+import { prefetchStorageImages } from '@/lib/storageImage';
 import { hasSeenWalkthrough } from '@/lib/walkthrough';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
 
@@ -40,6 +42,15 @@ export default function QuestsScreen() {
   const progress = useMyProgress(userId);
   const [refreshing, setRefreshing] = useState(false);
   const appUpdate = useAppUpdate();
+  const online = useIsOnline();
+  const accessToken = session?.access_token;
+  const coverPaths = (quests.data ?? []).map((q) => q.coverPhotoPath ?? '').join('|');
+
+  // Save quest covers on the phone so the cards look right without signal.
+  useEffect(() => {
+    if (!online || !accessToken || !coverPaths.replaceAll('|', '')) return;
+    prefetchStorageImages('spot-photos', coverPaths.split('|'), accessToken);
+  }, [online, accessToken, coverPaths]);
 
   // First visit after onboarding: show "How quests work" once.
   useEffect(() => {

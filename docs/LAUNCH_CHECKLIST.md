@@ -14,12 +14,13 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
   - **Option A — "field" build (recommended; needs the Apple Developer Program):** `npm run build:field`, install it on your iPhone from the EAS link. Standalone, no Mac needed.
   - **Option B — free, Mac stays home:** `npm run db:use-hosted`, then `caffeinate -dis npx expo start --tunnel --clear`; open it in Expo Go before you leave. Works on cellular while the Mac stays awake and online.
 - [ ] Sign in on the hosted database before you leave home: in the app enter your email and tap **Send my code**, then on the Mac run `npm run auth:code -- covington.brock@gmail.com` and type the code it prints (valid 1 hour). You'll finish onboarding once; the sign-in then lasts the whole walk.
+- [ ] Open **Profile → Field walk (0 of 20 done)** — the checklist shows every spot's Pin / Photo / Verified status; tap a spot to open it, and turn on "Show only unfinished" as you go.
 - [ ] At each of the 20 spots, stand where a guest should stand, then:
   - [ ] **Set pin here** (it refuses GPS fixes worse than 25 m — step into open sky and retry)
   - [ ] **Take hint photo** (replaces the storybook placeholder)
-  - [ ] Confirm the answer, the cannon count and candy shop names; tell Claude about anything that changed so the answer keys can be updated
+  - [ ] Confirm the answer, the cannon count and candy shop names — fix anything on the spot with **Edit text & answers** (clue, hint, where to stand, accepted answers, parade flag, radius). Every edit is logged so it can be undone.
   - [ ] **Mark verified**
-- [ ] On each of the 4 quest screens: **Take cover photo** (replaces the storybook scene on the card and quest page)
+- [ ] On each of the 4 quest screens: **Take cover photo** (and **Edit title & story** if needed) (replaces the storybook scene on the card and quest page)
 - [ ] After pinning a few spots, open the **Map** tab: stamps should sit on the right side of the street. If they're off, adjust the two anchor points in `src/lib/mapGeometry.ts`.
 - [ ] Note: once a spot has a pin, check-ins there require being on site — test at-home check-ins on unpinned spots.
 
@@ -102,6 +103,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
 - Report and block users (App Store Guideline 1.2): block/report from the … menu in Friends, Blocked explorers list, admin Moderation queue (remove photo, reset name, suspend, dismiss), suspended-account screen, banned words for names. Enforced in the database (72 tests).
+- Field-walk checklist (Profile → Field walk) and on-phone content editing for admins (spot text, accepted answers, parade flag, radius; quest title and story), logged in private.content_edits. Hint photos and quest covers are saved on the phone ahead of time for offline use.
 - Map tab: original storybook map of the street (offline, numbered stamps in walking order per quest, found stamps gold, parade pauses, 'you are here' once pins exist) with a switch to the real map (Apple Maps / Google Maps) showing pinned spots and your location.
 - First-time walkthrough "How quests work": 8 pages with looping animated examples (quest progress, finding a spot, four check-in types, stamps and badges, hints and Parade mode, offline sync, friends, safety); shown once after onboarding, reopen from Profile or the ? on the Quests banner; respects Reduce Motion.
 - Crash reporting (first-party, in Supabase) with a friendly error screen, and the admin Insights screen (Profile → Insights): the spec's success metrics in park time, funnel, per-quest progress, most-reported spots and grouped app errors. Offline check-ins keep their real time.

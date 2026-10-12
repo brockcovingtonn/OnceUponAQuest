@@ -1,4 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
@@ -13,9 +14,11 @@ import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { fieldToolsEnabled } from '@/lib/fieldTools';
+import { useIsOnline } from '@/lib/network';
 import { useOfflineQueue } from '@/lib/offlineQueue';
 import { useParadeMode } from '@/lib/paradeMode';
 import { useIsAdmin, useMyProgress, useQuest } from '@/lib/queries';
+import { prefetchStorageImages } from '@/lib/storageImage';
 import { colors, radius, spacing, type } from '@/theme';
 
 export default function QuestDetailScreen() {
@@ -26,6 +29,15 @@ export default function QuestDetailScreen() {
   const { paradeMode } = useParadeMode();
   const isAdmin = useIsAdmin(session?.user.id);
   const { items: queuedItems } = useOfflineQueue();
+  const online = useIsOnline();
+  const accessToken = session?.access_token;
+  const photoPaths = quest.data ? [quest.data.cover_photo_path, ...quest.data.spots.map((s) => s.photo_path)].join('|') : '';
+
+  // Save this quest's cover and hint photos on the phone so they show without signal later.
+  useEffect(() => {
+    if (!online || !accessToken || !photoPaths) return;
+    prefetchStorageImages('spot-photos', photoPaths.split('|'), accessToken);
+  }, [online, accessToken, photoPaths]);
 
   if (quest.isPending || progress.isPending) return <StateView kind="loading" />;
   if (quest.isError || progress.isError) {
@@ -114,7 +126,7 @@ export default function QuestDetailScreen() {
           </View>
         ) : null}
 
-        {fieldToolsEnabled && isAdmin.data ? <QuestFieldTools questId={quest.data.id} /> : null}
+        {fieldToolsEnabled && isAdmin.data ? <QuestFieldTools quest={{ id: quest.data.id, title, story }} /> : null}
       </ScrollView>
     </>
   );

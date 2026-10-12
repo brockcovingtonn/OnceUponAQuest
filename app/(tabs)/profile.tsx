@@ -12,7 +12,8 @@ import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { openAppSettings } from '@/lib/location';
 import { getPermissionStatuses, type PermissionStatuses } from '@/lib/permissions';
-import { useDeleteAccount, useIsAdmin, useOpenReports, useProfile } from '@/lib/queries';
+import { useDeleteAccount, useFieldWalk, useIsAdmin, useOpenReports, useProfile } from '@/lib/queries';
+import { fieldToolsEnabled } from '@/lib/fieldTools';
 import { supabase } from '@/lib/supabase';
 import { colors, spacing, type } from '@/theme';
 
@@ -42,6 +43,9 @@ export default function ProfileScreen() {
   const deleteAccount = useDeleteAccount(userId);
   const isAdmin = useIsAdmin(userId);
   const openReports = useOpenReports(isAdmin.data === true);
+  const fieldWalk = useFieldWalk(fieldToolsEnabled && isAdmin.data === true);
+  const walkSpots = fieldWalk.data?.flatMap((q) => q.spots) ?? [];
+  const walkDone = walkSpots.filter((s) => s.pinned && s.hasPhoto && s.verified).length;
   const [signingOut, setSigningOut] = useState(false);
 
   if (profile.isPending) return <StateView kind="loading" />;
@@ -120,6 +124,13 @@ export default function ProfileScreen() {
             label={copy.profile.about}
             onPress={() => router.push('/about')}
           />
+          {fieldToolsEnabled && isAdmin.data ? (
+            <SettingsRow
+              icon="footsteps-outline"
+              label={copy.fieldWalk.settingsRow(walkDone, walkSpots.length)}
+              onPress={() => router.push('/field-walk')}
+            />
+          ) : null}
           {isAdmin.data ? (
             <SettingsRow
               icon="stats-chart-outline"

@@ -72,7 +72,7 @@ const questListSelect = `
 const questDetailSelect = `
   id, slug, title, story, est_minutes, cover_photo_path,
   badge:badges ( id, slug, title, description, art_key ),
-  spots ( id, sort_order, teaser, title, method, pause_during_parades, holiday_note )
+  spots ( id, sort_order, teaser, title, method, pause_during_parades, holiday_note, photo_path )
 ` as const;
 
 export type QuestSummary = {
@@ -994,5 +994,115 @@ export function useMapSpots() {
         }))
         .sort((a, b) => a.quest.order - b.quest.order || a.order - b.order);
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Field walk: checklist and content editing (admins only; enforced in the database)
+// ---------------------------------------------------------------------------
+
+export type FieldWalkSpot = {
+  id: string;
+  order: number;
+  teaser: string;
+  pinned: boolean;
+  hasPhoto: boolean;
+  verified: boolean;
+};
+
+export type FieldWalkQuest = {
+  id: string;
+  slug: string;
+  title: string;
+  hasCover: boolean;
+  spots: FieldWalkSpot[];
+};
+
+export function useFieldWalk(enabled: boolean) {
+  return useQuery({
+    queryKey: ['field-walk'] as const,
+    enabled,
+    queryFn: async (): Promise<FieldWalkQuest[]> => {
+      const { data, error } = await supabase
+        .from('quests')
+        .select('id, slug, title, cover_photo_path, sort_order, spots ( id, sort_order, teaser, lat, lng, photo_path, verified_on_site )')
+        .order('sort_order')
+        .order('sort_order', { referencedTable: 'spots' });
+      if (error) throw error;
+      return data.map((q) => ({
+        id: q.id,
+        slug: q.slug,
+        title: q.title,
+        hasCover: Boolean(q.cover_photo_path),
+        spots: q.spots.map((s) => ({
+          id: s.id,
+          order: s.sort_order,
+          teaser: s.teaser,
+          pinned: s.lat !== null && s.lng !== null,
+          hasPhoto: Boolean(s.photo_path),
+          verified: s.verified_on_site,
+        })),
+      }));
+    },
+  });
+}
+
+export function useAdminSpotAnswers(spotId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-spot-answers', spotId] as const,
+    enabled,
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase.rpc('admin_get_spot_answers', { p_spot_id: spotId });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export type SpotContentChanges = {
+  teaser?: string;
+  title?: string;
+  where_to_stand?: string;
+  clue?: string;
+  prompt?: string;
+  hint?: string;
+  holiday_note?: string;
+  pause_during_parades?: boolean;
+  radius_m?: number;
+  accepted_answers?: string[];
+};
+
+/** Content shows in many places; refresh all of them after an edit. */
+function invalidateContent(queryClient: ReturnType<typeof useQueryClient>) {
+  return Promise.all(
+    ['spot', 'quest', 'quests', 'map-spots', 'passport-content', 'field-walk', 'admin-spot-answers'].map((key) =>
+      queryClient.invalidateQueries({ queryKey: [key] }),
+    ),
+  );
+}
+
+export function useAdminUpdateSpotContent(spotId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (changes: SpotContentChanges) => {
+      const { error } = await supabase.rpc('admin_update_spot_content', { p_spot_id: spotId, p_changes: changes });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateContent(queryClient),
+  });
+}
+
+export function useAdminUpdateQuestContent(questId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ title, story }: { title: string; story: string }) => {
+      const { error } = await supabase.rpc('admin_update_quest_content', {
+        p_quest_id: questId,
+        p_title: title,
+        p_story: story,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateContent(queryClient),
   });
 }

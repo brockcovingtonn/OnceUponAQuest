@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
+import { EditQuestSheet, EditSpotSheet } from '@/components/EditContentSheets';
 import { copy } from '@/copy';
 import { getCurrentFix, getLocationPermission, requestLocationPermission } from '@/lib/location';
 import { takePhoto, uploadContentPhoto } from '@/lib/photos';
@@ -28,6 +29,7 @@ export function SpotFieldTools({ spot }: { spot: SpotDetail }) {
   const update = useAdminUpdateSpot(spot.id);
   const [busy, setBusy] = useState<'pin' | 'photo' | 'verify'>();
   const [message, setMessage] = useState<Message>();
+  const [editing, setEditing] = useState(false);
 
   async function run(kind: 'pin' | 'photo' | 'verify', action: () => Promise<Message | undefined>) {
     setMessage(undefined);
@@ -92,14 +94,26 @@ export function SpotFieldTools({ spot }: { spot: SpotDetail }) {
         loading={busy === 'verify'}
         disabled={Boolean(busy)}
       />
+      <Button variant="secondary" label={copy.editContent.editSpot} onPress={() => setEditing(true)} disabled={Boolean(busy)} />
       {message ? <Banner tone={message.tone} message={message.text} /> : null}
+      <EditSpotSheet
+        spot={spot}
+        visible={editing}
+        onClose={() => setEditing(false)}
+        onSaved={() => {
+          setEditing(false);
+          setMessage({ text: copy.editContent.saved, tone: 'info' });
+        }}
+      />
     </Panel>
   );
 }
 
-/** Field-walk tool for a quest: take its cover photo. */
-export function QuestFieldTools({ questId }: { questId: string }) {
+/** Field-walk tools for a quest: take its cover photo, edit its title and story. */
+export function QuestFieldTools({ quest }: { quest: { id: string; title: string; story: string | null } }) {
+  const questId = quest.id;
   const setCover = useAdminSetQuestCover(questId);
+  const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message>();
 
@@ -126,7 +140,18 @@ export function QuestFieldTools({ questId }: { questId: string }) {
   return (
     <Panel>
       <Button variant="secondary" label={copy.fieldTools.coverPhoto} onPress={takeCover} loading={busy} />
+      <Button variant="secondary" label={copy.editContent.editQuest} onPress={() => setEditing(true)} />
       {message ? <Banner tone={message.tone} message={message.text} /> : null}
+      <EditQuestSheet
+        key={`${quest.title}|${quest.story ?? ''}`}
+        quest={quest}
+        visible={editing}
+        onClose={() => setEditing(false)}
+        onSaved={() => {
+          setEditing(false);
+          setMessage({ text: copy.editContent.saved, tone: 'info' });
+        }}
+      />
     </Panel>
   );
 }
