@@ -81,23 +81,26 @@ export default function QuestsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
-        <View style={styles.header}>
-          <Scene shapes={mainStreetNight} height={150} />
-          <Twinkle size={12} style={{ top: 58, right: '16%' }} />
-          <Twinkle size={9} delay={700} style={{ top: 74, left: '46%' }} color={colors.parchment} />
-          {profile.data ? (
-            <Text style={styles.greeting} accessibilityRole="header">
-              {copy.quests.greeting(new Date().getHours(), profile.data.display_name ?? profile.data.username)}
-            </Text>
-          ) : null}
+        {/* Greeting sits on plain parchment above the scene so it's always readable. */}
+        <View style={styles.greetingRow}>
+          <Text style={styles.greeting} accessibilityRole="header">
+            {profile.data
+              ? copy.quests.greeting(new Date().getHours(), profile.data.display_name ?? profile.data.username)
+              : ''}
+          </Text>
           <Pressable
             onPress={() => router.push('/walkthrough')}
             accessibilityRole="button"
             accessibilityLabel={copy.walkthrough.open}
             accessibilityHint={copy.walkthrough.openHint}
             style={styles.help}>
-            <Ionicons name="help-circle-outline" size={26} color={colors.parchment} />
+            <Ionicons name="help-circle-outline" size={28} color={colors.midnight} />
           </Pressable>
+        </View>
+        <View style={styles.header}>
+          <Scene shapes={mainStreetNight} height={150} />
+          <Twinkle size={12} style={{ top: 58, right: '16%' }} />
+          <Twinkle size={9} delay={700} style={{ top: 74, left: '46%' }} color={colors.parchment} />
         </View>
 
         {appUpdate.ready ? <UpdateBanner onRestart={appUpdate.restart} /> : null}
@@ -154,18 +157,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     overflow: 'hidden',
   },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: -spacing.sm,
+  },
   greeting: {
     ...type.title,
-    color: colors.parchment,
-    position: 'absolute',
-    top: spacing.md,
-    left: spacing.md,
-    right: spacing.md + minTouchTarget,
+    color: colors.midnight,
+    flex: 1,
   },
   help: {
-    position: 'absolute',
-    top: spacing.xs,
-    right: spacing.xs,
     width: minTouchTarget,
     height: minTouchTarget,
     alignItems: 'center',
