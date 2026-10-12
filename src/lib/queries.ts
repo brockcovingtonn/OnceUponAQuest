@@ -956,3 +956,43 @@ export function useRecentErrors(enabled: boolean) {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Map
+// ---------------------------------------------------------------------------
+
+export type MapSpot = {
+  id: string;
+  order: number;
+  teaser: string;
+  title: string;
+  lat: number | null;
+  lng: number | null;
+  pauseDuringParades: boolean;
+  quest: { id: string; slug: string; title: string; order: number };
+};
+
+/** Every live spot with its pin (if set) and quest, for the Map tab. Cached for offline use. */
+export function useMapSpots() {
+  return useQuery({
+    queryKey: ['map-spots'] as const,
+    queryFn: async (): Promise<MapSpot[]> => {
+      const { data, error } = await supabase
+        .from('spots')
+        .select('id, sort_order, teaser, title, lat, lng, pause_during_parades, quest:quests ( id, slug, title, sort_order )');
+      if (error) throw error;
+      return data
+        .map((s) => ({
+          id: s.id,
+          order: s.sort_order,
+          teaser: s.teaser,
+          title: s.title,
+          lat: s.lat,
+          lng: s.lng,
+          pauseDuringParades: s.pause_during_parades,
+          quest: { id: s.quest.id, slug: s.quest.slug, title: s.quest.title, order: s.quest.sort_order },
+        }))
+        .sort((a, b) => a.quest.order - b.quest.order || a.order - b.order);
+    },
+  });
+}

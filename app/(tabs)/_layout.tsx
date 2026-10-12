@@ -29,6 +29,14 @@ export default function TabLayout() {
         options={{
           title: copy.tabs.quests,
           tabBarAccessibilityLabel: copy.tabs.quests,
+          tabBarIcon: tabIcon('compass-outline'),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: copy.map.title,
+          tabBarAccessibilityLabel: copy.map.title,
           tabBarIcon: tabIcon('map-outline'),
         }}
       />

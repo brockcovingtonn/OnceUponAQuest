@@ -20,6 +20,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
   - [ ] Confirm the answer, the cannon count and candy shop names; tell Claude about anything that changed so the answer keys can be updated
   - [ ] **Mark verified**
 - [ ] On each of the 4 quest screens: **Take cover photo** (replaces the storybook scene on the card and quest page)
+- [ ] After pinning a few spots, open the **Map** tab: stamps should sit on the right side of the street. If they're off, adjust the two anchor points in `src/lib/mapGeometry.ts`.
 - [ ] Note: once a spot has a pin, check-ins there require being on site — test at-home check-ins on unpinned spots.
 
 ## 2. Domain, email and web pages (after you buy the domain)
@@ -57,6 +58,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
   - `npm run build:preview` — standalone test builds (sign-in needs the hosted email set up first — section 2)
   - `npm run build:production` then `npm run submit:ios` / `npm run submit:android` — store builds
 - [ ] Preview and production builds use the **hosted** Supabase project (values stored in EAS, not in the repo). Sign-in there needs the custom SMTP + code templates from section 2.
+- [ ] **Google Maps API key for Android** (the real map uses Google Maps on Android; iPhone uses Apple Maps with no key). Create a key in Google Cloud with the Maps SDK for Android enabled, then add it as `android.config.googleMaps.apiKey` in app.json and rebuild.
 - [ ] App Store privacy "nutrition label" and Google Play Data safety form: email, user ID, photos, precise location (app functionality only, not stored), user content; no tracking, no ads.
 - [ ] Age rating questionnaires (13+, user-generated content, location).
 
@@ -100,6 +102,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
 - Report and block users (App Store Guideline 1.2): block/report from the … menu in Friends, Blocked explorers list, admin Moderation queue (remove photo, reset name, suspend, dismiss), suspended-account screen, banned words for names. Enforced in the database (72 tests).
+- Map tab: original storybook map of the street (offline, numbered stamps in walking order per quest, found stamps gold, parade pauses, 'you are here' once pins exist) with a switch to the real map (Apple Maps / Google Maps) showing pinned spots and your location.
 - First-time walkthrough "How quests work": 8 pages with looping animated examples (quest progress, finding a spot, four check-in types, stamps and badges, hints and Parade mode, offline sync, friends, safety); shown once after onboarding, reopen from Profile or the ? on the Quests banner; respects Reduce Motion.
 - Crash reporting (first-party, in Supabase) with a friendly error screen, and the admin Insights screen (Profile → Insights): the spec's success metrics in park time, funnel, per-quest progress, most-reported spots and grouped app errors. Offline check-ins keep their real time.
 - Offline mode: quest content, progress, profile and friends cached on the device (7 days); check-ins (with photos and GPS captured at the spot) queue offline and sync when the connection returns; typed answers are checked at sync time.

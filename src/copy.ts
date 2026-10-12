@@ -324,6 +324,29 @@ export const copy = {
     loadError: "We couldn't load insights. Check your connection and try again.",
   },
 
+  map: {
+    title: 'Map',
+    storybook: 'Storybook',
+    real: 'Real map',
+    viewLabel: 'Map style',
+    allSpots: 'All spots',
+    approximate: 'Spot positions are approximate until they’re pinned on site.',
+    noPins: 'Spot pins are added during the field walk. Until then, use the Storybook map.',
+    tilesNeedSignal: 'The real map needs signal to load. The Storybook map works offline.',
+    locateMe: 'Show where I am',
+    hideMe: 'Hide my location',
+    notOnStreet: "You're not on the street right now.",
+    youAreHere: 'You are here',
+    stampLabel: (order: number, name: string, state: 'found' | 'open' | 'paused') =>
+      `Spot ${order}: ${name}. ${state === 'found' ? 'Found.' : state === 'paused' ? 'Paused for parades.' : 'Not found yet.'} Shows details.`,
+    found: 'Found',
+    notFound: 'Not found yet',
+    paused: 'Paused for parades',
+    openSpot: 'Open spot',
+    close: 'Close',
+    loadError: "We couldn't load the map. Check your connection and try again.",
+  },
+
   walkthrough: {
     open: 'How quests work',
     openHint: 'A quick tour of quests, check-ins, stamps and safety',
