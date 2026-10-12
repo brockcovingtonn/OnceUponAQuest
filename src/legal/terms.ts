@@ -65,7 +65,7 @@ export const terms: LegalDocument = {
         'Your content includes your username, display name, profile photo, check-in photos, snack logs, problem reports and anything else you submit. You keep ownership of your content.',
         'You give us a worldwide, non-exclusive, royalty-free license to host, store, copy, process and display your content only as needed to run, secure and improve the App as described in our Privacy Policy — for example, showing your profile photo to other signed-in users and showing your check-in photos back to you. Check-in photos are private to you; we do not publish them. This license ends when you delete the content or your account, except for copies we must keep by law or that remain for a short time in backups.',
         'You promise that you have the rights to everything you upload, and that anyone identifiable in your photos has agreed to appear. Do not photograph other guests, children, or staff without permission, and follow any park rules about photography.',
-        'We may remove any content, or limit any account, that we reasonably believe breaks these Terms or puts people at risk.',
+        'We review reports about users within 24 hours. We may remove any content (such as a profile photo), reset a username or display name, or suspend any account that we reasonably believe breaks these Terms or puts people at risk. Some words are not allowed in usernames or display names, including names that suggest you are staff or connected with a park operator.',
       ],
     },
     {
@@ -83,7 +83,7 @@ export const terms: LegalDocument = {
     {
       heading: '8. Friends and other explorers',
       paragraphs: [
-        'You choose who to add as a friend, and you can remove a friend at any time. Friends can see your progress and badges. Other signed-in users can see your username, display name and profile picture. We are not responsible for how other users act, in or out of the App. If someone makes you feel unsafe, remove them and tell us at ' + L.contactEmail + '.',
+        'You choose who to add as a friend, and you can remove a friend at any time. Friends can see your progress and badges. Other signed-in users can see your username, display name and profile picture. We are not responsible for how other users act, in or out of the App. If someone makes you feel unsafe, use the … menu next to their name to block them (you will no longer see each other in Friends, and neither of you can send a friend request) or report them. You can unblock people in Profile → Blocked explorers. You can also email us at ' + L.contactEmail + '.',
       ],
     },
     {

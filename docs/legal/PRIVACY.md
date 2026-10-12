@@ -13,6 +13,7 @@ This Privacy Policy explains what information Higher Thinking Consulting ("we", 
 - Check-ins — which spots you found and when. Typed answers are checked and then discarded; we do not store them.
 - Check-in photos you take for photo spots, and optional snack photos.
 - Snack Passport entries, problem reports (with any note you add), friend requests and friendships.
+- Reports you make about other users (with any note you add) and the people you block.
 - Anything you send us by email, such as feedback or support requests.
 
 ## 2. Information collected when you use the App
@@ -38,7 +39,8 @@ This Privacy Policy explains what information Higher Thinking Consulting ("we", 
 - Any signed-in user: your username, display name and avatar or profile photo (for example, when they search for your username or see a friend request).
 - Friends you accept: which spots you have found and when (including Snack Passport entries), and your badges. Friends cannot see your check-in photos.
 - Only you: your check-in photos and your email address.
-- Only us: problem reports, server logs, and your email address. We access account data only as needed to operate, secure and support the App.
+- Only you: the list of people you have blocked. People you block are not told.
+- Only us: problem reports, reports about users (the person reported is never told who reported them), server logs, and your email address. We access account data only as needed to operate, secure, moderate and support the App.
 
 ## 5. Service providers and other sharing
 
@@ -59,7 +61,7 @@ Teens aged 13 to 17 should use the App with a parent or guardian's permission. P
 
 ## 7. How long we keep information
 
-We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile, check-ins, badges, friendships, problem reports, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.
+We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile, check-ins, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.
 
 ## 8. Your choices and rights
 

@@ -12,7 +12,7 @@ import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { openAppSettings } from '@/lib/location';
 import { getPermissionStatuses, type PermissionStatuses } from '@/lib/permissions';
-import { useDeleteAccount, useProfile } from '@/lib/queries';
+import { useDeleteAccount, useIsAdmin, useOpenReports, useProfile } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { colors, spacing, type } from '@/theme';
 
@@ -40,6 +40,8 @@ export default function ProfileScreen() {
   const profile = useProfile(userId);
   const permissions = usePermissionStatuses();
   const deleteAccount = useDeleteAccount(userId);
+  const isAdmin = useIsAdmin(userId);
+  const openReports = useOpenReports(isAdmin.data === true);
   const [signingOut, setSigningOut] = useState(false);
 
   if (profile.isPending) return <StateView kind="loading" />;
@@ -99,6 +101,11 @@ export default function ProfileScreen() {
             accessibilityHint={copy.profile.permissionHint}
             onPress={openAppSettings}
           />
+          <SettingsRow
+            icon="hand-left-outline"
+            label={copy.blocked.title}
+            onPress={() => router.push('/blocked')}
+          />
           <SettingsRow icon="walk-outline" label={copy.profile.safetyRules} onPress={() => router.push('/safety')} />
           <SettingsRow icon="document-text-outline" label={copy.profile.terms} onPress={() => router.push('/terms')} />
           <SettingsRow icon="lock-closed-outline" label={copy.profile.privacy} onPress={() => router.push('/privacy')} />
@@ -107,6 +114,13 @@ export default function ProfileScreen() {
             label={copy.profile.about}
             onPress={() => router.push('/about')}
           />
+          {isAdmin.data ? (
+            <SettingsRow
+              icon="shield-checkmark-outline"
+              label={copy.moderation.settingsRow(openReports.data?.length ?? 0)}
+              onPress={() => router.push('/moderation')}
+            />
+          ) : null}
           {feedbackEmail ? (
             <SettingsRow
               icon="mail-outline"

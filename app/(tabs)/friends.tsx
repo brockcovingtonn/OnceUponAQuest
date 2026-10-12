@@ -13,10 +13,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ActionSheet, type SheetAction } from '@/components/ActionSheet';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { ProfileAvatar } from '@/components/ProfileAvatar';
+import { ReportUserSheet } from '@/components/ReportUserSheet';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
@@ -24,6 +26,7 @@ import {
   type AddFriendOutcome,
   type FriendProfile,
   useAddFriend,
+  useBlockUser,
   useFriendships,
   useLeaderboard,
   useRemoveFriend,
@@ -32,6 +35,9 @@ import {
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
 
 type AddMessage = { text: string; tone: 'info' | 'error' };
+
+/** Who the "…" menu is open for, and how they relate to me. */
+type MenuTarget = { id: string; username: string; relation: 'friend' | 'incoming' | 'outgoing' };
 
 function outcomeMessage(outcome: AddFriendOutcome, username: string): AddMessage {
   return {
@@ -47,7 +53,7 @@ function IconButton({
   disabled,
   tone,
 }: {
-  icon: 'checkmark' | 'close' | 'person-remove-outline';
+  icon: 'checkmark' | 'close' | 'ellipsis-horizontal';
   label: string;
   onPress: () => void;
   disabled: boolean;
@@ -90,13 +96,16 @@ export default function FriendsScreen() {
   const addFriend = useAddFriend(userId);
   const respond = useRespondToRequest(userId);
   const removeFriend = useRemoveFriend(userId);
+  const blockUser = useBlockUser(userId);
+  const [menuTarget, setMenuTarget] = useState<MenuTarget | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ id: string; username: string } | null>(null);
   const [username, setUsername] = useState('');
   const [addMessage, setAddMessage] = useState<AddMessage>();
-  const [removeMessage, setRemoveMessage] = useState<AddMessage>();
+  const [actionMessage, setActionMessage] = useState<AddMessage>();
   const [refreshing, setRefreshing] = useState(false);
 
   function confirmRemove(friendId: string, friendName: string) {
-    setRemoveMessage(undefined);
+    setActionMessage(undefined);
     Alert.alert(copy.friends.removeConfirmTitle(friendName), copy.friends.removeConfirmBody, [
       { text: copy.friends.removeCancel, style: 'cancel' },
       {
@@ -104,11 +113,52 @@ export default function FriendsScreen() {
         style: 'destructive',
         onPress: () =>
           removeFriend.mutate(friendId, {
-            onSuccess: () => setRemoveMessage({ text: copy.friends.removed(friendName), tone: 'info' }),
-            onError: () => setRemoveMessage({ text: copy.common.networkError, tone: 'error' }),
+            onSuccess: () => setActionMessage({ text: copy.friends.removed(friendName), tone: 'info' }),
+            onError: () => setActionMessage({ text: copy.common.networkError, tone: 'error' }),
           }),
       },
     ]);
+  }
+
+  function confirmBlock(otherId: string, otherName: string) {
+    setActionMessage(undefined);
+    Alert.alert(copy.friends.blockConfirmTitle(otherName), copy.friends.blockConfirmBody, [
+      { text: copy.common.cancel, style: 'cancel' },
+      {
+        text: copy.friends.blockConfirm,
+        style: 'destructive',
+        onPress: () =>
+          blockUser.mutate(otherId, {
+            onSuccess: () => setActionMessage({ text: copy.friends.blocked(otherName), tone: 'info' }),
+            onError: () => setActionMessage({ text: copy.common.networkError, tone: 'error' }),
+          }),
+      },
+    ]);
+  }
+
+  function menuActions(target: MenuTarget): SheetAction[] {
+    const actions: SheetAction[] = [];
+    if (target.relation === 'friend') {
+      actions.push({ label: copy.friends.removeFriend, onPress: () => confirmRemove(target.id, target.username) });
+    }
+    if (target.relation === 'outgoing') {
+      actions.push({ label: copy.friends.cancelRequest, onPress: () => removeFriend.mutate(target.id) });
+    }
+    actions.push({ label: copy.friends.report, onPress: () => setReportTarget({ id: target.id, username: target.username }) });
+    actions.push({ label: copy.friends.block, destructive: true, onPress: () => confirmBlock(target.id, target.username) });
+    return actions;
+  }
+
+  function moreButton(target: MenuTarget) {
+    return (
+      <IconButton
+        icon="ellipsis-horizontal"
+        tone="decline"
+        label={copy.friends.more(target.username)}
+        disabled={false}
+        onPress={() => setMenuTarget(target)}
+      />
+    );
   }
 
   async function refresh() {
@@ -172,6 +222,8 @@ export default function FriendsScreen() {
           {addMessage ? <Banner tone={addMessage.tone} message={addMessage.text} /> : null}
         </View>
 
+        {actionMessage ? <Banner tone={actionMessage.tone} message={actionMessage.text} /> : null}
+
         {incoming.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionHeader} accessibilityRole="header">
@@ -193,6 +245,7 @@ export default function FriendsScreen() {
                   disabled={respond.isPending}
                   onPress={() => respond.mutate({ requesterId: friend.id, accept: false })}
                 />
+                {moreButton({ id: friend.id, username: friend.username, relation: 'incoming' })}
               </PersonRow>
             ))}
             {respond.isError ? <Banner message={copy.common.networkError} /> : null}
@@ -207,6 +260,7 @@ export default function FriendsScreen() {
             {outgoing.map((friend) => (
               <PersonRow key={friend.id} friend={friend}>
                 <Text style={styles.waiting}>{copy.friends.waiting}</Text>
+                {moreButton({ id: friend.id, username: friend.username, relation: 'outgoing' })}
               </PersonRow>
             ))}
           </View>
@@ -237,18 +291,11 @@ export default function FriendsScreen() {
                 {row.isMe ? (
                   <View style={styles.iconButtonSpacer} />
                 ) : (
-                  <IconButton
-                    icon="person-remove-outline"
-                    tone="decline"
-                    label={copy.friends.remove(row.username)}
-                    disabled={removeFriend.isPending}
-                    onPress={() => confirmRemove(row.userId, row.username)}
-                  />
+                  moreButton({ id: row.userId, username: row.username, relation: 'friend' })
                 )}
               </View>
             );
           })}
-          {removeMessage ? <Banner tone={removeMessage.tone} message={removeMessage.text} /> : null}
           {rows.length <= 1 ? <Text style={styles.empty}>{copy.friends.empty}</Text> : null}
         </View>
       </ScrollView>
@@ -260,6 +307,20 @@ export default function FriendsScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {body}
       </KeyboardAvoidingView>
+      <ActionSheet
+        visible={menuTarget !== null}
+        title={menuTarget ? `@${menuTarget.username}` : ''}
+        actions={menuTarget ? menuActions(menuTarget) : []}
+        onClose={() => setMenuTarget(null)}
+      />
+      <ReportUserSheet
+        target={reportTarget}
+        onClose={() => setReportTarget(null)}
+        onSent={() => {
+          setReportTarget(null);
+          setActionMessage({ text: copy.reportUser.sent, tone: 'info' });
+        }}
+      />
     </SafeAreaView>
   );
 }

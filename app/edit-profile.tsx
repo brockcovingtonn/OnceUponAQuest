@@ -46,8 +46,9 @@ function EditProfileForm({ profile, userId }: { profile: Profile; userId: string
       await update.mutateAsync({ displayName, avatarKey: saved.avatarKey, avatarUrl: saved.avatarUrl });
       await avatar.cleanUp(userId, saved);
       router.back();
-    } catch {
-      setError(copy.editProfile.saveFailed);
+    } catch (e) {
+      const code = typeof e === 'object' && e !== null && 'code' in e ? e.code : undefined;
+      setError(code === '23514' ? copy.editProfile.nameNotAllowed : copy.editProfile.saveFailed);
     } finally {
       setSaving(false);
     }

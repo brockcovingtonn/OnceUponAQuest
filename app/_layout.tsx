@@ -16,6 +16,8 @@ import '@/lib/network';
 import { OfflineQueueProvider } from '@/lib/offlineQueue';
 import { ParadeModeProvider } from '@/lib/paradeMode';
 import { useProfile } from '@/lib/queries';
+import { supabase } from '@/lib/supabase';
+import { legalInfo } from '@/legal/info';
 import { CACHE_MAX_AGE_MS, persistOptions } from '@/lib/queryPersistence';
 import { colors, fontAssets, fonts, spacing, type } from '@/theme';
 
@@ -76,6 +78,18 @@ function RootNavigator() {
 
   if (!ready) return null;
 
+  if (signedIn && profile.data?.suspended_at) {
+    return (
+      <View style={styles.error}>
+        <Text style={styles.suspendedTitle} accessibilityRole="header">
+          {copy.suspended.title}
+        </Text>
+        <Text style={styles.errorText}>{copy.suspended.body(legalInfo.contactEmail)}</Text>
+        <Button variant="secondary" label={copy.common.signOut} onPress={() => supabase.auth.signOut()} />
+      </View>
+    );
+  }
+
   if (signedIn && (profile.isError || waitingForSignal)) {
     return (
       <View style={styles.error}>
@@ -117,6 +131,8 @@ function RootNavigator() {
           />
           <Stack.Screen name="safety" options={{ title: copy.safety.title }} />
           <Stack.Screen name="about" options={{ title: copy.about.title }} />
+        <Stack.Screen name="blocked" options={{ title: copy.blocked.title }} />
+        <Stack.Screen name="moderation" options={{ title: copy.moderation.title }} />
         </Stack.Protected>
 
         <Stack.Screen name="too-young" options={{ headerShown: false, gestureEnabled: false }} />
@@ -139,6 +155,11 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     backgroundColor: colors.parchment,
+  },
+  suspendedTitle: {
+    ...type.title,
+    color: colors.midnight,
+    textAlign: 'center',
   },
   errorText: {
     ...type.body,

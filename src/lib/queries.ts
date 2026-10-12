@@ -476,7 +476,15 @@ export function useLeaderboard(userId: string | undefined) {
   });
 }
 
-export type AddFriendOutcome = 'sent' | 'not_found' | 'self' | 'already_friends' | 'already_sent' | 'they_asked';
+export type AddFriendOutcome =
+  | 'sent'
+  | 'not_found'
+  | 'self'
+  | 'already_friends'
+  | 'already_sent'
+  | 'they_asked'
+  | 'you_blocked'
+  | 'unavailable';
 
 /** Escape LIKE wildcards so "lamp_lighter" matches only itself. */
 function escapeLike(value: string): string {
@@ -497,6 +505,14 @@ export function useAddFriend(userId: string | undefined) {
       if (!match) return 'not_found';
       if (match.id === userId) return 'self';
 
+      const { data: myBlock } = await supabase
+        .from('user_blocks')
+        .select('blocked')
+        .eq('blocker', userId)
+        .eq('blocked', match.id)
+        .maybeSingle();
+      if (myBlock) return 'you_blocked';
+
       const cached = queryClient.getQueryData<FriendshipRows>(friendKeys.friendships(userId));
       const current = cached ? toFriendships(cached) : undefined;
       if (current?.friendIds.has(match.id)) return 'already_friends';
@@ -506,6 +522,8 @@ export function useAddFriend(userId: string | undefined) {
       const insert = await supabase.from('friendships').insert({ requester: userId, addressee: match.id });
       if (insert.error) {
         if (insert.error.code === '23505') return 'already_sent';
+        // Refused by the database: they blocked you, or one of you is suspended.
+        if (insert.error.code === '42501') return 'unavailable';
         throw insert.error;
       }
       return 'sent';
@@ -675,5 +693,152 @@ export function useAdminSetQuestCover(questId: string) {
         queryClient.invalidateQueries({ queryKey: questKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['quest'] }),
       ]),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Blocking and reporting other explorers
+// ---------------------------------------------------------------------------
+
+export const moderationKeys = {
+  blocks: (userId: string | undefined) => ['blocks', userId] as const,
+  reports: ['user-reports'] as const,
+};
+
+export type BlockedExplorer = { id: string; username: string | null; avatarKey: string | null; avatarUrl: string | null };
+
+/** People I've blocked (username is null if their account is no longer visible). */
+export function useMyBlocks(userId: string | undefined) {
+  return useQuery({
+    queryKey: moderationKeys.blocks(userId),
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<BlockedExplorer[]> => {
+      const { data, error } = await supabase
+        .from('user_blocks')
+        .select('blocked, profile:profiles!user_blocks_blocked_fkey ( username, avatar_key, avatar_url )')
+        .eq('blocker', userId ?? '')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map((row) => ({
+        id: row.blocked,
+        username: row.profile?.username ?? null,
+        avatarKey: row.profile?.avatar_key ?? null,
+        avatarUrl: row.profile?.avatar_url ?? null,
+      }));
+    },
+  });
+}
+
+function invalidateSocial(queryClient: ReturnType<typeof useQueryClient>, userId: string | undefined) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: moderationKeys.blocks(userId) }),
+    queryClient.invalidateQueries({ queryKey: friendKeys.friendships(userId) }),
+    queryClient.invalidateQueries({ queryKey: friendKeys.leaderboard(userId) }),
+  ]);
+}
+
+/** Block someone: also ends any friendship or request between you (enforced in the database). */
+export function useBlockUser(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (otherId: string) => {
+      const { error } = await supabase.rpc('block_user', { p_user_id: otherId });
+      if (error) throw error;
+    },
+    onSettled: () => invalidateSocial(queryClient, userId),
+  });
+}
+
+export function useUnblockUser(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (otherId: string) => {
+      const { error } = await supabase.from('user_blocks').delete().eq('blocker', userId ?? '').eq('blocked', otherId);
+      if (error) throw error;
+    },
+    onSettled: () => invalidateSocial(queryClient, userId),
+  });
+}
+
+export type UserReportReason = Tables<'user_reports'>['reason'];
+
+export function useReportUser() {
+  return useMutation({
+    mutationFn: async (input: { reportedId: string; reason: UserReportReason; note: string }) => {
+      const note = input.note.trim();
+      const { error } = await supabase
+        .from('user_reports')
+        .insert({ reported: input.reportedId, reason: input.reason, note: note === '' ? null : note });
+      if (error) throw error;
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Moderation queue (admins only; enforced in the database)
+// ---------------------------------------------------------------------------
+
+export type OpenReport = {
+  id: string;
+  reason: UserReportReason;
+  note: string | null;
+  createdAt: string;
+  reporter: string | null;
+  reported: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarKey: string | null;
+    avatarUrl: string | null;
+  };
+};
+
+export function useOpenReports(enabled: boolean) {
+  return useQuery({
+    queryKey: moderationKeys.reports,
+    enabled,
+    queryFn: async (): Promise<OpenReport[]> => {
+      const { data, error } = await supabase
+        .from('user_reports')
+        .select(`
+          id, reason, note, created_at,
+          reporter_profile:profiles!user_reports_reporter_fkey ( username ),
+          reported_profile:profiles!user_reports_reported_fkey ( id, username, display_name, avatar_key, avatar_url )
+        `)
+        .eq('status', 'open')
+        .order('created_at');
+      if (error) throw error;
+      return data.map((r) => ({
+        id: r.id,
+        reason: r.reason,
+        note: r.note,
+        createdAt: r.created_at,
+        reporter: r.reporter_profile?.username ?? null,
+        reported: {
+          id: r.reported_profile.id,
+          username: r.reported_profile.username,
+          displayName: r.reported_profile.display_name,
+          avatarKey: r.reported_profile.avatar_key,
+          avatarUrl: r.reported_profile.avatar_url,
+        },
+      }));
+    },
+  });
+}
+
+export type ModerationAction = 'dismiss' | 'remove_photo' | 'reset_name' | 'suspend';
+
+export function useResolveReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ reportId, action }: { reportId: string; action: ModerationAction }) => {
+      const { data: removedPhoto, error } = await supabase.rpc('admin_resolve_report', {
+        p_report_id: reportId,
+        p_action: action,
+      });
+      if (error) throw error;
+      if (removedPhoto) await supabase.storage.from('avatars').remove([removedPhoto]);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: moderationKeys.reports }),
   });
 }

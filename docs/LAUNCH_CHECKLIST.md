@@ -46,8 +46,9 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ## 4. Required before App Store / Google Play submission
 
-- [ ] **(code) Report and block users.** Usernames and profile photos are user-generated content, and Apple (Guideline 1.2) requires a way to report offensive content and block abusive users, plus a way for you to act on reports within 24 hours.
-- [ ] **(code) Photo moderation plan** — profile photos are visible to every signed-in user. Either add reporting + review (above) or limit profile photos to accepted friends.
+- [ ] Check **Profile → Moderation** at least once a day once real users arrive (Apple expects action on reports within 24 hours). Actions: remove photo, reset name, suspend account, dismiss.
+- [ ] **(code, optional)** Email or push alert to you when a new report arrives — needs the custom SMTP from section 2 (or push notifications).
+- [ ] Add more words to the username / display-name filter in Supabase → SQL Editor: `insert into private.banned_name_words (word) values ('...');` (seeded with impersonation terms: disney, official, moderator, castmember, onceuponaquest).
 - [ ] Enroll in the **Apple Developer Program** (yearly fee) — needed for any iPhone build you install, TestFlight and the App Store.
 - [ ] Create a **Google Play Console** account (one-time fee) — needed for Play internal testing and the store. (Android test builds can be installed without it.)
 - [ ] First builds — run these in the VS Code terminal, because they ask questions (Apple sign-in, signing keys):
@@ -94,6 +95,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Animated intro, twinkling stars, sparkle bursts (respect Reduce Motion).
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
+- Report and block users (App Store Guideline 1.2): block/report from the … menu in Friends, Blocked explorers list, admin Moderation queue (remove photo, reset name, suspend, dismiss), suspended-account screen, banned words for names. Enforced in the database (72 tests).
 - Offline mode: quest content, progress, profile and friends cached on the device (7 days); check-ins (with photos and GPS captured at the spot) queue offline and sync when the connection returns; typed answers are checked at sync time.
 - Over-the-air updates (EAS Update) with channels per build profile and the fingerprint runtime policy.
 - EAS Build set up: project `@brockieboy/once-upon-a-quest`, app ID `app.onceuponaquest`, profiles development / development-simulator / preview / production, hosted Supabase values stored as EAS environment variables.

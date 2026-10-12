@@ -25,6 +25,8 @@ export const copy = {
     retry: 'Try again',
     back: 'Back',
     signOut: 'Sign out',
+    cancel: 'Cancel',
+    close: 'Close',
   },
 
   signIn: {
@@ -55,7 +57,7 @@ export const copy = {
     usernameRules: '3–24 letters, numbers or underscores.',
     usernameChecking: 'Checking…',
     usernameAvailable: 'Available',
-    usernameTaken: 'That name is taken. Try another.',
+    usernameTaken: "That name isn't available. Try another.",
     usernameInvalid: 'Use 3–24 letters, numbers or underscores.',
     usernameJustTaken: 'That name was just taken. Pick another.',
     avatarTitle: 'Choose a stamp avatar',
@@ -233,6 +235,64 @@ export const copy = {
     thanks: 'Thanks! Your report was sent.',
   },
 
+  reportUser: {
+    title: (username: string) => `Report @${username}`,
+    intro: "Tell us what's wrong. Reports are private — they won't know it was you. We review every report within 24 hours.",
+    reasons: {
+      inappropriate_photo: 'Inappropriate profile photo',
+      offensive_name: 'Offensive username or name',
+      harassment: 'Harassment or bullying',
+      spam: 'Spam or fake account',
+      other: 'Something else',
+    },
+    noteLabel: 'Details (optional)',
+    notePlaceholder: 'What happened?',
+    send: 'Send report',
+    cancel: 'Cancel',
+    sent: 'Thanks — your report was sent. You can also block them.',
+  },
+
+  blocked: {
+    title: 'Blocked explorers',
+    empty: "You haven't blocked anyone.",
+    hidden: 'Account no longer visible',
+    unblock: (username: string) => `Unblock @${username}`,
+    unblockShort: 'Unblock',
+    loadError: "We couldn't load your blocked list. Check your connection and try again.",
+  },
+
+  moderation: {
+    title: 'Moderation',
+    settingsRow: (open: number) => (open > 0 ? `Moderation (${open} open)` : 'Moderation'),
+    intro: 'Open reports, oldest first. Act within 24 hours (App Store rule).',
+    empty: 'No open reports. 🎉',
+    reportedBy: (reporter: string | null, date: string) => `Reported by @${reporter ?? 'unknown'} on ${date}`,
+    reasons: {
+      inappropriate_photo: 'Inappropriate photo',
+      offensive_name: 'Offensive name',
+      harassment: 'Harassment',
+      spam: 'Spam',
+      other: 'Other',
+    },
+    actions: {
+      remove_photo: 'Remove photo',
+      reset_name: 'Reset name',
+      suspend: 'Suspend account',
+      dismiss: 'Dismiss',
+    },
+    confirmSuspend: (username: string) => `Suspend @${username}? Their profile disappears for everyone and their friendships end.`,
+    confirm: 'Suspend',
+    cancel: 'Cancel',
+    failed: 'That did not save. Check your connection and try again.',
+    loadError: "We couldn't load reports. Check your connection and try again.",
+  },
+
+  suspended: {
+    title: 'Your account is suspended',
+    body: (email: string) =>
+      `Your account was suspended for breaking the Terms of Service. If you think this is a mistake, email ${email}.`,
+  },
+
   badge: {
     title: 'Quest complete!',
     foundAll: (count: number) => `You found all ${count} spots.`,
@@ -273,6 +333,8 @@ export const copy = {
       already_friends: (username: string) => `You and @${username} are already friends.`,
       already_sent: (username: string) => `You already sent @${username} a request.`,
       they_asked: (username: string) => `@${username} already sent you a request — accept it below.`,
+      you_blocked: (username: string) => `You blocked @${username}. Unblock them in Profile → Blocked explorers first.`,
+      unavailable: (username: string) => `You can't send a request to @${username}.`,
     },
     requests: (count: number) => `REQUESTS (${count})`,
     accept: (username: string) => `Accept @${username}`,
@@ -292,6 +354,16 @@ export const copy = {
     removeConfirm: 'Remove',
     removeCancel: 'Cancel',
     removed: (username: string) => `@${username} was removed from your friends.`,
+    more: (username: string) => `More options for @${username}`,
+    removeFriend: 'Remove friend',
+    report: 'Report',
+    block: 'Block',
+    cancelRequest: 'Cancel request',
+    blockConfirmTitle: (username: string) => `Block @${username}?`,
+    blockConfirmBody:
+      "You won't see each other in Friends, any friendship or request between you ends, and neither of you can send a new request. They aren't told.",
+    blockConfirm: 'Block',
+    blocked: (username: string) => `@${username} is blocked.`,
   },
 
   profile: {
@@ -362,6 +434,7 @@ export const copy = {
     avatarTitle: 'Stamp avatar',
     save: 'Save',
     saveFailed: "We couldn't save your changes. Check your connection and try again.",
+    nameNotAllowed: "That display name isn't allowed. Try another.",
   },
 
   safety: {

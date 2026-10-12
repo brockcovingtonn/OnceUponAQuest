@@ -48,7 +48,7 @@ You give us a worldwide, non-exclusive, royalty-free license to host, store, cop
 
 You promise that you have the rights to everything you upload, and that anyone identifiable in your photos has agreed to appear. Do not photograph other guests, children, or staff without permission, and follow any park rules about photography.
 
-We may remove any content, or limit any account, that we reasonably believe breaks these Terms or puts people at risk.
+We review reports about users within 24 hours. We may remove any content (such as a profile photo), reset a username or display name, or suspend any account that we reasonably believe breaks these Terms or puts people at risk. Some words are not allowed in usernames or display names, including names that suggest you are staff or connected with a park operator.
 
 ## 7. Things you may not do
 
@@ -62,7 +62,7 @@ We may remove any content, or limit any account, that we reasonably believe brea
 
 ## 8. Friends and other explorers
 
-You choose who to add as a friend, and you can remove a friend at any time. Friends can see your progress and badges. Other signed-in users can see your username, display name and profile picture. We are not responsible for how other users act, in or out of the App. If someone makes you feel unsafe, remove them and tell us at higherthinkingconsulting@gmail.com.
+You choose who to add as a friend, and you can remove a friend at any time. Friends can see your progress and badges. Other signed-in users can see your username, display name and profile picture. We are not responsible for how other users act, in or out of the App. If someone makes you feel unsafe, use the … menu next to their name to block them (you will no longer see each other in Friends, and neither of you can send a friend request) or report them. You can unblock people in Profile → Blocked explorers. You can also email us at higherthinkingconsulting@gmail.com.
 
 ## 9. Our content
 

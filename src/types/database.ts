@@ -125,14 +125,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "age_confirmed_13": boolean,"avatar_key": string | null,"avatar_url": string | null,"created_at": string,"display_name": string | null,"id": string,"terms_accepted_at": string | null,"username": string
+                    "age_confirmed_13": boolean,"avatar_key": string | null,"avatar_url": string | null,"created_at": string,"display_name": string | null,"id": string,"suspended_at": string | null,"terms_accepted_at": string | null,"username": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "age_confirmed_13"?: boolean,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id": string,"terms_accepted_at"?: string | null,"username": string
+                    "age_confirmed_13"?: boolean,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id": string,"suspended_at"?: string | null,"terms_accepted_at"?: string | null,"username": string
                   }
                   Update: {
-                    "age_confirmed_13"?: boolean,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id"?: string,"terms_accepted_at"?: string | null,"username"?: string
+                    "age_confirmed_13"?: boolean,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id"?: string,"suspended_at"?: string | null,"terms_accepted_at"?: string | null,"username"?: string
                   }
                   Relationships: [
                     
@@ -235,13 +235,68 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"user_blocks": {
+                  Row: {
+                    "blocked": string,"blocker": string,"created_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "blocked": string,"blocker": string,"created_at"?: string
+                  }
+                  Update: {
+                    "blocked"?: string,"blocker"?: string,"created_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_blocks_blocked_fkey"
+      columns: ["blocked"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_blocks_blocker_fkey"
+      columns: ["blocker"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"user_reports": {
+                  Row: {
+                    "action": string | null,"created_at": string,"id": string,"note": string | null,"reason": Database["public"]['Enums']["user_report_reason"],"reported": string,"reporter": string,"resolved_at": string | null,"resolved_by": string | null,"status": Database["public"]['Enums']["report_status"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action"?: string | null,"created_at"?: string,"id"?: string,"note"?: string | null,"reason": Database["public"]['Enums']["user_report_reason"],"reported": string,"reporter"?: string,"resolved_at"?: string | null,"resolved_by"?: string | null,"status"?: Database["public"]['Enums']["report_status"]
+                  }
+                  Update: {
+                    "action"?: string | null,"created_at"?: string,"id"?: string,"note"?: string | null,"reason"?: Database["public"]['Enums']["user_report_reason"],"reported"?: string,"reporter"?: string,"resolved_at"?: string | null,"resolved_by"?: string | null,"status"?: Database["public"]['Enums']["report_status"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_reports_reported_fkey"
+      columns: ["reported"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_reports_reporter_fkey"
+      columns: ["reporter"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "admin_set_quest_cover":
+            "admin_resolve_report":
+{ Args: { "p_action": string,"p_report_id": string }; Returns: string
+                           },
+"admin_set_quest_cover":
 { Args: { "p_photo_path": string,"p_quest_id": string }; Returns: undefined
                            },
 "admin_update_spot":
@@ -249,6 +304,9 @@ isOneToOne: false
                            },
 "am_i_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"block_user":
+{ Args: { "p_user_id": string }; Returns: undefined
                            },
 "check_in":
 { Args: { "p_answer"?: string,"p_lat"?: number,"p_lng"?: number,"p_parade_mode"?: boolean,"p_photo_path"?: string,"p_spot_id": string }; Returns: Json
@@ -266,7 +324,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "checkin_method": "answer"|"photo"|"listen"|"snack","friendship_status": "pending"|"accepted","quest_status": "draft"|"live"|"retired","report_reason": "spot_changed"|"unsafe"|"answer_wrong"|"other"
+            "checkin_method": "answer"|"photo"|"listen"|"snack","friendship_status": "pending"|"accepted","quest_status": "draft"|"live"|"retired","report_reason": "spot_changed"|"unsafe"|"answer_wrong"|"other","report_status": "open"|"actioned"|"dismissed","user_report_reason": "inappropriate_photo"|"offensive_name"|"harassment"|"spam"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -386,7 +444,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "checkin_method": ["answer", "photo", "listen", "snack"],"friendship_status": ["pending", "accepted"],"quest_status": ["draft", "live", "retired"],"report_reason": ["spot_changed", "unsafe", "answer_wrong", "other"]
+            "checkin_method": ["answer", "photo", "listen", "snack"],"friendship_status": ["pending", "accepted"],"quest_status": ["draft", "live", "retired"],"report_reason": ["spot_changed", "unsafe", "answer_wrong", "other"],"report_status": ["open", "actioned", "dismissed"],"user_report_reason": ["inappropriate_photo", "offensive_name", "harassment", "spam", "other"]
           }
         }
 } as const
