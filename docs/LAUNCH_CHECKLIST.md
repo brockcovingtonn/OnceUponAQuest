@@ -73,6 +73,16 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ---
 
+## How to ship changes to installed apps
+
+- **Design, text, screens, logic (JavaScript only):** publish an over-the-air update — no rebuild. Phones download it in the background and use it on the next launch (open the app, close it fully, open it again).
+  - Field build: `npm run update:field`
+  - Preview / TestFlight-style builds: `npm run update:preview`
+  - App Store / Play builds: `npm run update:production`
+- **New native packages or app.json changes** (permissions, icons, plugins): a new build is needed (`npm run build:field`, etc.). The fingerprint runtime policy makes sure old builds never receive an update they can't run.
+
+---
+
 ## Done (for reference)
 
 - Steps 1–9 of the build plan, plus Remove friend.
@@ -83,4 +93,5 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Animated intro, twinkling stars, sparkle bursts (respect Reduce Motion).
 - Field-walk tools (pins, hint photos, covers, verified) — admin-only, enforced by the database.
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
+- Over-the-air updates (EAS Update) with channels per build profile and the fingerprint runtime policy.
 - EAS Build set up: project `@brockieboy/once-upon-a-quest`, app ID `app.onceuponaquest`, profiles development / development-simulator / preview / production, hosted Supabase values stored as EAS environment variables.
