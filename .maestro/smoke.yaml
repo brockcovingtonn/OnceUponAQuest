@@ -1,0 +1,110 @@
+# Smoke test: a brand-new explorer signs in, onboards, checks in, and visits
+# every tab. Runs against the local Supabase stack — see scripts/e2e.mjs.
+appId: app.onceuponaquest
+name: Smoke test
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- runScript: scripts/newTester.js
+
+# Intro animation (tap to skip if it's still playing)
+- tapOn:
+    text: '.*Tap to skip.*'
+    optional: true
+
+# Sign in with an emailed code
+- extendedWaitUntil:
+    visible: 'Send my code'
+    timeout: 30000
+- tapOn:
+    id: 'email-input'
+- inputText: ${output.email}
+- tapOn: 'Send my code'
+- extendedWaitUntil:
+    visible: 'Enter the 6-digit code'
+    timeout: 20000
+- retry:
+    maxRetries: 3
+    commands:
+      - runScript:
+          file: scripts/fetchCode.js
+          env:
+            EMAIL: ${output.email}
+- tapOn:
+    id: 'code-input'
+- inputText: ${output.code}
+
+# Onboarding
+- extendedWaitUntil:
+    visible: 'Pick your explorer name'
+    timeout: 30000
+- tapOn:
+    id: 'username-input'
+- inputText: ${output.username}
+- extendedWaitUntil:
+    visible: 'Available'
+    timeout: 15000
+- tapOn: 'Next'
+- tapOn: 'Got it, next'
+- tapOn: "I'm 13 or older"
+- tapOn: 'I agree to the Terms and Privacy Policy'
+- tapOn: 'Start exploring'
+
+# The walkthrough opens once for new explorers
+- extendedWaitUntil:
+    visible: 'Welcome to the story'
+    timeout: 30000
+- tapOn: 'Next'
+- assertVisible: 'Find the spot'
+- tapOn: 'Skip'
+
+# Quests home
+- extendedWaitUntil:
+    visible: '.*Windows of Legends.*'
+    timeout: 20000
+- assertVisible: 'Parade mode'
+
+# Check in at a "listen" spot (no camera or location needed)
+- scrollUntilVisible:
+    element: '.*Main Street Senses.*'
+    direction: DOWN
+- tapOn: '.*Main Street Senses.*'
+- extendedWaitUntil:
+    visible: '.*0 of 4.*'
+    timeout: 15000
+- tapOn: '.*Spot 1:.*'
+- extendedWaitUntil:
+    visible: 'I heard it'
+    timeout: 15000
+- tapOn: 'I heard it'
+- extendedWaitUntil:
+    visible: '.*1 of 4.*'
+    timeout: 20000
+- tapOn: 'Back'
+
+# Passport shows the new stamp
+- tapOn: 'Passport'
+- extendedWaitUntil:
+    visible: '.*1 spot.*'
+    timeout: 15000
+
+# Map: storybook and real map
+- tapOn: 'Map'
+- extendedWaitUntil:
+    visible: 'Storybook'
+    timeout: 15000
+- tapOn: 'Real map'
+- tapOn: 'Storybook'
+
+# Friends and Profile
+- tapOn: 'Friends'
+- extendedWaitUntil:
+    visible: 'LEADERBOARD'
+    timeout: 15000
+- tapOn: 'Profile'
+- scrollUntilVisible:
+    element: 'Sounds'
+    direction: DOWN
+- assertVisible: 'Vibration'
+- assertVisible: 'How quests work'

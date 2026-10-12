@@ -3,11 +3,13 @@ import { StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
 import { copy } from '@/copy';
+import { useFeedback } from '@/lib/feedback';
 import { useParadeMode } from '@/lib/paradeMode';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
 
 export function ParadeModeToggle() {
   const { paradeMode, setParadeMode } = useParadeMode();
+  const feedback = useFeedback();
   return (
     <View style={styles.wrapper}>
       <View style={styles.card}>
@@ -18,7 +20,10 @@ export function ParadeModeToggle() {
         </View>
         <Switch
           value={paradeMode}
-          onValueChange={setParadeMode}
+          onValueChange={(on) => {
+            feedback.tap();
+            setParadeMode(on);
+          }}
           accessibilityLabel={copy.paradeMode.label}
           accessibilityHint={copy.paradeMode.hint}
           trackColor={{ false: colors.border, true: colors.storybookGold }}

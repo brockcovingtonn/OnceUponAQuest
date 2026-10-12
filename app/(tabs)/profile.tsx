@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, AppState, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -6,11 +7,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { SettingsRow } from '@/components/SettingsRow';
+import { SettingsSwitchRow } from '@/components/SettingsSwitchRow';
 import { ProfileAvatar } from '@/components/ProfileAvatar';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { openAppSettings } from '@/lib/location';
+import { usePreferences } from '@/lib/preferences';
 import { getPermissionStatuses, type PermissionStatuses } from '@/lib/permissions';
 import { useDeleteAccount, useFieldWalk, useIsAdmin, useOpenReports, useProfile } from '@/lib/queries';
 import { fieldToolsEnabled } from '@/lib/fieldTools';
@@ -41,6 +44,7 @@ export default function ProfileScreen() {
   const profile = useProfile(userId);
   const permissions = usePermissionStatuses();
   const deleteAccount = useDeleteAccount(userId);
+  const prefs = usePreferences();
   const isAdmin = useIsAdmin(userId);
   const openReports = useOpenReports(isAdmin.data === true);
   const fieldWalk = useFieldWalk(fieldToolsEnabled && isAdmin.data === true);
@@ -91,6 +95,24 @@ export default function ProfileScreen() {
           <Text style={styles.sectionHeader} accessibilityRole="header">
             {copy.profile.settings}
           </Text>
+          <SettingsSwitchRow
+            icon="musical-notes-outline"
+            label={copy.profile.sounds}
+            hint={copy.profile.soundsHint}
+            value={prefs.sounds}
+            onChange={(on) => prefs.setPreference('sounds', on)}
+          />
+          <SettingsSwitchRow
+            icon="phone-portrait-outline"
+            label={copy.profile.vibration}
+            hint={copy.profile.vibrationHint}
+            value={prefs.vibration}
+            onChange={(on) => {
+              prefs.setPreference('vibration', on);
+              // Confirm with a tick (the helper still holds the old "off" setting this render).
+              if (on) Haptics.selectionAsync().catch(() => {});
+            }}
+          />
           <SettingsRow
             icon="location-outline"
             label={copy.profile.locationPermission}

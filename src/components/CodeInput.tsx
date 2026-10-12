@@ -10,10 +10,11 @@ type Props = {
   accessibilityLabel: string;
   hasError?: boolean;
   autoFocus?: boolean;
+  testID?: string;
 };
 
 /** One real text field drawn as separate digit boxes (supports iOS/Android code autofill). */
-export function CodeInput({ value, onChange, length, accessibilityLabel, hasError, autoFocus }: Props) {
+export function CodeInput({ value, onChange, length, accessibilityLabel, hasError, autoFocus, testID }: Props) {
   const inputRef = useRef<TextInput>(null);
   const digits = Array.from({ length }, (_, i) => value[i] ?? '');
 
@@ -46,6 +47,7 @@ export function CodeInput({ value, onChange, length, accessibilityLabel, hasErro
         autoFocus={autoFocus}
         accessibilityLabel={accessibilityLabel}
         caretHidden
+        testID={testID}
         style={styles.hiddenInput}
       />
     </Pressable>

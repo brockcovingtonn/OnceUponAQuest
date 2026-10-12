@@ -515,6 +515,10 @@ export const copy = {
       `Exploring since ${new Date(iso).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`,
     editProfile: 'Edit profile',
     settings: 'SETTINGS',
+    sounds: 'Sounds',
+    soundsHint: 'Stamp thunks and badge chimes (follows your silent switch)',
+    vibration: 'Vibration',
+    vibrationHint: 'A gentle buzz when you check in',
     locationPermission: 'Location permission',
     cameraPermission: 'Camera permission',
     permissionState: {

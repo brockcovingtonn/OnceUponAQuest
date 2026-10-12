@@ -65,6 +65,8 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ## 5. Check on real phones
 
+- [ ] Before each TestFlight build, run the smoke test on the simulator: `npm run db:start`, `npm run e2e:build` (after app changes), then `npm run e2e`. It signs up a brand-new explorer, onboards, checks in, and visits every tab, then deletes its test accounts.
+- [ ] Listen to the stamp, badge chime and "saved" sounds on a real phone (with the ringer on); turn Sounds / Vibration off in Profile → Settings and confirm they go quiet.
 - [ ] Walkthrough (Profile → How quests work, or the ? on the Quests banner): all 8 pages read well, the animations loop smoothly, nothing overlaps at the largest text size, and with Reduce Motion on each page shows a still final picture.
 - [ ] Offline: open each quest once with signal, then turn on Airplane mode — quests, spots, Passport and Friends should still open; check in at a photo spot and a typed-answer spot (both say "Saved for later"); turn Airplane mode off and confirm the "synced" banner, the stamps, and any badge.
 - [ ] Largest system text size on every screen (iOS: Settings → Accessibility → Display & Text Size → Larger Text; Android: Font size).
@@ -104,6 +106,8 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - Hosted Supabase is up to date with all migrations (48 tests pass there).
 - Report and block users (App Store Guideline 1.2): block/report from the … menu in Friends, Blocked explorers list, admin Moderation queue (remove photo, reset name, suspend, dismiss), suspended-account screen, banned words for names. Enforced in the database (72 tests).
 - Field-walk checklist (Profile → Field walk) and on-phone content editing for admins (spot text, accepted answers, parade flag, radius; quest title and story), logged in private.content_edits. Hint photos and quest covers are saved on the phone ahead of time for offline use.
+- Sounds and vibration: original synthesized stamp thunk, badge chime and "saved" tone (scripts/generate-sounds.mjs), with Sounds / Vibration switches in Profile → Settings; sounds follow the silent switch and mix with music.
+- Automated smoke tests (Maestro, .maestro/smoke.yaml) on the iOS Simulator against the local stack: sign-in via the local inbox, onboarding, walkthrough, a check-in, Passport, Map, Friends, Profile.
 - Map tab: original storybook map of the street (offline, numbered stamps in walking order per quest, found stamps gold, parade pauses, 'you are here' once pins exist) with a switch to the real map (Apple Maps / Google Maps) showing pinned spots and your location.
 - First-time walkthrough "How quests work": 8 pages with looping animated examples (quest progress, finding a spot, four check-in types, stamps and badges, hints and Parade mode, offline sync, friends, safety); shown once after onboarding, reopen from Profile or the ? on the Quests banner; respects Reduce Motion.
 - Crash reporting (first-party, in Supabase) with a friendly error screen, and the admin Insights screen (Profile → Insights): the spec's success metrics in park time, funnel, per-quest progress, most-reported spots and grouped app errors. Offline check-ins keep their real time.

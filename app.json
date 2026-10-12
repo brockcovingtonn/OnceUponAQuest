@@ -63,7 +63,15 @@
           "microphonePermission": false,
           "photosPermission": false
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false
+        }
+      ],
+      "./plugins/withSceneLifecycle",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

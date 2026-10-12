@@ -13,6 +13,7 @@ import { SparkleBurst } from '@/components/SparkleBurst';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
+import { useFeedback } from '@/lib/feedback';
 import { useBadge, useMyProgress, useQuests } from '@/lib/queries';
 import { colors, radius, spacing, type } from '@/theme';
 
@@ -27,7 +28,12 @@ export default function BadgeEarnedScreen() {
   const [shareError, setShareError] = useState<string>();
   const [sharing, setSharing] = useState(false);
 
+  const feedback = useFeedback();
   const loaded = Boolean(badge.data);
+  // Chime once when the badge appears.
+  useEffect(() => {
+    if (loaded) feedback.badge();
+  }, [loaded, feedback]);
   useEffect(() => {
     if (!loaded) return;
     Animated.spring(scale, { toValue: 1, friction: 4, tension: 80, useNativeDriver: true }).start();

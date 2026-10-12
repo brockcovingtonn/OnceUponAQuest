@@ -17,6 +17,7 @@ import { flushPendingErrors, installGlobalErrorHandler, reportError, setCurrentS
 import '@/lib/network';
 import { OfflineQueueProvider } from '@/lib/offlineQueue';
 import { ParadeModeProvider } from '@/lib/paradeMode';
+import { PreferencesProvider } from '@/lib/preferences';
 import { useProfile } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { legalInfo } from '@/legal/info';
@@ -55,14 +56,16 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
         <AppUpdatesProvider>
-          <AuthProvider>
-            <OfflineQueueProvider>
-              <ParadeModeProvider>
-                <StatusBar style="dark" />
-                {fontsReady ? <RootNavigator /> : null}
-              </ParadeModeProvider>
-            </OfflineQueueProvider>
-          </AuthProvider>
+          <PreferencesProvider>
+            <AuthProvider>
+              <OfflineQueueProvider>
+                <ParadeModeProvider>
+                  <StatusBar style="dark" />
+                  {fontsReady ? <RootNavigator /> : null}
+                </ParadeModeProvider>
+              </OfflineQueueProvider>
+            </AuthProvider>
+          </PreferencesProvider>
         </AppUpdatesProvider>
       </PersistQueryClientProvider>
     </SafeAreaProvider>
@@ -153,7 +156,10 @@ function RootNavigator() {
         <Stack.Screen name="moderation" options={{ title: copy.moderation.title }} />
         <Stack.Screen name="insights" options={{ title: copy.insights.title }} />
         <Stack.Screen name="field-walk" options={{ title: copy.fieldWalk.title }} />
-        <Stack.Screen name="walkthrough" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+        <Stack.Screen
+          name="walkthrough"
+          options={{ headerShown: false, animation: 'slide_from_bottom', gestureEnabled: false }}
+        />
         </Stack.Protected>
 
         <Stack.Screen name="too-young" options={{ headerShown: false, gestureEnabled: false }} />

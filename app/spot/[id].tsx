@@ -1,6 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { onlineManager } from '@tanstack/react-query';
-import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -17,6 +16,7 @@ import { StampCelebration } from '@/components/StampCelebration';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
+import { useFeedback } from '@/lib/feedback';
 import { formatDate } from '@/lib/format';
 import {
   type Coords,
@@ -56,6 +56,7 @@ export default function SpotScreen() {
   const progress = useMyProgress(userId);
   const { paradeMode } = useParadeMode();
   const checkIn = useCheckIn(userId);
+  const fx = useFeedback();
   const isAdmin = useIsAdmin(userId);
   const offlineQueue = useOfflineQueue();
   const queued = useQueuedCheckIn(id);
@@ -90,7 +91,7 @@ export default function SpotScreen() {
   const total = s.quest.spots[0]?.count ?? 0;
 
   async function celebrate(result: Extract<CheckInResult, { ok: true }>) {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    fx.stamp();
     setCelebrating('stamped');
     await delay(CELEBRATION_MS);
     if (result.questComplete && result.badgeSlug) {
@@ -116,7 +117,7 @@ export default function SpotScreen() {
       text: submission.answer !== undefined ? copy.offline.savedAnswer : copy.offline.savedOther,
       tone: 'info',
     });
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    fx.saved();
     setCelebrating('saved');
     await delay(CELEBRATION_MS + 600);
     router.back();
@@ -125,7 +126,7 @@ export default function SpotScreen() {
   function showFailure(result: Extract<CheckInResult, { ok: false }>) {
     switch (result.reason) {
       case 'wrong_answer':
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        fx.wrong();
         setMisses((m) => m + 1);
         setFeedback({ text: copy.checkInReasons.wrong_answer, tone: 'error' });
         break;

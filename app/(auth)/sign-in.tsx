@@ -142,6 +142,7 @@ export default function SignInScreen() {
                 onChange={changeCode}
                 length={CODE_LENGTH}
                 accessibilityLabel={copy.signIn.codeAccessibilityLabel}
+                testID="code-input"
                 hasError={Boolean(codeError)}
                 autoFocus
               />
@@ -179,6 +180,7 @@ export default function SignInScreen() {
                 keyboardType="email-address"
                 textContentType="emailAddress"
                 autoComplete="email"
+                testID="email-input"
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="send"

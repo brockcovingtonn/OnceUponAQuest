@@ -156,6 +156,7 @@ export default function OnboardingScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="username-new"
+                testID="username-input"
                 maxLength={24}
               />
 
