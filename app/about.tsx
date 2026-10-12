@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Logo } from '@/components/Logo';
 import { copy } from '@/copy';
+import { versionLabel } from '@/lib/appUpdates';
 import { colors, spacing, type } from '@/theme';
 
 export default function AboutScreen() {
@@ -12,7 +13,7 @@ export default function AboutScreen() {
       <View style={styles.hero}>
         <Logo accessibilityLabel={copy.signIn.logoLabel} />
         <Text style={styles.appName}>{copy.appName}</Text>
-        <Text style={styles.version}>{copy.about.version(version)}</Text>
+        <Text style={styles.version}>{copy.about.version(versionLabel(version))}</Text>
       </View>
       <Text style={styles.body}>{copy.about.body}</Text>
       <Text style={styles.heading} accessibilityRole="header">

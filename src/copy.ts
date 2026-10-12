@@ -398,6 +398,11 @@ export const copy = {
     reducedMotionNote: 'Animations are paused because Reduce Motion is on.',
   },
 
+  appUpdate: {
+    ready: 'A new version of Once Upon a Quest is ready.',
+    restart: 'Restart now',
+  },
+
   errorScreen: {
     title: 'Something went wrong',
     body: "Sorry — this page hit a snag. We've been told about it. Try again, or go back and pick up where you left off.",

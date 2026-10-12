@@ -10,9 +10,11 @@ import { ParadeModeToggle } from '@/components/ParadeModeToggle';
 import { Scene } from '@/components/Scene';
 import { Twinkle } from '@/components/Twinkle';
 import { QuestCard } from '@/components/QuestCard';
+import { UpdateBanner } from '@/components/UpdateBanner';
 import { StateView } from '@/components/StateView';
 import { mainStreetNight } from '@/art/scenes';
 import { copy } from '@/copy';
+import { useAppUpdate } from '@/lib/appUpdates';
 import { useAuth } from '@/lib/auth';
 import { type QuestSummary, useMyProgress, useProfile, useQuests } from '@/lib/queries';
 import { hasSeenWalkthrough } from '@/lib/walkthrough';
@@ -37,6 +39,7 @@ export default function QuestsScreen() {
   const quests = useQuests();
   const progress = useMyProgress(userId);
   const [refreshing, setRefreshing] = useState(false);
+  const appUpdate = useAppUpdate();
 
   // First visit after onboarding: show "How quests work" once.
   useEffect(() => {
@@ -86,6 +89,7 @@ export default function QuestsScreen() {
           </Pressable>
         </View>
 
+        {appUpdate.ready ? <UpdateBanner onRestart={appUpdate.restart} /> : null}
         <OfflineStatus />
         <ParadeModeToggle />
 

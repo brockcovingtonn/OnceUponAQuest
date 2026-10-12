@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { IntroAnimation } from '@/components/IntroAnimation';
 import { copy } from '@/copy';
+import { AppUpdatesProvider } from '@/lib/appUpdates';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { flushPendingErrors, installGlobalErrorHandler, reportError, setCurrentScreen } from '@/lib/errorReporting';
 import '@/lib/network';
@@ -53,14 +54,16 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
-        <AuthProvider>
-          <OfflineQueueProvider>
-            <ParadeModeProvider>
-              <StatusBar style="dark" />
-              {fontsReady ? <RootNavigator /> : null}
-            </ParadeModeProvider>
-          </OfflineQueueProvider>
-        </AuthProvider>
+        <AppUpdatesProvider>
+          <AuthProvider>
+            <OfflineQueueProvider>
+              <ParadeModeProvider>
+                <StatusBar style="dark" />
+                {fontsReady ? <RootNavigator /> : null}
+              </ParadeModeProvider>
+            </OfflineQueueProvider>
+          </AuthProvider>
+        </AppUpdatesProvider>
       </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
