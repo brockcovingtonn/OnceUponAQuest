@@ -102,12 +102,12 @@ const RIVER = { cx: 165, cy: 362, rx: 96, ry: 80 } as const;
 export const RIVERBOAT_PATH: Pt[] = ellipsePoints(RIVER.cx, RIVER.cy, 78, 63, 36);
 
 /** Hot-air balloon in the margin, rocket spinner hub and plaza fountain. */
-export const PARK_BALLOON: Pt = { x: 70, y: 92 };
+export const PARK_BALLOON: Pt = { x: 650, y: 140 };
 export const ROCKET_SPINNER: Pt = { x: 474, y: 584 };
 export const PARK_FOUNTAIN: Pt = { x: 360, y: 522 };
 /** Painted sparkles that twinkle. */
 export const PARK_TWINKLES: Pt[] = [
-  { x: 640, y: 64 }, { x: 34, y: 640 }, { x: 590, y: 858 }, { x: 214, y: 34 }, { x: 452, y: 420 },
+  { x: 640, y: 64 }, { x: 34, y: 640 }, { x: 590, y: 858 }, { x: 300, y: 22 }, { x: 452, y: 420 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -226,10 +226,10 @@ const frame: Shape[] = [
   curl(26, 874, 1, -1),
   curl(694, 874, -1, -1),
   cloud(560, 28, 70),
-  cloud(250, 18, 54),
+  cloud(330, 12, 50),
   cloud(470, 856, 46),
-  bird(150, 50),
-  bird(166, 42),
+  bird(372, 22),
+  bird(388, 15),
   bird(690, 300),
   ...PARK_TWINKLES.map((p) => sparkle(p.x, p.y, 5)),
   // Title cartouche (bottom left) and compass rose (bottom right).
@@ -259,6 +259,49 @@ const berm: Shape[] = [
   ...station(96, 616, 34, M.blue),
   ...station(440, 40, 34, M.gold),
   ...station(706, 560, 26, M.steel),
+];
+
+// Galaxy's Edge, outside the berm in the far corner: stone spires, domed
+// huts, market awnings and a landing pad with an original cargo freighter.
+const GE_PATCH = 'M40 58 Q40 42 56 42 L246 42 Q262 42 250 52 L200 74 L136 112 L80 160 L48 206 Q40 216 40 200 Z';
+const galaxysEdge: Shape[] = [
+  ...patch(GE_PATCH, '#D9C2A0'),
+  // Tunnels under the berm.
+  ...[[190, 128], [126, 186]].flatMap(([x, y]): Shape[] => [
+    { kind: 'circle', cx: x, cy: y, r: 9, fill: M.ink, opacity: 0.55 },
+    { kind: 'circle', cx: x, cy: y, r: 9, fill: 'none', stroke: M.stone, strokeWidth: 2 },
+  ]),
+  // Landing pad and freighter.
+  { kind: 'circle', cx: 204, cy: 58, r: 15, fill: '#C8B08C', stroke: M.edge, strokeWidth: 1, dash: '3 3' },
+  { kind: 'path', d: 'M180 58 C180 53 185 51 192 51 L222 51 C227 51 230 54 230 58 C230 62 227 65 222 65 L192 65 C185 65 180 63 180 58 Z', fill: '#B9B4AA', stroke: M.ink, strokeWidth: 1 },
+  { kind: 'path', d: 'M180 58 C180 54 183 52 188 52 L188 64 C183 64 180 62 180 58 Z', fill: '#2D3866' },
+  { kind: 'circle', cx: 232, cy: 55, r: 2, fill: '#7FC8F0' },
+  { kind: 'circle', cx: 232, cy: 61, r: 2, fill: '#7FC8F0' },
+  // Cargo crates and the roasting stall's fire.
+  ...[[150, 66], [158, 66], [154, 59]].map(([x, y]): Shape => ({ kind: 'rect', x, y, w: 7, h: 7, fill: '#C99A5A', stroke: M.woodDark, strokeWidth: 0.8 })),
+  { kind: 'circle', cx: 168, cy: 90, r: 5, fill: '#F2A04A', opacity: 0.5 },
+  { kind: 'circle', cx: 168, cy: 90, r: 2, fill: M.red },
+  // Market awnings and domed huts.
+  ...[[96, 104, M.red], [110, 96, '#3F8A8A'], [124, 88, M.gold], [104, 118, '#3F8A8A']].flatMap(([x, y, c]): Shape[] => [
+    { kind: 'rect', x: x as number, y: y as number, w: 11, h: 8, rx: 1, fill: c as Hex, stroke: M.woodDark, strokeWidth: 0.6 },
+    { kind: 'line', x1: (x as number) + 2, y1: (y as number) + 4, x2: (x as number) + 9, y2: (y as number) + 4, stroke: M.white, strokeWidth: 1, opacity: 0.7 },
+  ]),
+  ...[[78, 132, 9], [66, 152, 7], [140, 72, 7], [118, 62, 8]].flatMap(([x, y, r]): Shape[] => [
+    { kind: 'circle', cx: x + 1, cy: y + 1.5, r, fill: M.ink, opacity: 0.15 },
+    { kind: 'circle', cx: x, cy: y, r, fill: '#C9A27A', stroke: M.edge, strokeWidth: 1 },
+    { kind: 'circle', cx: x - r * 0.3, cy: y - r * 0.3, r: r * 0.35, fill: M.white, opacity: 0.45 },
+  ]),
+  // Two-color milk.
+  { kind: 'circle', cx: 132, cy: 104, r: 2.4, fill: '#7FC8F0', stroke: M.ink, strokeWidth: 0.5 },
+  { kind: 'circle', cx: 137, cy: 104, r: 2.4, fill: '#8ACB7A', stroke: M.ink, strokeWidth: 0.5 },
+  // Stone spires, with the darkest at the village center.
+  ...[[56, 112, 9, 30, '#9C8270'], [62, 82, 7, 24, '#B49A84'], [90, 66, 8, 26, '#9C8270'], [104, 92, 10, 40, '#2E2A34'], [160, 50, 6, 18, '#B49A84']].flatMap(
+    ([x, base, w, h, c]): Shape[] => [
+      { kind: 'path', d: `M${(x as number) - (w as number)} ${base} L${(x as number) - (w as number) * 0.6} ${(base as number) - (h as number) * 0.6} L${(x as number) - (w as number) * 0.2} ${(base as number) - (h as number)} L${(x as number) + (w as number) * 0.5} ${(base as number) - (h as number) * 0.7} L${(x as number) + (w as number)} ${base} Z`, fill: c as Hex, stroke: M.ink, strokeWidth: 0.6 },
+      { kind: 'line', x1: (x as number) - (w as number) * 0.7, y1: (base as number) - (h as number) * 0.35, x2: (x as number) + (w as number) * 0.7, y2: (base as number) - (h as number) * 0.38, stroke: M.paper, strokeWidth: 1, opacity: 0.4 },
+    ],
+  ),
+  ...[[74, 120], [148, 100], [190, 92]].map(([x, y]): Shape => sparkle(x, y, 3, M.glow)),
 ];
 
 // Entrance, street and plaza.
@@ -319,6 +362,8 @@ const walkways: Shape[] = [
   ...walkway('M470 220 C474 196 476 170 476 150'),
   ...walkway('M120 520 C56 470 46 360 84 302 C112 262 172 250 236 268', 10),
   ...walkway('M466 446 C480 470 494 488 508 508'),
+  ...walkway('M262 262 C246 210 220 160 168 104', 10),
+  ...walkway('M150 222 C140 204 124 180 100 150', 10),
 ];
 
 // Adventureland: jungle, a winding river, a giant tree and a thatched hut.
@@ -565,6 +610,7 @@ export const parkMap: Shape[] = [
   ...frame,
   ...berm,
   ...walkways,
+  ...galaxysEdge,
   ...river,
   ...bayou,
   ...frontier,
@@ -633,6 +679,15 @@ export const PARK_LANDS: ParkLand[] = [
     lanes: [
       [{ x: 300, y: 504 }, { x: 266, y: 452 }, { x: 266, y: 384 }, { x: 282, y: 330 }, { x: 290, y: 280 }],
       [{ x: 334, y: 490 }, { x: 336, y: 430 }, { x: 330, y: 376 }, { x: 330, y: 318 }, { x: 318, y: 272 }],
+    ],
+  },
+  {
+    id: 'dlp-galaxys-edge',
+    label: { x: 140, y: 64 },
+    view: { x: 24, y: 24, w: 260, h: 210 },
+    lanes: [
+      [{ x: 48, y: 170 }, { x: 52, y: 128 }, { x: 60, y: 88 }, { x: 96, y: 56 }, { x: 150, y: 48 }],
+      [{ x: 84, y: 128 }, { x: 116, y: 100 }, { x: 150, y: 82 }, { x: 186, y: 62 }, { x: 222, y: 48 }],
     ],
   },
   {

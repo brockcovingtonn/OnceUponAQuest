@@ -2,7 +2,7 @@
 
 The single list of everything still open before the app goes public. Items marked **(code)** need more building; Claude can do those. Everything else needs you, a visit to the park, or your attorney.
 
-_Last updated: October 13, 2026_
+_Last updated: October 14, 2026_
 
 ---
 
@@ -14,13 +14,13 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
   - **Option A — "field" build (recommended; needs the Apple Developer Program):** `npm run build:field`, install it on your iPhone from the EAS link. Standalone, no Mac needed.
   - **Option B — free, Mac stays home:** `npm run db:use-hosted`, then `caffeinate -dis npx expo start --tunnel --clear`; open it in Expo Go before you leave. Works on cellular while the Mac stays awake and online.
 - [ ] Sign in on the hosted database before you leave home: in the app enter your email and tap **Send my code**, then on the Mac run `npm run auth:code -- covington.brock@gmail.com` and type the code it prints (valid 1 hour). You'll finish onboarding once; the sign-in then lasts the whole walk.
-- [ ] Open **Profile → Field walk (0 of 83 done)** — the checklist shows every spot's Pin / Photo / Verified status; tap a spot to open it, and turn on "Show only unfinished" as you go.
-- [ ] At each of the 83 spots (20 on Main Street, 63 across the seven other lands — plan several visits), stand where a guest should stand, then:
+- [ ] Open **Profile → Field walk (0 of 93 done)** — the checklist shows every spot's Pin / Photo / Verified status; tap a spot to open it, and turn on "Show only unfinished" as you go.
+- [ ] At each of the 93 spots (20 on Main Street, 73 across the eight other lands — plan several visits), stand where a guest should stand, then:
   - [ ] **Set pin here** (it refuses GPS fixes worse than 25 m — step into open sky and retry)
   - [ ] **Take hint photo** (replaces the storybook placeholder)
   - [ ] Confirm the answer, the cannon count and candy shop names — fix anything on the spot with **Edit text & answers** (clue, hint, where to stand, accepted answers, parade flag, radius). Every edit is logged so it can be undone.
   - [ ] **Mark verified**
-- [ ] On each of the 18 quest screens: **Take cover photo** (and **Edit title & story** if needed) (replaces the storybook scene on the card and quest page)
+- [ ] On each of the 20 quest screens: **Take cover photo** (and **Edit title & story** if needed) (replaces the storybook scene on the card and quest page)
 - [ ] After pinning a few spots, open the **Map** tab: stamps should sit on the right side of the street. If they're off, adjust the two anchor points in `src/lib/mapGeometry.ts`.
 - [ ] Same for the whole-park map: after pinning spots in a few lands, check they land in the right land on the storybook map. If not, nudge `PARK_BOUNDS` in `src/lib/mapGeometry.ts` (the park drawing is loosely geographic, not to scale).
 - [ ] **New lands (added Oct 13, 2026) are live but tagged "Being verified on site."** They were written from public research, so check these first:
@@ -28,6 +28,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
   - Things that may have moved or changed: the edible plants and blue eggs in Tomorrowland planters, the keelboat by the river, the bear tributes in Bayou Country, Toontown's crates, fountain, mailboxes and fire station window, the 21 Royal Street address.
   - Parade flags: only the clock-tower lawn spots in Fantasyland pause in Parade mode. Flag any others that sit on the parade route.
   - The "Being verified" tag on a quest goes away by itself once every spot in it is **Mark verified**.
+- [ ] **Galaxy's Edge (added Oct 14, 2026)**, same "Being verified" status. Check the typed answers: the outpost's name (the darkest spire → "Black Spire"), the daytime greeting ("Bright suns" — cast members may vary), the three container numbers above the food hall (77, 80, 83), and the two milk colors. Also confirm the wheel tracks near the droid workshop and the creature in the drinking-fountain tank are still there.
 - [ ] Note: once a spot has a pin, check-ins there require being on site — test at-home check-ins on unpinned spots.
 
 ## 2. Domain, email and web pages (after you buy the domain)
@@ -48,6 +49,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - [ ] App icon, logo, stamp avatars, badge art and storybook scenes (all original, in `src/art/`).
 - [ ] Disclaimer wording (sign-in, About, Terms, store listings).
 - [ ] Spot titles naming real people or places, e.g. "Elias Disney window", "Walt's window", "Walt's lamp", "The Dominguez Palm", "Jingles", the WD/RD initials. Attraction and land names appear only as plain text describing locations (e.g. "Jungle Cruise boat names", "Toontown"). The land is shown as "Toontown", leaving the character name out of the app's headings.
+- [ ] **Galaxy's Edge content** — the most sensitive land for IP. The app shows it as "Galaxy's Edge" (no franchise name in headings), names no film characters, ships or droids in titles, and uses only original generic art (no recognizable ships, droids or weapons). Attraction and venue names (e.g. Millennium Falcon: Smugglers Run, Docking Bay 7 Food and Cargo, Ronto Roasters, Kat Saka's Kettle) appear only in "where to stand" text. Ask whether to keep the in-world names "Black Spire" and "Bright suns" as typed answers.
 - [ ] The "Ears Everywhere" quest concept (finding hidden three-circle shapes — described in text only; the app never draws the shape).
 - [ ] Menu item names in the Snack Passport (e.g. "Walt's Chili").
 - [ ] Store screenshots before submission.

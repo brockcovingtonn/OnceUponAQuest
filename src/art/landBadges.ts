@@ -232,4 +232,29 @@ export const landBadgeGlyphs: Record<string, Shape[]> = {
     ...twinkle(30, 33, 3.5),
     ...twinkle(71, 33, 3),
   ],
+
+  // Galaxy's Edge — stone spires under a crescent moon.
+  badge_spire: [
+    { kind: 'path', d: 'M71 22 C66 22 62 26 62 31 C62 36 66 40 71 40 C68 37 66.5 34 66.5 31 C66.5 28 68 25 71 22 Z', fill: 'accent', stroke: 'line', strokeWidth: 1.5 },
+    { kind: 'path', d: 'M30 76 L33 52 L31 44 L37 38 L41 50 L40 76 Z', fill: 'soft', stroke: 'line', strokeWidth: 2.5 },
+    { kind: 'path', d: 'M43 76 L46 40 L44 30 L50 22 L55 32 L53 46 L56 76 Z', fill: 'line' },
+    { kind: 'path', d: 'M59 76 L61 58 L59 50 L65 46 L69 56 L68 76 Z', fill: 'soft', stroke: 'line', strokeWidth: 2.5 },
+    { kind: 'line', x1: 34, y1: 58, x2: 38, y2: 57, stroke: 'line', strokeWidth: 1.5 },
+    { kind: 'line', x1: 62, y1: 64, x2: 66, y2: 63, stroke: 'line', strokeWidth: 1.5 },
+    { kind: 'path', d: 'M24 77 C40 73 60 73 76 77', fill: 'none', stroke: 'line', strokeWidth: 3 },
+    ...twinkle(76, 50, 2.5),
+    ...twinkle(30, 30, 3),
+  ],
+
+  // Galaxy's Edge — a frosty mug of two-color milk.
+  badge_mug: [
+    { kind: 'path', d: 'M34 36 L62 36 L60 74 C60 76 58 77 56 77 L40 77 C38 77 36 76 36 74 Z', fill: 'soft', stroke: 'line', strokeWidth: 3 },
+    { kind: 'path', d: 'M36.5 50 L59.5 50 L58.8 62 L37.2 62 Z', fill: 'accent' },
+    { kind: 'path', d: 'M37.2 62 L58.8 62 L58.2 72 C58 74 57 75 55 75 L41 75 C39 75 38 74 37.8 72 Z', fill: 'line', opacity: 0.85 },
+    { kind: 'path', d: 'M62 44 C72 44 72 64 61 64', fill: 'none', stroke: 'line', strokeWidth: 3 },
+    { kind: 'path', d: 'M33 36 C34 30 40 28 44 31 C46 26 54 26 56 31 C60 29 64 32 63 36 Z', fill: 'soft', stroke: 'line', strokeWidth: 2.5 },
+    { kind: 'line', x1: 41, y1: 42, x2: 41, y2: 46, stroke: 'line', strokeWidth: 1.5 },
+    ...twinkle(26, 50, 3),
+    ...twinkle(74, 28, 3),
+  ],
 };

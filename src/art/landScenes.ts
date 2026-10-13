@@ -784,6 +784,114 @@ const futureGarden: Shape[] = [
   { kind: 'rect', x: 0, y: 196, w: 400, h: 44, fill: '#2C3150' },
 ];
 
+// ---------------------------------------------------------------------------
+// Galaxy's Edge (generic far-off outpost: no film ships, droids or characters)
+// ---------------------------------------------------------------------------
+
+function stoneSpire(x: number, base: number, w: number, h: number, fill: Hex, band: Hex): Shape[] {
+  const top = base - h;
+  return [
+    { kind: 'path', d: `M${x - w / 2} ${base} L${x - w * 0.42} ${top + h * 0.55} L${x - w * 0.5} ${top + h * 0.3} L${x - w * 0.18} ${top} L${x + w * 0.12} ${top + h * 0.12} L${x + w * 0.46} ${top + h * 0.36} L${x + w * 0.38} ${top + h * 0.6} L${x + w / 2} ${base} Z`, fill },
+    { kind: 'line', x1: x - w * 0.44, y1: top + h * 0.5, x2: x + w * 0.4, y2: top + h * 0.47, stroke: band, strokeWidth: 2, opacity: 0.7 },
+    { kind: 'line', x1: x - w * 0.47, y1: top + h * 0.75, x2: x + w * 0.45, y2: top + h * 0.72, stroke: band, strokeWidth: 2, opacity: 0.6 },
+  ];
+}
+
+function domeHut(x: number, w: number, h: number, wall: Hex, dome: Hex): Shape[] {
+  const top = 190 - h;
+  return [
+    { kind: 'rect', x, y: top, w, h, fill: wall },
+    { kind: 'path', d: `M${x - 2} ${top} A${w / 2 + 2} ${w / 2.6} 0 0 1 ${x + w + 2} ${top} Z`, fill: dome },
+    { kind: 'path', d: `M${x + w / 2 - 9} 190 L${x + w / 2 - 9} ${190 - h * 0.5} A9 9 0 0 1 ${x + w / 2 + 9} ${190 - h * 0.5} L${x + w / 2 + 9} 190 Z`, fill: '#3A2A20' },
+    { kind: 'circle', cx: x + w * 0.2, cy: top + h * 0.3, r: 4, fill: GLOW },
+    { kind: 'circle', cx: x + w * 0.8, cy: top + h * 0.3, r: 4, fill: GLOW },
+  ];
+}
+
+function canopy(x: number, w: number, y: number, a: Hex, b: Hex): Shape[] {
+  const out: Shape[] = [
+    { kind: 'line', x1: x, y1: y, x2: x, y2: 190, stroke: '#5A3E2A', strokeWidth: 3 },
+    { kind: 'line', x1: x + w, y1: y, x2: x + w, y2: 190, stroke: '#5A3E2A', strokeWidth: 3 },
+  ];
+  const n = Math.max(2, Math.round(w / 14));
+  for (let i = 0; i < n; i++) {
+    const x1 = x + (w / n) * i;
+    out.push({ kind: 'path', d: `M${x1} ${y} L${x1 + w / n} ${y} L${x1 + w / n} ${y + 8} Q${x1 + w / (2 * n)} ${y + 14} ${x1} ${y + 8} Z`, fill: i % 2 ? a : b });
+  }
+  return out;
+}
+
+const outpostWanderer: Shape[] = [
+  sky('#2A2340', '#D98A5A'),
+  ...stars(0.7).slice(0, 8),
+  { kind: 'circle', cx: 310, cy: 46, r: 26, fill: '#F2E2C4', opacity: 0.25 },
+  { kind: 'circle', cx: 310, cy: 46, r: 17, fill: '#F2E2C4' },
+  { kind: 'circle', cx: 346, cy: 30, r: 6, fill: '#E6CFA8' },
+  ...stoneSpire(52, 196, 54, 150, '#9C8270', '#B89A7A'),
+  ...stoneSpire(352, 196, 46, 128, '#9C8270', '#B89A7A'),
+  ...stoneSpire(200, 196, 40, 176, '#2E2A34', '#4A4452'),
+  ...stoneSpire(128, 196, 30, 100, '#B49A84', '#CDB59C'),
+  { kind: 'rect', x: 0, y: 188, w: 400, h: 52, fill: '#8A6A4A' },
+  ...domeHut(78, 70, 54, '#C9A27A', '#B08A62'),
+  ...domeHut(250, 82, 62, '#D2AE86', '#B08A62'),
+  ...canopy(160, 30, 140, '#C8475A', '#E6B85A'),
+  ...canopy(224, 22, 148, '#3F8A8A', '#E6CFA8'),
+  { kind: 'path', d: 'M0 112 C60 128 120 128 180 116', fill: 'none', stroke: INK, strokeWidth: 1, opacity: 0.6 },
+  ...[20, 44, 68, 92, 116, 140, 164].map((x, i): Shape => ({ kind: 'circle', cx: x, cy: 116 + Math.sin(i * 0.6) * 4 + (i < 4 ? i * 2 : 8 - (i - 4) * 2), r: 2.2, fill: BULB })),
+  { kind: 'path', d: 'M0 214 C40 214 70 210 120 212', fill: 'none', stroke: '#5A4434', strokeWidth: 2, dash: '2 6' },
+  { kind: 'path', d: 'M0 222 C40 222 70 218 120 220', fill: 'none', stroke: '#5A4434', strokeWidth: 2, dash: '2 6' },
+  sparkle(200, 16, 5, BULB),
+];
+
+const dockingBayDays: Shape[] = [
+  sky('#141A30', '#3A4A6A'),
+  ...stars(0.85),
+  // Hangar gantry.
+  { kind: 'path', d: 'M10 196 L10 70 Q120 20 230 70 L230 196', fill: 'none', stroke: '#6A7088', strokeWidth: 8 },
+  { kind: 'path', d: 'M10 70 Q120 20 230 70', fill: 'none', stroke: '#8F96AE', strokeWidth: 2, dash: '4 6' },
+  ...[40, 80, 120, 160, 200].map((x): Shape => ({ kind: 'line', x1: x, y1: x === 120 ? 44 : 60, x2: x, y2: 74, stroke: '#6A7088', strokeWidth: 3 })),
+  { kind: 'circle', cx: 120, cy: 60, r: 5, fill: GLOW },
+  // A long-nosed cargo freighter (original design).
+  { kind: 'path', d: 'M30 150 C30 132 60 120 110 118 L196 116 C208 116 214 124 214 134 L214 154 C214 162 208 166 198 166 L60 166 C42 166 30 160 30 150 Z', fill: '#B9B4AA', stroke: INK, strokeWidth: 1.5 },
+  { kind: 'path', d: 'M30 150 C30 140 40 132 56 130 L56 150 Z', fill: '#2D3866' },
+  { kind: 'circle', cx: 46, cy: 142, r: 4, fill: '#BFE0F2' },
+  { kind: 'line', x1: 80, y1: 124, x2: 80, y2: 164, stroke: '#8E8A82', strokeWidth: 1.5 },
+  { kind: 'line', x1: 130, y1: 118, x2: 130, y2: 164, stroke: '#8E8A82', strokeWidth: 1.5 },
+  { kind: 'line', x1: 170, y1: 117, x2: 170, y2: 164, stroke: '#8E8A82', strokeWidth: 1.5 },
+  { kind: 'rect', x: 92, y: 132, w: 26, h: 10, rx: 2, fill: '#8E8A82' },
+  { kind: 'rect', x: 140, y: 128, w: 22, h: 6, rx: 2, fill: RED },
+  { kind: 'rect', x: 214, y: 124, w: 12, h: 14, rx: 3, fill: '#6A7088', stroke: INK, strokeWidth: 1 },
+  { kind: 'rect', x: 214, y: 142, w: 12, h: 14, rx: 3, fill: '#6A7088', stroke: INK, strokeWidth: 1 },
+  { kind: 'circle', cx: 230, cy: 131, r: 7, fill: '#7FC8F0', opacity: 0.4 },
+  { kind: 'circle', cx: 230, cy: 149, r: 7, fill: '#7FC8F0', opacity: 0.4 },
+  { kind: 'circle', cx: 228, cy: 131, r: 3.5, fill: '#D8F2FF' },
+  { kind: 'circle', cx: 228, cy: 149, r: 3.5, fill: '#D8F2FF' },
+  { kind: 'line', x1: 70, y1: 166, x2: 64, y2: 190, stroke: INK, strokeWidth: 3 },
+  { kind: 'line', x1: 180, y1: 166, x2: 186, y2: 190, stroke: INK, strokeWidth: 3 },
+  ...puffs(70, 186, PARCHMENT, 0.35),
+  ...puffs(170, 186, PARCHMENT, 0.3),
+  // Stacked cargo with stenciled numbers.
+  ...[[262, 90], [306, 90], [284, 56]].flatMap(([x, y]): Shape[] => [
+    { kind: 'rect', x, y, w: 42, h: 32, rx: 2, fill: '#C99A5A', stroke: INK, strokeWidth: 1.5 },
+    { kind: 'rect', x: x + 12, y: y + 11, w: 18, h: 10, rx: 1, fill: '#2D3866' },
+    { kind: 'line', x1: x + 15, y1: y + 16, x2: x + 27, y2: y + 16, stroke: PARCHMENT, strokeWidth: 2, dash: '4 2' },
+  ]),
+  // Roasting stall with a glowing fire, and two mugs of milk.
+  { kind: 'rect', x: 250, y: 140, w: 140, h: 50, fill: '#7A5236' },
+  ...canopy(250, 140, 124, '#C8475A', '#E6B85A'),
+  { kind: 'circle', cx: 290, cy: 160, r: 16, fill: '#F2A04A', opacity: 0.35 },
+  { kind: 'path', d: 'M282 170 C284 160 288 156 290 150 C294 158 298 162 298 170 Z', fill: '#F2A04A' },
+  { kind: 'line', x1: 270, y1: 154, x2: 312, y2: 154, stroke: '#3A2A20', strokeWidth: 3 },
+  ...[[340, '#7FC8F0'], [362, '#8ACB7A']].flatMap(([x, c]): Shape[] => [
+    { kind: 'rect', x: x as number, y: 150, w: 14, h: 20, rx: 2, fill: c as Hex, stroke: INK, strokeWidth: 1.2 },
+    { kind: 'path', d: `M${(x as number) + 14} 154 C${(x as number) + 20} 154 ${(x as number) + 20} 164 ${(x as number) + 14} 164`, fill: 'none', stroke: INK, strokeWidth: 1.5 },
+    { kind: 'path', d: `M${x} 150 C${(x as number) + 2} 144 ${(x as number) + 12} 144 ${(x as number) + 14} 150 Z`, fill: PARCHMENT },
+  ]),
+  ...bulbRow(254, 386, 136, 11),
+  { kind: 'rect', x: 0, y: 190, w: 400, h: 50, fill: '#3A3F52' },
+  { kind: 'line', x1: 0, y1: 206, x2: 400, y2: 206, stroke: GOLD, strokeWidth: 2, dash: '14 10', opacity: 0.6 },
+];
+
 /** Vignette per quest slug outside Main Street. */
 export const landQuestScenes: Record<string, Shape[]> = {
   'jungle-expedition': jungleExpedition,
@@ -794,6 +902,8 @@ export const landQuestScenes: Record<string, Shape[]> = {
   'bayou-critters': bayouCritters,
   'frontier-fort': frontierFort,
   'river-life': riverLife,
+  'outpost-wanderer': outpostWanderer,
+  'docking-bay-days': dockingBayDays,
   'knights-and-carrousel': knightsCarrousel,
   'clockwork-wonders': clockworkWonders,
   'toontown-town-tour': toontownTour,
