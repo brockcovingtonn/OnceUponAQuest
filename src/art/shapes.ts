@@ -5,6 +5,7 @@
  *
  * Hard rule: no characters, castles or three-circle "head and ears" shapes.
  */
+import { landBadgeGlyphs } from './landBadges';
 
 /** Semantic colors, resolved per variant at render time. */
 export type Tone = 'bg' | 'frame' | 'line' | 'soft' | 'accent' | 'none';
@@ -120,7 +121,7 @@ export const avatarGlyphs: Record<string, Shape[]> = {
   ],
 };
 
-/** Glyphs for the 4 quest badges. Keys match badges.art_key. */
+/** Glyphs for the quest badges. Keys match badges.art_key. */
 export const badgeGlyphs: Record<string, Shape[]> = {
   badge_window: [
     { kind: 'path', d: 'M34 71 L34 45 C34 34 41 27 50 27 C59 27 66 34 66 45 L66 71 Z', fill: 'soft', stroke: 'line', strokeWidth: 3.5 },
@@ -153,6 +154,8 @@ export const badgeGlyphs: Record<string, Shape[]> = {
     { kind: 'path', d: 'M26 35 L50 54 L74 35', fill: 'none', stroke: 'line', strokeWidth: 3 },
     { kind: 'polygon', points: starPoints(50, 54, 7, 3), fill: 'accent', stroke: 'line', strokeWidth: 1 },
   ],
+
+  ...landBadgeGlyphs,
 };
 
 /** The app's logo mark: an open storybook with a star. */

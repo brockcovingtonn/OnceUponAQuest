@@ -8,6 +8,7 @@
  * specific real building or sign. The street ends in open sky on purpose.
  */
 import type { Shape } from '@/art/shapes';
+import { landQuestScenes } from '@/art/landScenes';
 
 export const SCENE = { width: 400, height: 240 } as const;
 
@@ -371,6 +372,7 @@ export const questScenes: Record<string, Shape[]> = {
   'walt-was-here': lampVignette,
   'ears-everywhere': magnifierVignette,
   'main-street-senses': sensesVignette,
+  ...landQuestScenes,
 };
 
 export function sceneForQuest(slug: string | null | undefined): Shape[] {

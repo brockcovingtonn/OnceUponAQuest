@@ -1,6 +1,20 @@
 /**
  * All user-facing copy lives here so it can be reviewed in one place.
  */
+function roman(n: number): string {
+  const steps: [number, string][] = [
+    [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I'],
+  ];
+  let out = '';
+  for (const [value, numeral] of steps) {
+    while (n >= value) {
+      out += numeral;
+      n -= value;
+    }
+  }
+  return out;
+}
+
 export const copy = {
   appName: 'Once Upon a Quest',
   tagline: 'Find the stories hiding in plain sight.',
@@ -68,7 +82,7 @@ export const copy = {
       { icon: 'walk-outline', text: 'Walk, never run.' },
       {
         icon: 'hand-left-outline',
-        text: 'Stay on sidewalks — never stand in the street or block a doorway.',
+        text: 'Stay on walkways — never block a doorway, a queue or the parade route.',
       },
       { icon: 'sparkles-outline', text: 'Turn on Parade mode during parades and fireworks.' },
     ],
@@ -131,14 +145,17 @@ export const copy = {
     start: 'Start',
     continue: 'Continue',
     badgeEarned: 'Badge',
-    moreLands: 'More lands coming soon ✦',
+    moreLands: 'New chapters are always being written ✦',
+    beingVerified: 'Being verified on site',
+    jumpTo: 'Jump to a land',
+    jumpToLabel: (land: string) => `Jump to ${land}`,
     empty: 'No quests here yet.',
     loadError: "We couldn't load quests. Check your connection and try again.",
     statusNotStarted: (spots: number, minutes: number) =>
       `${spots} spots, about ${minutes} minutes. Not started.`,
     statusInProgress: (found: number, total: number) => `${found} of ${total} spots found.`,
     statusComplete: 'Complete. Badge earned.',
-    chapter: (n: number) => `CHAPTER ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n - 1] ?? n}`,
+    chapter: (n: number) => `CHAPTER ${n > 0 && n < 90 ? roman(n) : n}`,
   },
 
   questDetail: {
@@ -159,11 +176,14 @@ export const copy = {
               : 'Not found yet.'
       }`,
     pending: 'Waiting to sync',
+    beingVerified:
+      "We're still checking some of these spots in person, so a detail may have changed. If something doesn't match, tell us with Send feedback on your Profile.",
   },
 
   spot: {
     position: (order: number, total: number) => `${order} of ${total}`,
     photoComingSoon: 'Hint photo coming soon',
+    beingVerified: 'Not yet checked in person — details may have changed.',
     photoLabel: (whereToStand: string) => `Hint photo. ${whereToStand}`,
     whereToStand: 'Where to stand',
     clue: 'Clue',
@@ -330,12 +350,22 @@ export const copy = {
     real: 'Real map',
     viewLabel: 'Map style',
     allSpots: 'All spots',
+    wholePark: 'Whole park',
+    backToPark: 'Back to the whole park',
+    allInLand: 'All quests here',
+    landsLabel: 'Lands',
+    questsLabel: 'Quests in this land',
+    landLabel: (land: string, found: number, total: number) => `${land}. ${found} of ${total} spots found.`,
+    landHint: 'Shows this land up close',
+    landCount: (found: number, total: number) => `${found}/${total} found`,
+    parkIntro: 'Tap a land to see its quests up close.',
     approximate: 'Spot positions are approximate until they’re pinned on site.',
     noPins: 'Spot pins are added during the field walk. Until then, use the Storybook map.',
     tilesNeedSignal: 'The real map needs signal to load. The Storybook map works offline.',
     locateMe: 'Show where I am',
     hideMe: 'Hide my location',
     notOnStreet: "You're not on the street right now.",
+    notOnMap: "You're not on this map right now.",
     youAreHere: 'You are here',
     stampLabel: (order: number, name: string, state: 'found' | 'open' | 'paused') =>
       `Spot ${order}: ${name}. ${state === 'found' ? 'Found.' : state === 'paused' ? 'Paused for parades.' : 'Not found yet.'} Shows details.`,
@@ -358,11 +388,11 @@ export const copy = {
     pages: [
       {
         title: 'Welcome to the story',
-        body: 'Quests are short storybook hunts on a real street. Each quest has 4 to 7 spots in walking order and takes about 15–20 minutes. Start any quest, in any order, and pick up where you left off.',
+        body: 'Quests are short storybook hunts in every land of the park. Each quest has 4 to 7 spots in walking order and takes about 15–20 minutes. Start any quest, in any order, and pick up where you left off.',
       },
       {
         title: 'Find the spot',
-        body: 'Open a spot to see where to stand — always on the sidewalk — and a clue in our own words. Then look closely: the details are hiding in plain sight. Found spots reveal their real name.',
+        body: 'Open a spot to see where to stand — always on a walkway — and a clue in our own words. Then look closely: the details are hiding in plain sight. Found spots reveal their real name.',
       },
       {
         title: 'Four ways to check in',
@@ -378,7 +408,7 @@ export const copy = {
       },
       {
         title: 'No signal? No problem',
-        body: 'Busy streets can have weak signal. Your quests still open, and check-ins are saved on your phone with an hourglass. They’re stamped automatically as soon as you’re back online.',
+        body: 'Crowded lands can have weak signal. Your quests still open, and check-ins are saved on your phone with an hourglass. They’re stamped automatically as soon as you’re back online.',
       },
       {
         title: 'Explore with friends',
@@ -639,7 +669,7 @@ export const copy = {
 
   about: {
     title: 'About & disclaimer',
-    body: 'Once Upon a Quest turns a walk down the street into a storybook hunt. Find the hidden details, collect stamps and earn badges.',
+    body: 'Once Upon a Quest turns a walk through the park into a storybook hunt. Find the hidden details, collect stamps and earn badges.',
     disclaimerTitle: 'Disclaimer',
     photosNote:
       'Spot photos are taken by the app founder and by explorers. Clues are written in our own words.',

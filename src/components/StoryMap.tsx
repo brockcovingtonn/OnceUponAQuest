@@ -168,48 +168,45 @@ export function StoryMap({ width, stamps, showRoute, me, onSelect }: Props) {
         </Svg>
       ) : null}
 
-      {stamps.map((s) => {
-        const size = s.selected ? STAMP + 8 : STAMP;
-        return (
-          <Pressable
-            key={s.id}
-            onPress={() => onSelect(s.id)}
-            accessibilityRole="button"
-            accessibilityLabel={copy.map.stampLabel(s.order, s.name, s.state)}
-            accessibilityState={{ selected: s.selected }}
-            hitSlop={6}
-            style={[
-              styles.stamp,
-              {
-                width: size,
-                height: size,
-                borderRadius: size / 2,
-                left: s.point.x * scale - size / 2,
-                top: s.point.y * scale - size / 2,
-              },
-              s.state === 'found' && styles.stampFound,
-              s.selected && styles.stampSelected,
-            ]}>
-            {s.state === 'found' ? (
-              <Ionicons name="checkmark" size={18} color={colors.midnight} />
-            ) : s.state === 'paused' ? (
-              <Ionicons name="pause" size={16} color={colors.midnight} />
-            ) : (
-              <Text style={styles.number}>{s.order}</Text>
-            )}
-          </Pressable>
-        );
-      })}
+      {stamps.map((s) => (
+        <MapStamp key={s.id} stamp={s} x={s.point.x * scale} y={s.point.y * scale} onPress={() => onSelect(s.id)} />
+      ))}
 
-      {me ? (
-        <View
-          style={[styles.me, { left: me.x * scale - 9, top: me.y * scale - 9 }]}
-          accessible
-          accessibilityLabel={copy.map.youAreHere}
-        />
-      ) : null}
+      {me ? <MeDot x={me.x * scale} y={me.y * scale} /> : null}
     </View>
   );
+}
+
+/** A tappable spot stamp centered on (x, y) in screen points. */
+export function MapStamp({ stamp, x, y, onPress }: { stamp: StoryMapStamp; x: number; y: number; onPress: () => void }) {
+  const size = stamp.selected ? STAMP + 8 : STAMP;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={copy.map.stampLabel(stamp.order, stamp.name, stamp.state)}
+      accessibilityState={{ selected: stamp.selected }}
+      hitSlop={6}
+      style={[
+        styles.stamp,
+        { width: size, height: size, borderRadius: size / 2, left: x - size / 2, top: y - size / 2 },
+        stamp.state === 'found' && styles.stampFound,
+        stamp.selected && styles.stampSelected,
+      ]}>
+      {stamp.state === 'found' ? (
+        <Ionicons name="checkmark" size={18} color={colors.midnight} />
+      ) : stamp.state === 'paused' ? (
+        <Ionicons name="pause" size={16} color={colors.midnight} />
+      ) : (
+        <Text style={styles.number}>{stamp.order}</Text>
+      )}
+    </Pressable>
+  );
+}
+
+/** "You are here" dot centered on (x, y) in screen points. */
+export function MeDot({ x, y }: { x: number; y: number }) {
+  return <View style={[styles.me, { left: x - 9, top: y - 9 }]} accessible accessibilityLabel={copy.map.youAreHere} />;
 }
 
 const styles = StyleSheet.create({

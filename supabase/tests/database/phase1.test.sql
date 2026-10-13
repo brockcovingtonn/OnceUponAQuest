@@ -7,7 +7,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 set local role postgres;
 
-select plan(48);
+select plan(50);
 
 -- ---------------------------------------------------------------------------
 -- Helpers (temporary, dropped with the rollback)
@@ -42,8 +42,14 @@ insert into auth.users (id, email) values
 -- ---------------------------------------------------------------------------
 -- Seed content
 -- ---------------------------------------------------------------------------
-select is((select count(*) from public.quests where status = 'live'), 4::bigint, 'seed: 4 live quests');
-select is((select count(*) from public.spots), 20::bigint, 'seed: 20 spots');
+select is((select count(*) from public.quests where status = 'live'), 18::bigint, 'seed: 18 live quests');
+select is((select count(*) from public.spots), 83::bigint, 'seed: 83 spots');
+select is((select count(*) from public.lands where park_id = 'disneyland-park'), 8::bigint, 'seed: 8 lands');
+select is(
+  (select count(*) from public.lands l
+   where (select count(*) from public.quests q where q.land_id = l.id and q.status = 'live') < 2
+     and l.id <> 'dlp-main-street'),
+  0::bigint, 'seed: every new land has at least 2 live quests');
 select is(
   (select count(*) from public.spots s
    where s.method = 'answer'

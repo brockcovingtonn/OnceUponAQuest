@@ -1,12 +1,16 @@
 /**
  * Geometry shared by the storybook map and the real map.
  *
- * The storybook map is drawn on a 360 × 640 canvas: Town Square at the bottom,
+ * The street map is drawn on a 360 × 640 canvas: Town Square at the bottom,
  * the street running north, the central plaza at the top. Real GPS pins are
  * placed with a simple calibration (two anchor points along the street).
  * It's approximate — check it against a few real pins after the field walk
  * and adjust the anchors if stamps land on the wrong side of the street.
  */
+
+import { PARK_CANVAS, PARK_LANDS } from '@/art/parkMap';
+
+export { PARK_CANVAS };
 
 export const MAP_CANVAS = { width: 360, height: 640 } as const;
 
@@ -50,4 +54,57 @@ export const STREET_REGION = {
   longitude: SOUTH.lng,
   latitudeDelta: 0.0032,
   longitudeDelta: 0.0032,
+};
+
+// ---------------------------------------------------------------------------
+// Whole-park storybook map (src/art/parkMap.ts, 720 × 900)
+// ---------------------------------------------------------------------------
+
+/**
+ * Rough bounds of the park for placing real GPS pins on the park map. The
+ * drawing is loosely geographic, not to scale, so this is approximate — check
+ * it against real pins after the field walk and nudge the bounds if needed.
+ */
+const PARK_BOUNDS = { north: 33.8162, south: 33.8094, west: -117.924, east: -117.914 };
+
+/** Where a GPS point falls on the park map (null if it's off the drawing). */
+export function toParkPoint(lat: number, lng: number): MapPoint | null {
+  const x = ((lng - PARK_BOUNDS.west) / (PARK_BOUNDS.east - PARK_BOUNDS.west)) * PARK_CANVAS.width;
+  const y = ((PARK_BOUNDS.north - lat) / (PARK_BOUNDS.north - PARK_BOUNDS.south)) * PARK_CANVAS.height;
+  if (x < 0 || x > PARK_CANVAS.width || y < 0 || y > PARK_CANVAS.height) return null;
+  return { x, y };
+}
+
+/** Point a fraction `t` (0–1) of the way along a walking route. */
+function alongRoute(route: MapPoint[], t: number): MapPoint {
+  const lengths = route.slice(1).map((p, i) => Math.hypot(p.x - route[i].x, p.y - route[i].y));
+  let remaining = t * lengths.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < lengths.length; i++) {
+    if (remaining <= lengths[i] || i === lengths.length - 1) {
+      const f = lengths[i] ? Math.min(remaining / lengths[i], 1) : 0;
+      return { x: route[i].x + (route[i + 1].x - route[i].x) * f, y: route[i].y + (route[i + 1].y - route[i].y) * f };
+    }
+    remaining -= lengths[i];
+  }
+  return route[0];
+}
+
+/**
+ * Stand-in position on the park map for a spot without a pin yet: each quest
+ * in a land walks its own route, in spot order. Purely illustrative.
+ */
+export function parkPlaceholderPoint(landId: string, questIndexInLand: number, order: number, questSpotCount: number): MapPoint {
+  const land = PARK_LANDS.find((l) => l.id === landId);
+  if (!land) return { x: PARK_CANVAS.width / 2, y: PARK_CANVAS.height / 2 };
+  const route = land.lanes[questIndexInLand % land.lanes.length];
+  const t = questSpotCount > 1 ? (order - 1) / (questSpotCount - 1) : 0.5;
+  return alongRoute(route, t);
+}
+
+/** Region for the real map: the whole park. */
+export const PARK_REGION = {
+  latitude: 33.8124,
+  longitude: -117.919,
+  latitudeDelta: 0.0085,
+  longitudeDelta: 0.0085,
 };

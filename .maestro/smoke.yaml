@@ -64,6 +64,7 @@ name: Smoke test
     visible: '.*Windows of Legends.*'
     timeout: 20000
 - assertVisible: 'Parade mode'
+- assertVisible: 'Jump to a land'
 
 # Check in at a "listen" spot (no camera or location needed)
 - scrollUntilVisible:
@@ -89,11 +90,17 @@ name: Smoke test
     visible: '.*1 spot.*'
     timeout: 15000
 
-# Map: storybook and real map
+# Map: whole park, a land up close, and the real map
 - tapOn: 'Map'
 - extendedWaitUntil:
     visible: 'Storybook'
     timeout: 15000
+- tapOn: 'Whole park'
+- assertVisible: 'Adventureland.*spots found.*'
+- tapOn: 'Adventureland'
+- extendedWaitUntil:
+    visible: 'Jungle Expedition'
+    timeout: 10000
 - tapOn: 'Real map'
 - tapOn: 'Storybook'
 

@@ -33,7 +33,9 @@ export function QuestCard({ quest, chapter, found, badgeEarned, onPress }: Props
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${copy.quests.chapter(chapter)}: ${quest.title}. ${status}`}
+      accessibilityLabel={`${copy.quests.chapter(chapter)}: ${quest.title}. ${status}${
+        quest.beingVerified ? ` ${copy.quests.beingVerified}.` : ''
+      }`}
       accessibilityHint={action}
       style={({ pressed }) => [styles.card, complete && styles.cardComplete, pressed && styles.pressed]}>
       <QuestCover slug={quest.slug} coverPhotoPath={quest.coverPhotoPath} height={96} />
@@ -50,6 +52,12 @@ export function QuestCard({ quest, chapter, found, badgeEarned, onPress }: Props
         </View>
 
         <Text style={styles.meta}>{copy.quests.spotsAndTime(total, quest.estMinutes)}</Text>
+        {quest.beingVerified ? (
+          <View style={styles.verifyTag}>
+            <Ionicons name="compass-outline" size={14} color={colors.ink} />
+            <Text style={styles.verifyText}>{copy.quests.beingVerified}</Text>
+          </View>
+        ) : null}
 
         {!complete ? (
           <View style={styles.footer}>
@@ -121,6 +129,22 @@ const styles = StyleSheet.create({
   meta: {
     ...type.label,
     color: colors.inkMuted,
+  },
+  verifyTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.round,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.inkMuted,
+  },
+  verifyText: {
+    ...type.caption,
+    color: colors.ink,
   },
   footer: {
     flexDirection: 'row',

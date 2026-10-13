@@ -14,6 +14,8 @@ type Props = {
   /** Fixed height; with `crop` the drawing fills the box and is trimmed (like cover). */
   height?: number;
   crop?: boolean;
+  /** Draw only this part of the canvas (a zoomed-in view). */
+  view?: { x: number; y: number; w: number; h: number };
 };
 
 /** Draws artwork shapes at the given size. Decorative: label the parent. */
@@ -25,6 +27,7 @@ export function Artwork({
   canvas = { width: 100, height: 100 },
   height,
   crop = false,
+  view,
 }: Props) {
   const idPrefix = useId().replace(/[^a-zA-Z0-9]/g, '');
   const color = (c: Color | undefined) =>
@@ -35,8 +38,8 @@ export function Artwork({
   return (
     <Svg
       width={size}
-      height={height ?? (size * canvas.height) / canvas.width}
-      viewBox={`0 0 ${canvas.width} ${canvas.height}`}
+      height={height ?? (view ? (size * view.h) / view.w : (size * canvas.height) / canvas.width)}
+      viewBox={view ? `${view.x} ${view.y} ${view.w} ${view.h}` : `0 0 ${canvas.width} ${canvas.height}`}
       preserveAspectRatio={crop ? 'xMidYMid slice' : 'xMidYMid meet'}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants">

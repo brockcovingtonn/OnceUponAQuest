@@ -6,7 +6,7 @@ import type { PersistQueryClientOptions } from '@tanstack/react-query-persist-cl
 export const CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
 
 /** Change when cached data shapes change, so old caches are thrown away. */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 
 // Never worth keeping across launches.
 const NOT_PERSISTED = new Set(['username-available']);

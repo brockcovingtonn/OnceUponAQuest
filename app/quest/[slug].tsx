@@ -98,6 +98,9 @@ export default function QuestDetailScreen() {
         </View>
 
         {anyPaused ? <Banner tone="warning" message={copy.paradeMode.banner} /> : null}
+        {spots.some((s) => !s.verified_on_site) ? (
+          <Banner tone="info" message={copy.questDetail.beingVerified} />
+        ) : null}
 
         <View>
           {rows.map(({ spot, state, name }) => (

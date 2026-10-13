@@ -2,7 +2,7 @@
 
 The single list of everything still open before the app goes public. Items marked **(code)** need more building; Claude can do those. Everything else needs you, a visit to the park, or your attorney.
 
-_Last updated: October 11, 2026_
+_Last updated: October 13, 2026_
 
 ---
 
@@ -14,14 +14,20 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
   - **Option A — "field" build (recommended; needs the Apple Developer Program):** `npm run build:field`, install it on your iPhone from the EAS link. Standalone, no Mac needed.
   - **Option B — free, Mac stays home:** `npm run db:use-hosted`, then `caffeinate -dis npx expo start --tunnel --clear`; open it in Expo Go before you leave. Works on cellular while the Mac stays awake and online.
 - [ ] Sign in on the hosted database before you leave home: in the app enter your email and tap **Send my code**, then on the Mac run `npm run auth:code -- covington.brock@gmail.com` and type the code it prints (valid 1 hour). You'll finish onboarding once; the sign-in then lasts the whole walk.
-- [ ] Open **Profile → Field walk (0 of 20 done)** — the checklist shows every spot's Pin / Photo / Verified status; tap a spot to open it, and turn on "Show only unfinished" as you go.
-- [ ] At each of the 20 spots, stand where a guest should stand, then:
+- [ ] Open **Profile → Field walk (0 of 83 done)** — the checklist shows every spot's Pin / Photo / Verified status; tap a spot to open it, and turn on "Show only unfinished" as you go.
+- [ ] At each of the 83 spots (20 on Main Street, 63 across the seven other lands — plan several visits), stand where a guest should stand, then:
   - [ ] **Set pin here** (it refuses GPS fixes worse than 25 m — step into open sky and retry)
   - [ ] **Take hint photo** (replaces the storybook placeholder)
   - [ ] Confirm the answer, the cannon count and candy shop names — fix anything on the spot with **Edit text & answers** (clue, hint, where to stand, accepted answers, parade flag, radius). Every edit is logged so it can be undone.
   - [ ] **Mark verified**
-- [ ] On each of the 4 quest screens: **Take cover photo** (and **Edit title & story** if needed) (replaces the storybook scene on the card and quest page)
+- [ ] On each of the 18 quest screens: **Take cover photo** (and **Edit title & story** if needed) (replaces the storybook scene on the card and quest page)
 - [ ] After pinning a few spots, open the **Map** tab: stamps should sit on the right side of the street. If they're off, adjust the two anchor points in `src/lib/mapGeometry.ts`.
+- [ ] Same for the whole-park map: after pinning spots in a few lands, check they land in the right land on the storybook map. If not, nudge `PARK_BOUNDS` in `src/lib/mapGeometry.ts` (the park drawing is loosely geographic, not to scale).
+- [ ] **New lands (added Oct 13, 2026) are live but tagged "Being verified on site."** They were written from public research, so check these first:
+  - Typed answers: Jungle Cruise boat names; the tiki figures' names (spellings vary — add any you hear); the Orleans St / Royal St sign; the number on the green door (33); the WD/RD balcony initials; the year in the riverfront brick wall (1764); the petrified tree plaque (September 1957); the riverboat and sailing ship names; the carrousel lead horse (Jingles).
+  - Things that may have moved or changed: the edible plants and blue eggs in Tomorrowland planters, the keelboat by the river, the bear tributes in Bayou Country, Toontown's crates, fountain, mailboxes and fire station window, the 21 Royal Street address.
+  - Parade flags: only the clock-tower lawn spots in Fantasyland pause in Parade mode. Flag any others that sit on the parade route.
+  - The "Being verified" tag on a quest goes away by itself once every spot in it is **Mark verified**.
 - [ ] Note: once a spot has a pin, check-ins there require being on site — test at-home check-ins on unpinned spots.
 
 ## 2. Domain, email and web pages (after you buy the domain)
@@ -41,7 +47,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - [ ] App name "Once Upon a Quest" — trademark search.
 - [ ] App icon, logo, stamp avatars, badge art and storybook scenes (all original, in `src/art/`).
 - [ ] Disclaimer wording (sign-in, About, Terms, store listings).
-- [ ] Spot titles naming real people or places, e.g. "Elias Disney window", "Walt's window", "Walt's lamp".
+- [ ] Spot titles naming real people or places, e.g. "Elias Disney window", "Walt's window", "Walt's lamp", "The Dominguez Palm", "Jingles", the WD/RD initials. Attraction and land names appear only as plain text describing locations (e.g. "Jungle Cruise boat names", "Toontown"). The land is shown as "Toontown", leaving the character name out of the app's headings.
 - [ ] The "Ears Everywhere" quest concept (finding hidden three-circle shapes — described in text only; the app never draws the shape).
 - [ ] Menu item names in the Snack Passport (e.g. "Walt's Chili").
 - [ ] Store screenshots before submission.

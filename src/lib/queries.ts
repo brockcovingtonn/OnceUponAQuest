@@ -66,13 +66,13 @@ const questListSelect = `
   id, slug, title, story, est_minutes, sort_order, is_premium, season, cover_photo_path,
   land:lands ( id, name, sort_order ),
   badge:badges ( id, slug, title, art_key ),
-  spots ( count )
+  spots ( verified_on_site )
 ` as const;
 
 const questDetailSelect = `
   id, slug, title, story, est_minutes, cover_photo_path,
   badge:badges ( id, slug, title, description, art_key ),
-  spots ( id, sort_order, teaser, title, method, pause_during_parades, holiday_note, photo_path )
+  spots ( id, sort_order, teaser, title, method, pause_during_parades, holiday_note, photo_path, verified_on_site )
 ` as const;
 
 export type QuestSummary = {
@@ -87,6 +87,8 @@ export type QuestSummary = {
   land: { id: string; name: string; sortOrder: number };
   badge: { id: string; slug: string; title: string; artKey: string } | null;
   spotCount: number;
+  /** True while any spot is still waiting to be checked in person. */
+  beingVerified: boolean;
 };
 
 export type QuestDetail = Awaited<ReturnType<typeof fetchQuestDetail>>;
@@ -131,7 +133,8 @@ export function useQuests() {
           badge: q.badge
             ? { id: q.badge.id, slug: q.badge.slug, title: q.badge.title, artKey: q.badge.art_key }
             : null,
-          spotCount: q.spots[0]?.count ?? 0,
+          spotCount: q.spots.length,
+          beingVerified: q.spots.some((s) => !s.verified_on_site),
       }));
     },
   });
@@ -970,6 +973,7 @@ export type MapSpot = {
   lng: number | null;
   pauseDuringParades: boolean;
   quest: { id: string; slug: string; title: string; order: number };
+  land: { id: string; name: string; order: number };
 };
 
 /** Every live spot with its pin (if set) and quest, for the Map tab. Cached for offline use. */
@@ -979,7 +983,9 @@ export function useMapSpots() {
     queryFn: async (): Promise<MapSpot[]> => {
       const { data, error } = await supabase
         .from('spots')
-        .select('id, sort_order, teaser, title, lat, lng, pause_during_parades, quest:quests ( id, slug, title, sort_order )');
+        .select(
+          'id, sort_order, teaser, title, lat, lng, pause_during_parades, quest:quests ( id, slug, title, sort_order, land:lands ( id, name, sort_order ) )',
+        );
       if (error) throw error;
       return data
         .map((s) => ({
@@ -991,8 +997,9 @@ export function useMapSpots() {
           lng: s.lng,
           pauseDuringParades: s.pause_during_parades,
           quest: { id: s.quest.id, slug: s.quest.slug, title: s.quest.title, order: s.quest.sort_order },
+          land: { id: s.quest.land.id, name: s.quest.land.name, order: s.quest.land.sort_order },
         }))
-        .sort((a, b) => a.quest.order - b.quest.order || a.order - b.order);
+        .sort((a, b) => a.land.order - b.land.order || a.quest.order - b.quest.order || a.order - b.order);
     },
   });
 }

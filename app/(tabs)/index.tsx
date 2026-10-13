@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -41,6 +41,9 @@ export default function QuestsScreen() {
   const quests = useQuests();
   const progress = useMyProgress(userId);
   const [refreshing, setRefreshing] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const sectionY = useRef(new Map<string, number>());
+  const jumpHeight = useRef(0);
   const appUpdate = useAppUpdate();
   const online = useIsOnline();
   const accessToken = session?.access_token;
@@ -79,8 +82,12 @@ export default function QuestsScreen() {
     const sections = groupByLand(quests.data);
     body = (
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
+        // Keep "Jump to a land" pinned to the top while scrolling.
+        stickyHeaderIndices={[1]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
+        <View style={styles.top}>
         {/* Greeting sits on plain parchment above the scene so it's always readable. */}
         <View style={styles.greetingRow}>
           <Text style={styles.greeting} accessibilityRole="header">
@@ -106,11 +113,42 @@ export default function QuestsScreen() {
         {appUpdate.ready ? <UpdateBanner onRestart={appUpdate.restart} /> : null}
         <OfflineStatus />
         <ParadeModeToggle />
+        </View>
+
+        {sections.length > 1 ? (
+          <View style={styles.jump} onLayout={(e) => (jumpHeight.current = e.nativeEvent.layout.height)}>
+            <Text style={styles.jumpTitle}>{copy.quests.jumpTo}</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}>
+              {sections.map((land) => (
+                <Pressable
+                  key={land.id}
+                  onPress={() => {
+                    const y = sectionY.current.get(land.id);
+                    // Land just below the pinned chip row.
+                    if (y !== undefined) scrollRef.current?.scrollTo({ y: y - jumpHeight.current - spacing.sm, animated: true });
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={copy.quests.jumpToLabel(land.name)}
+                  style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}>
+                  <Text style={styles.chipText}>{land.name}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : (
+          <View />
+        )}
 
         {sections.length === 0 ? <Text style={styles.empty}>{copy.quests.empty}</Text> : null}
 
         {sections.map((land) => (
-          <View key={land.id} style={styles.section}>
+          <View
+            key={land.id}
+            style={styles.section}
+            onLayout={(e) => sectionY.current.set(land.id, e.nativeEvent.layout.y)}>
             <View style={styles.landHeading}>
               <Text style={styles.landHeader} accessibilityRole="header">
                 {land.name.toUpperCase()}
@@ -176,6 +214,41 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: spacing.md,
+  },
+  top: {
+    gap: spacing.lg,
+  },
+  jump: {
+    gap: spacing.xs,
+    marginHorizontal: -spacing.lg,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.parchment,
+  },
+  jumpTitle: {
+    ...type.caption,
+    color: colors.inkMuted,
+    letterSpacing: 1.5,
+    paddingHorizontal: spacing.lg,
+  },
+  chips: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  chip: {
+    minHeight: minTouchTarget,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.round,
+    borderWidth: 1,
+    borderColor: colors.storybookGold,
+    backgroundColor: colors.white,
+  },
+  chipPressed: {
+    opacity: 0.7,
+  },
+  chipText: {
+    ...type.label,
+    color: colors.midnight,
   },
   landHeading: {
     alignItems: 'center',

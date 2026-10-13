@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,11 +8,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { StateView } from '@/components/StateView';
+import { ParkMap } from '@/components/ParkMap';
 import { type StoryMapStamp, StoryMap } from '@/components/StoryMap';
+import { PARK_LANDS } from '@/art/parkMap';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { getCurrentCoords, getLocationPermission, requestLocationPermission } from '@/lib/location';
-import { type MapPoint, placeholderPoint, STREET_REGION, toMapPoint } from '@/lib/mapGeometry';
+import {
+  PARK_REGION,
+  parkPlaceholderPoint,
+  placeholderPoint,
+  STREET_REGION,
+  toMapPoint,
+  toParkPoint,
+} from '@/lib/mapGeometry';
 import { useIsOnline } from '@/lib/network';
 import { useParadeMode } from '@/lib/paradeMode';
 import { type MapSpot, useMapSpots, useMyProgress } from '@/lib/queries';
@@ -20,6 +29,10 @@ import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
 type MapStyle = 'storybook' | 'real';
 const ALL = 'all';
+const PARK = 'park';
+const STREET_LAND = 'dlp-main-street';
+
+type Chip = { id: string; label: string };
 
 export default function MapScreen() {
   const { session } = useAuth();
@@ -29,17 +42,25 @@ export default function MapScreen() {
   const { paradeMode } = useParadeMode();
   const online = useIsOnline();
   const [view, setView] = useState<MapStyle>('storybook');
+  const [chosenLand, setChosenLand] = useState<string | null>(null);
   const [chosenQuest, setChosenQuest] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [me, setMe] = useState<MapPoint | null>(null);
+  const [myCoords, setMyCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locateMessage, setLocateMessage] = useState<string>();
   const [showUserOnRealMap, setShowUserOnRealMap] = useState(false);
 
-  const quests = useMemo(() => {
-    const seen = new Map<string, MapSpot['quest']>();
-    for (const s of spots.data ?? []) seen.set(s.quest.id, s.quest);
-    return [...seen.values()].sort((a, b) => a.order - b.order);
+  const { lands, quests } = useMemo(() => {
+    const landMap = new Map<string, MapSpot['land']>();
+    const questMap = new Map<string, MapSpot['quest'] & { landId: string }>();
+    for (const s of spots.data ?? []) {
+      landMap.set(s.land.id, s.land);
+      questMap.set(s.quest.id, { ...s.quest, landId: s.land.id });
+    }
+    return {
+      lands: [...landMap.values()].sort((a, b) => a.order - b.order),
+      quests: [...questMap.values()].sort((a, b) => a.order - b.order),
+    };
   }, [spots.data]);
 
   if (spots.isPending || progress.isPending) return <StateView kind="loading" />;
@@ -59,40 +80,63 @@ export default function MapScreen() {
   const { foundSpots } = progress.data;
   const all = spots.data;
 
-  // Default to the quest you're partway through, else the first one not finished.
   const questFound = (questId: string) => all.filter((s) => s.quest.id === questId && foundSpots.has(s.id)).length;
   const questTotal = (questId: string) => all.filter((s) => s.quest.id === questId).length;
-  const defaultQuest =
-    quests.find((q) => questFound(q.id) > 0 && questFound(q.id) < questTotal(q.id))?.id ??
-    quests.find((q) => questFound(q.id) < questTotal(q.id))?.id ??
-    quests[0]?.id ??
-    ALL;
-  const questId = chosenQuest ?? defaultQuest;
-  const shown = questId === ALL ? all : all.filter((s) => s.quest.id === questId);
+  const inProgress = (q: { id: string }) => questFound(q.id) > 0 && questFound(q.id) < questTotal(q.id);
+
+  // Open on the land of the quest you're partway through, else the whole park.
+  const landId = chosenLand ?? quests.find(inProgress)?.landId ?? PARK;
+  const landQuests = quests.filter((q) => q.landId === landId);
+  // Within a land: the chosen quest, else the one you're partway through, else the first not finished.
+  const questId =
+    landId === PARK
+      ? ALL
+      : ((chosenQuest && landQuests.some((q) => q.id === chosenQuest) ? chosenQuest : null) ??
+        landQuests.find(inProgress)?.id ??
+        landQuests.find((q) => questFound(q.id) < questTotal(q.id))?.id ??
+        ALL);
+  const inLand = landId === PARK ? [] : all.filter((s) => s.land.id === landId);
+  const shown = questId === ALL ? inLand : inLand.filter((s) => s.quest.id === questId);
+  const onStreet = landId === STREET_LAND;
+  const parkLand = PARK_LANDS.find((l) => l.id === landId) ?? null;
+  const me = myCoords ? (onStreet ? toMapPoint(myCoords.lat, myCoords.lng) : toParkPoint(myCoords.lat, myCoords.lng)) : null;
 
   const stateOf = (s: MapSpot): StoryMapStamp['state'] =>
     foundSpots.has(s.id) ? 'found' : paradeMode && s.pauseDuringParades ? 'paused' : 'open';
   const nameOf = (s: MapSpot) => (foundSpots.has(s.id) ? s.title : s.teaser);
 
   const stamps: StoryMapStamp[] = shown.map((s) => {
-    const qIndex = quests.findIndex((q) => q.id === s.quest.id);
-    const pinned = s.lat !== null && s.lng !== null ? toMapPoint(s.lat, s.lng) : null;
+    const qIndex = landQuests.findIndex((q) => q.id === s.quest.id);
+    const hasPin = s.lat !== null && s.lng !== null;
+    const pinned = hasPin ? (onStreet ? toMapPoint(s.lat ?? 0, s.lng ?? 0) : toParkPoint(s.lat ?? 0, s.lng ?? 0)) : null;
     return {
       id: s.id,
       order: s.order,
       name: nameOf(s),
-      point: pinned ?? placeholderPoint(qIndex, s.order, questTotal(s.quest.id)),
+      point:
+        pinned ??
+        (onStreet
+          ? placeholderPoint(qIndex, s.order, questTotal(s.quest.id))
+          : parkPlaceholderPoint(landId, qIndex, s.order, questTotal(s.quest.id))),
       state: stateOf(s),
       selected: s.id === selectedId,
     };
   });
+  const medallions = lands.map((l) => {
+    const inThisLand = all.filter((s) => s.land.id === l.id);
+    return { landId: l.id, name: l.name, found: inThisLand.filter((s) => foundSpots.has(s.id)).length, total: inThisLand.length };
+  });
   const anyApproximate = shown.some((s) => s.lat === null || s.lng === null);
-  const pinnedShown = shown.filter((s) => s.lat !== null && s.lng !== null);
+  const pinnedShown = (landId === PARK ? all : shown).filter((s) => s.lat !== null && s.lng !== null);
+
+  const landChips: Chip[] = [{ id: PARK, label: copy.map.wholePark }, ...lands.map((l) => ({ id: l.id, label: l.name }))];
+  const questChips: Chip[] =
+    landId === PARK ? [] : [...landQuests.map((q) => ({ id: q.id, label: q.title })), { id: ALL, label: copy.map.allInLand }];
   const selected = all.find((s) => s.id === selectedId) ?? null;
 
   async function locate() {
-    if (me) {
-      setMe(null);
+    if (myCoords) {
+      setMyCoords(null);
       return;
     }
     setLocateMessage(undefined);
@@ -103,9 +147,9 @@ export default function MapScreen() {
         return;
       }
       const coords = await getCurrentCoords();
-      const point = toMapPoint(coords.lat, coords.lng);
-      if (point) setMe(point);
-      else setLocateMessage(copy.map.notOnStreet);
+      const point = onStreet ? toMapPoint(coords.lat, coords.lng) : toParkPoint(coords.lat, coords.lng);
+      setMyCoords(coords);
+      if (!point) setLocateMessage(onStreet ? copy.map.notOnStreet : copy.map.notOnMap);
     } catch {
       setLocateMessage(copy.location.unavailable);
     } finally {
@@ -145,51 +189,90 @@ export default function MapScreen() {
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipBar}>
-        {[...quests.map((q) => ({ id: q.id, label: q.title })), { id: ALL, label: copy.map.allSpots }].map((chip) => {
-          const active = chip.id === questId;
-          return (
-            <Pressable
-              key={chip.id}
-              onPress={() => {
-                setChosenQuest(chip.id);
-                setSelectedId(null);
-              }}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-              accessibilityLabel={chip.label}
-              style={[styles.chip, active && styles.chipActive]}>
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{chip.label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <ChipRow
+        label={copy.map.landsLabel}
+        chips={landChips}
+        activeId={landId}
+        onPick={(id) => {
+          setChosenLand(id);
+          setChosenQuest(null);
+          setSelectedId(null);
+          setLocateMessage(undefined);
+        }}
+      />
+      {questChips.length > 0 ? (
+        <ChipRow
+          label={copy.map.questsLabel}
+          chips={questChips}
+          activeId={questId}
+          small
+          onPick={(id) => {
+            setChosenQuest(id);
+            setSelectedId(null);
+          }}
+        />
+      ) : null}
 
       {view === 'storybook' ? (
         <ScrollView contentContainerStyle={styles.mapContent}>
-          {anyApproximate ? <Text style={styles.note}>{copy.map.approximate}</Text> : null}
-          <StoryMap
-            width={width - spacing.lg * 2}
-            stamps={stamps}
-            showRoute={questId !== ALL}
-            me={me}
-            onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
-          />
-          {pinnedShown.length > 0 ? (
-            <Button
-              variant="secondary"
-              label={me ? copy.map.hideMe : copy.map.locateMe}
-              onPress={locate}
-              loading={locating}
+          {landId === PARK ? (
+            <Text style={styles.note}>{copy.map.parkIntro}</Text>
+          ) : (
+            <View style={styles.noteRow}>
+              <Pressable
+                onPress={() => {
+                  setChosenLand(PARK);
+                  setSelectedId(null);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={copy.map.backToPark}
+                hitSlop={8}
+                style={({ pressed }) => [styles.backToPark, pressed && styles.pressed]}>
+                <Ionicons name="map-outline" size={16} color={colors.midnight} />
+                <Text style={styles.backToParkText}>{copy.map.backToPark}</Text>
+              </Pressable>
+              {anyApproximate ? <Text style={styles.note}>{copy.map.approximate}</Text> : null}
+            </View>
+          )}
+          {onStreet ? (
+            <StoryMap
+              width={width - spacing.lg * 2}
+              stamps={stamps}
+              showRoute={questId !== ALL}
+              me={me}
+              onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
             />
-          ) : null}
+          ) : (
+            <ParkMap
+              width={width - spacing.lg * 2}
+              land={landId === PARK ? null : parkLand}
+              lands={PARK_LANDS}
+              medallions={medallions}
+              stamps={stamps}
+              showRoute={questId !== ALL}
+              me={me}
+              onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
+              onSelectLand={(id) => {
+                setChosenLand(id);
+                setChosenQuest(null);
+                setSelectedId(null);
+              }}
+            />
+          )}
+          <Button
+            variant="secondary"
+            label={myCoords ? copy.map.hideMe : copy.map.locateMe}
+            onPress={locate}
+            loading={locating}
+          />
           {locateMessage ? <Banner tone="info" message={locateMessage} /> : null}
         </ScrollView>
       ) : (
         <View style={styles.realWrap}>
           <MapView
+            key={onStreet ? 'street' : 'park'}
             style={StyleSheet.absoluteFill}
-            initialRegion={STREET_REGION}
+            initialRegion={onStreet ? STREET_REGION : PARK_REGION}
             showsUserLocation={showUserOnRealMap}
             showsPointsOfInterests={false}
             showsCompass
@@ -243,6 +326,63 @@ export default function MapScreen() {
   );
 }
 
+function ChipRow({
+  label,
+  chips,
+  activeId,
+  small = false,
+  onPick,
+}: {
+  label: string;
+  chips: Chip[];
+  activeId: string;
+  small?: boolean;
+  onPick: (id: string) => void;
+}) {
+  const scrollRef = useRef<ScrollView>(null);
+  const chipBox = useRef(new Map<string, { x: number; w: number }>());
+  const scrollX = useRef(0);
+  const viewW = useRef(0);
+  // Bring the active chip into view if it's off screen (e.g. after tapping a land on the map).
+  useEffect(() => {
+    const box = chipBox.current.get(activeId);
+    if (!box || !viewW.current) return;
+    if (box.x < scrollX.current || box.x + box.w > scrollX.current + viewW.current) {
+      scrollRef.current?.scrollTo({ x: Math.max(0, box.x - spacing.lg), animated: true });
+    }
+  }, [activeId]);
+  return (
+    <ScrollView
+      ref={scrollRef}
+      onLayout={(e) => (viewW.current = e.nativeEvent.layout.width)}
+      onScroll={(e) => (scrollX.current = e.nativeEvent.contentOffset.x)}
+      scrollEventThrottle={64}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[styles.chips, small && styles.chipsSmall]}
+      style={styles.chipBar}
+      accessibilityLabel={label}>
+      {chips.map((chip) => {
+        const active = chip.id === activeId;
+        return (
+          <Pressable
+            key={chip.id}
+            onPress={() => onPick(chip.id)}
+            onLayout={(e) => chipBox.current.set(chip.id, { x: e.nativeEvent.layout.x, w: e.nativeEvent.layout.width })}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={chip.label}
+            style={[styles.chip, small && styles.chipSmall, active && (small ? styles.chipActiveSmall : styles.chipActive)]}>
+            <Text style={[styles.chipText, active && styles.chipTextActive, active && !small && styles.chipTextOnDark]}>
+              {chip.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -289,7 +429,12 @@ const styles = StyleSheet.create({
   chips: {
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+  },
+  chipsSmall: {
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
   },
   chip: {
     minHeight: minTouchTarget - 6,
@@ -300,9 +445,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.white,
   },
+  chipSmall: {
+    borderStyle: 'dashed',
+  },
   chipActive: {
+    backgroundColor: colors.midnight,
+    borderColor: colors.midnight,
+  },
+  chipActiveSmall: {
     backgroundColor: colors.storybookGold,
     borderColor: colors.storybookGold,
+    borderStyle: 'solid',
   },
   chipText: {
     ...type.label,
@@ -312,6 +465,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodySemiBold,
     color: colors.midnight,
   },
+  chipTextOnDark: {
+    color: colors.parchment,
+  },
   mapContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: 140,
@@ -320,6 +476,25 @@ const styles = StyleSheet.create({
   note: {
     ...type.caption,
     color: colors.inkMuted,
+  },
+  noteRow: {
+    gap: spacing.xs,
+  },
+  backToPark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: spacing.xs,
+    minHeight: minTouchTarget - 12,
+  },
+  backToParkText: {
+    ...type.label,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.midnight,
+    textDecorationLine: 'underline',
+  },
+  pressed: {
+    opacity: 0.7,
   },
   realWrap: {
     flex: 1,

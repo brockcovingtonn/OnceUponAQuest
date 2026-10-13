@@ -275,6 +275,12 @@ export default function SpotScreen() {
               <Text style={styles.sectionTitle}>{copy.spot.whereToStand}</Text>
             </View>
             <Text style={styles.body}>{s.where_to_stand}</Text>
+            {!s.verified_on_site ? (
+              <View style={styles.sectionHeader}>
+                <Ionicons name="compass-outline" size={14} color={colors.inkMuted} />
+                <Text style={styles.unverified}>{copy.spot.beingVerified}</Text>
+              </View>
+            ) : null}
           </View>
 
           <View style={styles.section}>
@@ -415,6 +421,11 @@ const styles = StyleSheet.create({
   body: {
     ...type.body,
     color: colors.ink,
+  },
+  unverified: {
+    ...type.caption,
+    color: colors.inkMuted,
+    flexShrink: 1,
   },
   notice: {
     gap: spacing.sm,
