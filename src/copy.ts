@@ -353,6 +353,7 @@ export const copy = {
     allSpots: 'All spots',
     wholePark: 'Whole park',
     backToPark: 'Back to the whole park',
+    osmCredit: '© OpenStreetMap contributors',
     allInLand: 'All quests here',
     landsLabel: 'Lands',
     questsLabel: 'Quests in this land',
@@ -749,6 +750,8 @@ export const copy = {
     disclaimerTitle: 'Disclaimer',
     photosNote:
       'Spot photos are taken by the app founder and by explorers. Clues are written in our own words.',
+    mapCredit:
+      'The park map is drawn from OpenStreetMap data, © OpenStreetMap contributors, available under the Open Database License (openstreetmap.org/copyright). The illustration style is our own.',
     version: (version: string) => `Version ${version}`,
   },
 } as const;

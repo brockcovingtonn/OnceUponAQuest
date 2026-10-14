@@ -169,7 +169,7 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
   const car = { w: 15 * s, h: 9 * s };
   const riverboat = { w: 20 * s, h: 11 * s };
   const balloon = { w: 28 * s, h: 36 * s };
-  const spinner = 64 * scale;
+  const spinner = Math.max(26 * scale, 22);
   const fountain = project(PARK_FOUNTAIN);
   const balloonAt = project(PARK_BALLOON);
   const spinnerAt = project(ROCKET_SPINNER);
@@ -358,11 +358,26 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
       })}
 
       {me ? <MeDot {...project(me)} /> : null}
+
+      <Text style={styles.credit} accessibilityLabel={copy.map.osmCredit}>
+        {copy.map.osmCredit}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  credit: {
+    position: 'absolute',
+    right: 6,
+    bottom: 4,
+    fontSize: 9,
+    color: colors.ink,
+    backgroundColor: 'rgba(250, 245, 234, 0.85)',
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
   shimmer: {
     position: 'absolute',
     borderWidth: 2,

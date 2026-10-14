@@ -16,6 +16,7 @@ import { useAuth } from '@/lib/auth';
 import { useFeedback } from '@/lib/feedback';
 import { bearingDegrees, type Landmark, relativeAngle, useLandmarks, useMyLensStamps } from '@/lib/landmarks';
 import { distanceMeters, getLocationPermission, openAppSettings, requestLocationPermission } from '@/lib/location';
+import { approxLandmarkCoords } from '@/lib/mapGeometry';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
@@ -128,9 +129,9 @@ export default function LensScreen() {
   const nearby = useMemo(() => {
     if (!position) return [];
     return all
-      .filter((l) => l.lat !== null && l.lng !== null)
-      .map((l) => {
-        const to = { lat: l.lat ?? 0, lng: l.lng ?? 0 };
+      .map((l) => ({ l, to: l.lat !== null && l.lng !== null ? { lat: l.lat, lng: l.lng } : approxLandmarkCoords(l.slug) }))
+      .filter((x): x is { l: Landmark; to: { lat: number; lng: number } } => x.to !== null)
+      .map(({ l, to }) => {
         return { landmark: l, distance: distanceMeters(position, to), bearing: bearingDegrees(position, to) };
       })
       .filter((n) => n.distance <= NEARBY_M)

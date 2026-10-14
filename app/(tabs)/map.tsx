@@ -18,6 +18,7 @@ import { useAuth } from '@/lib/auth';
 import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
 import { getCurrentCoords, getLocationPermission, requestLocationPermission } from '@/lib/location';
 import {
+  approxLandmarkCoords,
   PARK_REGION,
   parkPlaceholderPoint,
   placeholderPoint,
@@ -144,9 +145,10 @@ export default function MapScreen() {
   // Storybook Lens landmarks in this land (pinned where they are, else at stand-in spots).
   const landStories = landId === PARK || !storiesOn ? [] : (landmarks.data ?? []).filter((l) => l.land.id === landId);
   const storyMarkers: StoryMarkerData[] = landStories.map((l, i) => {
-    const pinned =
-      l.lat !== null && l.lng !== null ? (onStreet ? toMapPoint(l.lat, l.lng) : toParkPoint(l.lat, l.lng)) : null;
-    const standIn = onStreet ? STREET_STORY_SPOTS[i % STREET_STORY_SPOTS.length] : parkLand?.stories[i % (parkLand?.stories.length || 1)];
+    // Pinned on site, else its approximate real-world spot, else a stand-in on the street map.
+    const coords = l.lat !== null && l.lng !== null ? { lat: l.lat, lng: l.lng } : approxLandmarkCoords(l.slug);
+    const pinned = coords ? (onStreet ? toMapPoint(coords.lat, coords.lng) : toParkPoint(coords.lat, coords.lng)) : null;
+    const standIn = onStreet ? STREET_STORY_SPOTS[i % STREET_STORY_SPOTS.length] : (parkLand?.label ?? null);
     return {
       id: l.id,
       title: l.title,

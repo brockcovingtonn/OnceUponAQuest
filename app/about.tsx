@@ -21,6 +21,7 @@ export default function AboutScreen() {
       </Text>
       <Text style={styles.body}>{copy.disclaimer}</Text>
       <Text style={styles.body}>{copy.about.photosNote}</Text>
+      <Text style={styles.body}>{copy.about.mapCredit}</Text>
     </ScrollView>
   );
 }

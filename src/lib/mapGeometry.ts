@@ -9,6 +9,7 @@
  */
 
 import { PARK_CANVAS, PARK_LANDS } from '@/art/parkMap';
+import { LANDMARK_APPROX, PARK_GEO_PROJECTION } from '@/art/parkGeo';
 
 export { PARK_CANVAS };
 
@@ -57,22 +58,21 @@ export const STREET_REGION = {
 };
 
 // ---------------------------------------------------------------------------
-// Whole-park storybook map (src/art/parkMap.ts, 720 × 900)
+// Whole-park storybook map (src/art/parkMap.ts), drawn over real geography
 // ---------------------------------------------------------------------------
-
-/**
- * Rough bounds of the park for placing real GPS pins on the park map. The
- * drawing is loosely geographic, not to scale, so this is approximate — check
- * it against real pins after the field walk and nudge the bounds if needed.
- */
-const PARK_BOUNDS = { north: 33.8162, south: 33.8094, west: -117.924, east: -117.914 };
 
 /** Where a GPS point falls on the park map (null if it's off the drawing). */
 export function toParkPoint(lat: number, lng: number): MapPoint | null {
-  const x = ((lng - PARK_BOUNDS.west) / (PARK_BOUNDS.east - PARK_BOUNDS.west)) * PARK_CANVAS.width;
-  const y = ((PARK_BOUNDS.north - lat) / (PARK_BOUNDS.north - PARK_BOUNDS.south)) * PARK_CANVAS.height;
+  const P = PARK_GEO_PROJECTION;
+  const x = (lng - P.lng0) * P.metersPerLng - P.x0;
+  const y = (P.lat0 - lat) * P.metersPerLat - P.y0;
   if (x < 0 || x > PARK_CANVAS.width || y < 0 || y > PARK_CANVAS.height) return null;
   return { x, y };
+}
+
+/** Approximate map position of a Storybook Lens landmark that isn't pinned yet. */
+export function approxLandmarkCoords(slug: string): { lat: number; lng: number } | null {
+  return LANDMARK_APPROX[slug] ?? null;
 }
 
 /** Point a fraction `t` (0–1) of the way along a walking route. */
@@ -101,10 +101,11 @@ export function parkPlaceholderPoint(landId: string, questIndexInLand: number, o
   return alongRoute(route, t);
 }
 
-/** Region for the real map: the whole park. */
+/** Region for the real map: the whole park (the storybook map's own extent). */
+const P0 = PARK_GEO_PROJECTION;
 export const PARK_REGION = {
-  latitude: 33.8124,
-  longitude: -117.919,
-  latitudeDelta: 0.0085,
-  longitudeDelta: 0.0085,
+  latitude: P0.lat0 - (P0.y0 + PARK_CANVAS.height / 2) / P0.metersPerLat,
+  longitude: P0.lng0 + (P0.x0 + PARK_CANVAS.width / 2) / P0.metersPerLng,
+  latitudeDelta: (PARK_CANVAS.height / P0.metersPerLat) * 1.05,
+  longitudeDelta: (PARK_CANVAS.width / P0.metersPerLng) * 1.05,
 };
