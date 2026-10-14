@@ -9,13 +9,15 @@ import { BadgeStamp } from '@/components/BadgeStamp';
 import { Button } from '@/components/Button';
 import { Fireworks } from '@/components/Fireworks';
 import { Flourish } from '@/components/Flourish';
+import { QuestCover } from '@/components/QuestCover';
 import { SparkleBurst } from '@/components/SparkleBurst';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useFeedback } from '@/lib/feedback';
-import { useBadge, useMyProgress, useQuests } from '@/lib/queries';
-import { colors, radius, spacing, type } from '@/theme';
+import { suggestNextQuest } from '@/lib/nextAdventure';
+import { useBadge, useMyProgress, useQuests, useSavedQuests, useToggleSavedQuest } from '@/lib/queries';
+import { colors, fonts, radius, spacing, type } from '@/theme';
 
 export default function BadgeEarnedScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -23,6 +25,9 @@ export default function BadgeEarnedScreen() {
   const badge = useBadge(slug);
   const quests = useQuests();
   const progress = useMyProgress(session?.user.id);
+  const saved = useSavedQuests(session?.user.id);
+  const toggleSaved = useToggleSavedQuest(session?.user.id);
+  const [saveError, setSaveError] = useState(false);
   const shareCard = useRef<View>(null);
   const scale = useState(() => new Animated.Value(0.3))[0];
   const [shareError, setShareError] = useState<string>();
@@ -47,13 +52,20 @@ export default function BadgeEarnedScreen() {
   const quest = b.quests[0];
   const spotCount = quest?.spots[0]?.count ?? 0;
 
-  // First quest (in order) that isn't finished yet, other than this one.
-  const nextQuest = quests.data?.find(
-    (q) =>
-      q.slug !== quest?.slug &&
-      !(q.badge && progress.data?.badgeIds.has(q.badge.id)) &&
-      (progress.data?.foundByQuest.get(q.id) ?? 0) < q.spotCount,
-  );
+  // Your next adventure: a quest you've started, else the next one nearby.
+  const currentId = quests.data?.find((q) => q.slug === quest?.slug)?.id;
+  const next =
+    quests.data && progress.data
+      ? suggestNextQuest(quests.data, currentId, progress.data.foundByQuest, progress.data.badgeIds)
+      : null;
+  const nextSaved = next ? Boolean(saved.data?.includes(next.quest.id)) : false;
+
+  function toggleSave() {
+    if (!next) return;
+    setSaveError(false);
+    feedback.tap();
+    toggleSaved.mutate({ questId: next.quest.id, save: !nextSaved }, { onError: () => setSaveError(true) });
+  }
 
   async function share() {
     setShareError(undefined);
@@ -101,15 +113,39 @@ export default function BadgeEarnedScreen() {
 
       <View style={styles.actions}>
         <Button label={copy.badge.share} onPress={share} loading={sharing} />
-        {nextQuest ? (
+      </View>
+
+      {next ? (
+        <View style={styles.next} accessibilityLabel={copy.badge.nextAdventure}>
+          <Text style={styles.nextKicker}>{copy.badge.nextAdventure}</Text>
+          <QuestCover slug={next.quest.slug} coverPhotoPath={next.quest.coverPhotoPath} height={110} style={styles.nextCover} />
+          <Text style={styles.nextTitle}>{next.quest.title}</Text>
+          <Text style={styles.nextReason}>
+            {copy.badge.nextReason(
+              next.reason,
+              next.quest.land.name,
+              progress.data?.foundByQuest.get(next.quest.id) ?? 0,
+              next.quest.spotCount,
+            )}
+          </Text>
+          <Text style={styles.nextMeta}>{copy.quests.spotsAndTime(next.quest.spotCount, next.quest.estMinutes)}</Text>
+          <Button
+            label={copy.badge.startNow}
+            onPress={() => router.replace({ pathname: '/quest/[slug]', params: { slug: next.quest.slug } })}
+          />
           <Button
             variant="secondary"
-            label={`${copy.badge.nextQuest}: ${nextQuest.title} ›`}
-            onPress={() => router.replace({ pathname: '/quest/[slug]', params: { slug: nextQuest.slug } })}
+            label={nextSaved ? `✓ ${copy.badge.savedForNext}` : copy.badge.saveForNext}
+            onPress={toggleSave}
           />
-        ) : null}
-        <Button variant="text" label={copy.badge.done} onPress={() => router.back()} />
-      </View>
+          {nextSaved ? <Text style={styles.nextHint}>{copy.badge.savedHint}</Text> : null}
+          {saveError ? <Banner message={copy.badge.saveFailed} /> : null}
+        </View>
+      ) : quests.data && progress.data ? (
+        <Text style={styles.allDone}>{copy.badge.allDone}</Text>
+      ) : null}
+
+      <Button variant="text" label={copy.badge.done} onPress={() => router.back()} />
     </ScrollView>
   );
 }
@@ -162,5 +198,49 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: spacing.sm,
+  },
+  next: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.storybookGold,
+    backgroundColor: colors.white,
+  },
+  nextKicker: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 12,
+    letterSpacing: 1.5,
+    color: colors.inkMuted,
+    textAlign: 'center',
+  },
+  nextCover: {
+    borderRadius: radius.md,
+    overflow: 'hidden',
+  },
+  nextTitle: {
+    ...type.title,
+    color: colors.midnight,
+    textAlign: 'center',
+  },
+  nextReason: {
+    ...type.body,
+    color: colors.ink,
+    textAlign: 'center',
+  },
+  nextMeta: {
+    ...type.label,
+    color: colors.inkMuted,
+    textAlign: 'center',
+  },
+  nextHint: {
+    ...type.caption,
+    color: colors.inkMuted,
+    textAlign: 'center',
+  },
+  allDone: {
+    ...type.heading,
+    color: colors.midnight,
+    textAlign: 'center',
   },
 });

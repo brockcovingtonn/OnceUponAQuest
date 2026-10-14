@@ -9,6 +9,9 @@ set local role postgres;
 
 select plan(50);
 
+-- Test the rules, not live pins: clear any field-walk pins inside this rolled-back transaction.
+update public.spots set lat = null, lng = null where lat is not null;
+
 -- ---------------------------------------------------------------------------
 -- Helpers (temporary, dropped with the rollback)
 -- ---------------------------------------------------------------------------

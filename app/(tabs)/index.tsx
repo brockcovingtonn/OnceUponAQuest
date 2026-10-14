@@ -17,7 +17,7 @@ import { copy } from '@/copy';
 import { useAppUpdate } from '@/lib/appUpdates';
 import { useIsOnline } from '@/lib/network';
 import { useAuth } from '@/lib/auth';
-import { type QuestSummary, useMyProgress, useProfile, useQuests } from '@/lib/queries';
+import { type QuestSummary, useMyProgress, useProfile, useQuests, useSavedQuests, useToggleSavedQuest } from '@/lib/queries';
 import { prefetchStorageImages } from '@/lib/storageImage';
 import { hasSeenWalkthrough } from '@/lib/walkthrough';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
@@ -40,6 +40,8 @@ export default function QuestsScreen() {
   const profile = useProfile(userId);
   const quests = useQuests();
   const progress = useMyProgress(userId);
+  const saved = useSavedQuests(userId);
+  const toggleSaved = useToggleSavedQuest(userId);
   const [refreshing, setRefreshing] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const sectionY = useRef(new Map<string, number>());
@@ -113,6 +115,47 @@ export default function QuestsScreen() {
         {appUpdate.ready ? <UpdateBanner onRestart={appUpdate.restart} /> : null}
         <OfflineStatus />
         <ParadeModeToggle />
+        {(() => {
+          // Saved for your next visit (finished quests drop off on their own).
+          const savedQuests = (saved.data ?? [])
+            .map((id) => quests.data.find((q) => q.id === id))
+            .filter((q): q is QuestSummary => {
+              if (!q) return false;
+              const earned = q.badge ? progress.data.badgeIds.has(q.badge.id) : false;
+              return !earned && (progress.data.foundByQuest.get(q.id) ?? 0) < q.spotCount;
+            });
+          if (savedQuests.length === 0) return null;
+          return (
+            <View style={styles.section}>
+              <View style={styles.savedHeading}>
+                <Ionicons name="bookmark" size={16} color={colors.storybookGold} />
+                <Text style={styles.landHeader} accessibilityRole="header">
+                  {copy.quests.savedTitle}
+                </Text>
+              </View>
+              {savedQuests.map((quest) => (
+                <View key={quest.id} style={styles.savedItem}>
+                  <QuestCard
+                    quest={quest}
+                    chapter={quests.data.indexOf(quest) + 1}
+                    found={progress.data.foundByQuest.get(quest.id) ?? 0}
+                    badgeEarned={false}
+                    onPress={() => router.push({ pathname: '/quest/[slug]', params: { slug: quest.slug } })}
+                  />
+                  <Pressable
+                    onPress={() => toggleSaved.mutate({ questId: quest.id, save: false })}
+                    accessibilityRole="button"
+                    accessibilityLabel={copy.quests.removeSavedLabel(quest.title)}
+                    hitSlop={8}
+                    style={styles.removeSaved}>
+                    <Ionicons name="bookmark-outline" size={14} color={colors.inkMuted} />
+                    <Text style={styles.removeSavedText}>{copy.quests.removeSaved}</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          );
+        })()}
         </View>
 
         {sections.length > 1 ? (
@@ -217,6 +260,27 @@ const styles = StyleSheet.create({
   },
   top: {
     gap: spacing.lg,
+  },
+  savedHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  savedItem: {
+    gap: spacing.xs,
+  },
+  removeSaved: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    gap: 4,
+    minHeight: minTouchTarget - 12,
+  },
+  removeSavedText: {
+    ...type.label,
+    color: colors.inkMuted,
+    textDecorationLine: 'underline',
   },
   jump: {
     gap: spacing.xs,

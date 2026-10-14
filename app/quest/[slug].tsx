@@ -1,6 +1,7 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
@@ -17,9 +18,9 @@ import { fieldToolsEnabled } from '@/lib/fieldTools';
 import { useIsOnline } from '@/lib/network';
 import { useOfflineQueue } from '@/lib/offlineQueue';
 import { useParadeMode } from '@/lib/paradeMode';
-import { useIsAdmin, useMyProgress, useQuest } from '@/lib/queries';
+import { useIsAdmin, useMyProgress, useQuest, useSavedQuests, useToggleSavedQuest } from '@/lib/queries';
 import { prefetchStorageImages } from '@/lib/storageImage';
-import { colors, radius, spacing, type } from '@/theme';
+import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
 export default function QuestDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -28,6 +29,8 @@ export default function QuestDetailScreen() {
   const progress = useMyProgress(session?.user.id);
   const { paradeMode } = useParadeMode();
   const isAdmin = useIsAdmin(session?.user.id);
+  const saved = useSavedQuests(session?.user.id);
+  const toggleSaved = useToggleSavedQuest(session?.user.id);
   const { items: queuedItems } = useOfflineQueue();
   const online = useIsOnline();
   const accessToken = session?.access_token;
@@ -54,7 +57,7 @@ export default function QuestDetailScreen() {
   }
   if (!quest.data) return <StateView kind="empty" message={copy.questDetail.notFound} />;
 
-  const { title, story, est_minutes: estMinutes, spots, badge, cover_photo_path: coverPhotoPath } = quest.data;
+  const { id: questId, title, story, est_minutes: estMinutes, spots, badge, cover_photo_path: coverPhotoPath } = quest.data;
   const { foundSpots, badgeIds } = progress.data;
 
   const rows = spots.map((spot) => {
@@ -72,6 +75,7 @@ export default function QuestDetailScreen() {
   const foundCount = rows.filter((r) => r.state === 'found').length;
   const anyPaused = rows.some((r) => r.state === 'paused');
   const badgeEarned = badge ? badgeIds.has(badge.id) : false;
+  const isSaved = Boolean(saved.data?.includes(questId));
 
   return (
     <>
@@ -96,6 +100,18 @@ export default function QuestDetailScreen() {
           </ProgressRing>
           <Text style={styles.minutes}>{copy.questDetail.minutes(estMinutes)}</Text>
         </View>
+
+        {foundCount < spots.length && !badgeEarned ? (
+          <Pressable
+            onPress={() => toggleSaved.mutate({ questId, save: !isSaved })}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSaved }}
+            accessibilityLabel={isSaved ? copy.questDetail.saved : copy.questDetail.save}
+            style={({ pressed }) => [styles.saveButton, isSaved && styles.saveButtonOn, pressed && { opacity: 0.75 }]}>
+            <Ionicons name={isSaved ? 'bookmark' : 'bookmark-outline'} size={18} color={colors.midnight} />
+            <Text style={styles.saveText}>{isSaved ? copy.questDetail.saved : copy.questDetail.save}</Text>
+          </Pressable>
+        ) : null}
 
         {anyPaused ? <Banner tone="warning" message={copy.paradeMode.banner} /> : null}
         {spots.some((s) => !s.verified_on_site) ? (
@@ -136,6 +152,25 @@ export default function QuestDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: spacing.xs,
+    minHeight: minTouchTarget,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.round,
+    borderWidth: 1.5,
+    borderColor: colors.storybookGold,
+  },
+  saveButtonOn: {
+    backgroundColor: colors.storybookGold,
+  },
+  saveText: {
+    ...type.label,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.midnight,
+  },
   content: {
     padding: spacing.lg,
     gap: spacing.md,

@@ -216,7 +216,7 @@ export function useMyProgress(userId: string | undefined) {
 const spotDetailSelect = `
   id, quest_id, sort_order, teaser, title, where_to_stand, clue, hint, prompt, method,
   lat, lng, radius_m, pause_during_parades, holiday_note, photo_path, verified_on_site,
-  quest:quests ( slug, title, spots ( count ) ),
+  quest:quests ( slug, title, spots ( count ), land:lands ( name ) ),
   landmark:landmarks ( slug, title )
 ` as const;
 
@@ -1112,5 +1112,56 @@ export function useAdminUpdateQuestContent(questId: string) {
       if (error) throw error;
     },
     onSuccess: () => invalidateContent(queryClient),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Saved quests ("Save for my next visit")
+// ---------------------------------------------------------------------------
+
+export const savedQuestKeys = {
+  all: (userId: string | undefined) => ['saved-quests', userId] as const,
+};
+
+/** Quest ids you've saved for your next visit, newest first. */
+export function useSavedQuests(userId: string | undefined) {
+  return useQuery({
+    queryKey: savedQuestKeys.all(userId),
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from('saved_quests')
+        .select('quest_id, saved_at')
+        .eq('user_id', userId ?? '')
+        .order('saved_at', { ascending: false });
+      if (error) throw error;
+      return data.map((r) => r.quest_id);
+    },
+  });
+}
+
+/** Saves or unsaves a quest, updating the list right away. */
+export function useToggleSavedQuest(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  const key = savedQuestKeys.all(userId);
+  return useMutation({
+    mutationFn: async ({ questId, save }: { questId: string; save: boolean }) => {
+      const { error } = save
+        ? await supabase.from('saved_quests').upsert({ quest_id: questId }, { onConflict: 'user_id,quest_id', ignoreDuplicates: true })
+        : await supabase.from('saved_quests').delete().eq('user_id', userId ?? '').eq('quest_id', questId);
+      if (error) throw error;
+    },
+    onMutate: async ({ questId, save }) => {
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<string[]>(key);
+      queryClient.setQueryData<string[]>(key, (ids = []) =>
+        save ? [questId, ...ids.filter((id) => id !== questId)] : ids.filter((id) => id !== questId),
+      );
+      return { previous };
+    },
+    onError: (_error, _vars, context) => {
+      if (context) queryClient.setQueryData(key, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
   });
 }

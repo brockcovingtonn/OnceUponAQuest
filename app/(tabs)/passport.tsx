@@ -5,15 +5,19 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BadgeStamp } from '@/components/BadgeStamp';
+import { Button } from '@/components/Button';
 import { Flourish } from '@/components/Flourish';
 import { LensStamp } from '@/components/LensStamp';
 import { Stamp } from '@/components/Stamp';
+import { PassportShareCard } from '@/components/share/PassportShareCard';
+import { ShareSheet } from '@/components/share/ShareSheet';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
-import { useMyProgress, usePassportContent } from '@/lib/queries';
+import { computeMilestones, countParkDays } from '@/lib/milestones';
+import { useMyProgress, usePassportContent, useProfile } from '@/lib/queries';
 import { colors, minTouchTarget, spacing, type } from '@/theme';
 
 const STAMP_SIZE = 56;
@@ -28,6 +32,8 @@ export default function PassportScreen() {
   const progress = useMyProgress(session?.user.id);
   const landmarks = useLandmarks();
   const lensStamps = useMyLensStamps(session?.user.id);
+  const profile = useProfile(session?.user.id);
+  const [sharing, setSharing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   async function refresh() {
@@ -46,6 +52,16 @@ export default function PassportScreen() {
     const { foundSpots, badgeIds, snacks } = progress.data;
     const spotsById = new Map(lands.flatMap((land) => land.spots.map((spot) => [spot.id, spot] as const)));
     const earnedCount = badges.filter((b) => badgeIds.has(b.id)).length;
+    const foundDates = [...foundSpots.values()];
+    const lensCount = lensStamps.data?.size ?? 0;
+    const milestones = computeMilestones({ foundAt: foundDates, snackCount: snacks.length, lensCount });
+    const parkDays = countParkDays(foundDates);
+    const landProgress = lands.map((land) => ({
+      id: land.id,
+      name: land.name,
+      found: land.spots.filter((spot) => foundSpots.has(spot.id)).length,
+      total: land.spots.length,
+    }));
 
     body = (
       <ScrollView
@@ -60,6 +76,46 @@ export default function PassportScreen() {
             {copy.passport.summary(foundSpots.size, earnedCount, snacks.length)}
           </Text>
           {foundSpots.size === 0 ? <Text style={styles.hint}>{copy.passport.firstStampHint}</Text> : null}
+          <View style={styles.shareRow}>
+            <Button variant="secondary" label={copy.passport.sharePassport} onPress={() => setSharing(true)} />
+          </View>
+          <ShareSheet visible={sharing} onClose={() => setSharing(false)} dialogTitle={copy.share.passportDialog}>
+            <PassportShareCard
+              name={profile.data?.display_name || profile.data?.username || copy.passport.title}
+              spots={foundSpots.size}
+              snacks={snacks.length}
+              lensPages={lensCount}
+              badges={badges.filter((b) => badgeIds.has(b.id)).map((b) => ({ id: b.id, artKey: b.artKey }))}
+              milestones={milestones}
+              lands={landProgress}
+            />
+          </ShareSheet>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader} accessibilityRole="header">
+            {copy.passport.milestones}
+          </Text>
+          <View style={styles.badgeRow}>
+            {milestones.map((m) => {
+              const label = copy.passport.milestone[m.key];
+              return (
+                <View
+                  key={m.key}
+                  style={styles.badge}
+                  accessible
+                  accessibilityLabel={copy.passport.milestoneLabel(label.title, label.detail, m.earned)}>
+                  <Stamp icon={m.icon} inked={m.earned} size={56} />
+                  <Text style={[styles.badgeTitle, !m.earned && styles.muted]} numberOfLines={2}>
+                    {label.title}
+                  </Text>
+                  {m.key === 'threeDays' && !m.earned ? (
+                    <Text style={styles.milestoneProgress}>{copy.passport.daysProgress(parkDays)}</Text>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -113,11 +169,23 @@ export default function PassportScreen() {
           </View>
         ) : null}
 
-        {lands.map((land) => (
+        {lands.map((land) => {
+          const progress = landProgress.find((l) => l.id === land.id);
+          const found = progress?.found ?? 0;
+          const total = progress?.total ?? 0;
+          return (
           <View key={land.id} style={styles.section}>
-            <Text style={styles.sectionHeader} accessibilityRole="header">
-              {copy.passport.stamps(land.name)}
-            </Text>
+            <View
+              style={styles.landHeader}
+              accessible
+              accessibilityRole="header"
+              accessibilityLabel={copy.passport.landProgressLabel(land.name, found, total)}>
+              <Text style={styles.sectionHeader}>{copy.passport.stamps(land.name)}</Text>
+              <Text style={styles.landCount}>{copy.passport.landProgress(found, total)}</Text>
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.fill, { width: `${total ? (found / total) * 100 : 0}%` }]} />
+            </View>
             <View style={styles.grid}>
               {land.spots.map((spot) => {
                 const foundAt = foundSpots.get(spot.id);
@@ -142,7 +210,8 @@ export default function PassportScreen() {
               })}
             </View>
           </View>
-        ))}
+          );
+        })}
 
         <View style={styles.section}>
           <Text style={styles.sectionHeader} accessibilityRole="header">
@@ -232,6 +301,39 @@ const styles = StyleSheet.create({
   },
   muted: {
     color: colors.inkMuted,
+  },
+  shareRow: {
+    marginTop: spacing.md,
+  },
+  milestoneProgress: {
+    ...type.caption,
+    color: colors.inkMuted,
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  landHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  landCount: {
+    ...type.label,
+    color: colors.midnight,
+    fontVariant: ['tabular-nums'],
+  },
+  track: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.border,
+    overflow: 'hidden',
+    marginTop: -spacing.xs,
+  },
+  fill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: colors.storybookGold,
   },
   grid: {
     flexDirection: 'row',

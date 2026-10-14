@@ -11,6 +11,8 @@ import { OfflineStatus } from '@/components/OfflineStatus';
 import { SpotFieldTools } from '@/components/FieldTools';
 import { ReportProblemSheet } from '@/components/ReportProblemSheet';
 import { SpotPhoto } from '@/components/SpotPhoto';
+import { ShareSheet } from '@/components/share/ShareSheet';
+import { SpotShareCard } from '@/components/share/SpotShareCard';
 import { Stamp } from '@/components/Stamp';
 import { StampCelebration } from '@/components/StampCelebration';
 import { StateView } from '@/components/StateView';
@@ -67,6 +69,7 @@ export default function SpotScreen() {
   const [feedback, setFeedback] = useState<Feedback>();
   const [locationIssue, setLocationIssue] = useState<LocationIssue>();
   const [celebrating, setCelebrating] = useState<'stamped' | 'saved' | null>(null);
+  const [sharingSpot, setSharingSpot] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const pendingSubmission = useRef<CheckInSubmission | null>(null);
 
@@ -255,6 +258,20 @@ export default function SpotScreen() {
               <Stamp icon="checkmark" inked size={40} />
               <Text style={styles.foundText}>{copy.spot.foundOn(formatDate(foundAt))}</Text>
             </View>
+          ) : null}
+          {foundAt ? (
+            <Button variant="secondary" label={copy.share.spotButton} onPress={() => setSharingSpot(true)} />
+          ) : null}
+          {foundAt ? (
+            <ShareSheet visible={sharingSpot} onClose={() => setSharingSpot(false)} dialogTitle={copy.share.spotDialog}>
+              <SpotShareCard
+                title={s.title}
+                questTitle={s.quest.title}
+                questSlug={s.quest.slug}
+                landName={s.quest.land?.name ?? null}
+                foundAt={foundAt}
+              />
+            </ShareSheet>
           ) : null}
 
           {paused ? <Banner tone="warning" message={copy.paradeMode.banner} /> : null}

@@ -22,6 +22,7 @@ This Privacy Policy explains what information Higher Thinking Consulting ("we", 
 - Camera — when you tap a button to take a photo, and while the Storybook Lens is open to show a live view. The Lens view is never recorded, saved or sent anywhere.
 - Compass direction — while the Storybook Lens is open, to show which landmarks you are facing. It stays on your phone.
 - Storybook Lens stamps — which landmark stories you have stamped, and when.
+- Saved quests — quests you save for your next visit. Only you can see them.
 - Photo library — only through your phone's system picker, and only for the single photo you choose as your profile photo.
 - On your device only — your sign-in session (kept in your phone's secure storage), your Parade mode setting, a copy of quest content and your progress so the App works without signal, and check-ins (including photos) made offline until they upload. Signing out clears the copy and any check-ins waiting to upload.
 - Server logs — our hosting provider records basic technical data such as IP address, time of request and error messages, to keep the service secure and working.
@@ -64,7 +65,7 @@ Teens aged 13 to 17 should use the App with a parent or guardian's permission. P
 
 ## 7. How long we keep information
 
-We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile, check-ins, Storybook Lens stamps, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.
+We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile, check-ins, Storybook Lens stamps, saved quests, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.
 
 ## 8. Your choices and rights
 

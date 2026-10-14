@@ -137,6 +137,9 @@ export const copy = {
   },
 
   quests: {
+    savedTitle: 'SAVED FOR YOUR NEXT VISIT',
+    removeSaved: 'Remove from saved',
+    removeSavedLabel: (title: string) => `Remove ${title} from saved quests`,
     greeting: (hour: number, username: string) =>
       `${hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'}, ${username}`,
     spotsAndTime: (spots: number, minutes: number) =>
@@ -176,6 +179,8 @@ export const copy = {
               : 'Not found yet.'
       }`,
     pending: 'Waiting to sync',
+    save: 'Save for my next visit',
+    saved: 'Saved for your next visit',
     beingVerified:
       "We're still checking some of these spots in person, so a detail may have changed. If something doesn't match, tell us with Send feedback on your Profile.",
   },
@@ -534,8 +539,20 @@ export const copy = {
     share: 'Share my badge',
     shareDialogTitle: 'Share your badge',
     shareUnavailable: "Sharing isn't available on this device.",
-    nextQuest: 'Next quest',
     done: 'Done',
+    nextAdventure: 'YOUR NEXT ADVENTURE',
+    nextReason: (reason: 'in_progress' | 'same_land' | 'next_land', land: string, found: number, total: number) =>
+      reason === 'in_progress'
+        ? `You're partway through: ${found} of ${total} spots found.`
+        : reason === 'same_land'
+          ? `Right next door, in ${land}.`
+          : `A new land to explore: ${land}.`,
+    startNow: 'Start now',
+    saveForNext: 'Save for my next visit',
+    savedForNext: 'Saved for your next visit',
+    savedHint: "It's pinned to the top of your Quests screen.",
+    saveFailed: "That didn't save. Check your connection and try again.",
+    allDone: 'You have finished every quest. Legendary!',
     stampLabel: (title: string) => `${title} badge`,
     notFound: "We couldn't find that badge.",
   },
@@ -554,6 +571,40 @@ export const copy = {
     lockedStampLabel: (teaser: string) => `${teaser}. Not found yet.`,
     snackLabel: (title: string, date: string) => `${title}, ${date}. Open spot.`,
     loadError: "We couldn't load your passport. Check your connection and try again.",
+    landProgress: (found: number, total: number) => `${found} of ${total} stamps`,
+    landProgressLabel: (land: string, found: number, total: number) => `${land}: ${found} of ${total} stamps found.`,
+    milestones: 'MILESTONES',
+    milestoneLabel: (title: string, detail: string, earned: boolean) =>
+      `${title}. ${detail}. ${earned ? 'Earned.' : 'Not earned yet.'}`,
+    milestone: {
+      firstStamp: { title: 'First Stamp', detail: 'Find your first spot' },
+      firstSnack: { title: 'First Snack', detail: 'Log your first snack' },
+      threeDays: { title: 'Three Visits', detail: 'Find spots on 3 different park days' },
+      tenStamps: { title: 'Ten Stamps', detail: 'Find 10 spots' },
+      firstLens: { title: 'First Lens Page', detail: 'Stamp a Storybook Lens story' },
+    },
+    daysProgress: (days: number) => `${days} of 3 park days`,
+    sharePassport: 'Share my Passport',
+  },
+
+  share: {
+    shareImage: 'Share image',
+    close: 'Close',
+    preview: 'Here is your storybook card.',
+    unavailable: "Sharing isn't available on this device.",
+    failed: "We couldn't make the image. Please try again.",
+    spotButton: 'Share this find',
+    spotDialog: 'Share your find',
+    passportDialog: 'Share your Passport',
+    found: 'FOUND',
+    foundOn: (date: string) => `Found on ${date}`,
+    inQuest: (quest: string) => `in the quest “${quest}”`,
+    passportTitle: (name: string) => `${name}’s Passport`,
+    stats: { spots: 'spots', badges: 'badges', snacks: 'snacks', lens: 'Lens pages' },
+    badgesEarned: 'BADGES EARNED',
+    noBadgesYet: 'The first badge is just a quest away.',
+    moreBadges: (n: number) => `+${n}`,
+    footer: 'An independent fan app',
   },
 
   friends: {

@@ -217,6 +217,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"saved_quests": {
+                  Row: {
+                    "quest_id": string,"saved_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "quest_id": string,"saved_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "quest_id"?: string,"saved_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saved_quests_quest_id_fkey"
+      columns: ["quest_id"]
+isOneToOne: false
+      referencedRelation: "quests"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"spot_reports": {
                   Row: {
                     "created_at": string,"id": string,"note": string | null,"reason": Database["public"]['Enums']["report_reason"],"spot_id": string,"user_id": string

@@ -7,6 +7,9 @@ set local role postgres;
 
 select plan(14);
 
+-- Test the rules, not live pins: clear any field-walk pins inside this rolled-back transaction.
+update public.spots set lat = null, lng = null where lat is not null;
+
 create function pg_temp.act_as(p_uid uuid) returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
