@@ -78,6 +78,10 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ## 5. Check on real phones
 
+- [ ] **Get the app onto testers' phones** (testers use the user1–4 accounts until the custom SMTP from section 2 is set up):
+  - **Android:** `npx eas-cli@latest build --profile preview --platform android`, then send testers the install link (an APK; they allow "install unknown apps" once). No Play account needed.
+  - **iPhone, a few friends now:** `npx eas-cli@latest device:create`, send each tester the link to register their iPhone (Settings → General → VPN & Device Management → install the profile), then `npx eas-cli@latest build --profile preview --platform ios`, include their devices, and send the install link. Rebuild whenever you add a phone (100 iPhones a year).
+  - **iPhone, a bigger group (TestFlight):** `npm run build:production` with `--platform ios`, then `npm run submit:ios`. In App Store Connect → TestFlight, add testers by email. Your own App Store Connect team (up to 100) can install right away; outside testers need a quick Apple beta review first (give the reviewer a tester account and the code). Publish fixes with `npm run update:preview`, or for TestFlight `npx eas-cli@latest update --channel production`.
 - [ ] **Tester accounts** user1@ … user4@onceuponaquest.com (on hosted and local) sign in with one shared 6-digit test code instead of an emailed code; the code is kept out of the repo. To change it: `TEST_CODE=<6 digits> node scripts/create-test-accounts.mjs` (add `--local` for the local stack). Before going public, either delete these accounts in Supabase → Authentication → Users or set a new code, and remove `src/lib/testAccounts.ts` if you no longer need it.
 
 - [ ] Before each TestFlight build, run the smoke test on the simulator: `npm run db:start`, `npm run e2e:build` (after app changes), then `npm run e2e`. It signs up a brand-new explorer, onboards, checks in, and visits every tab, then deletes its test accounts.
