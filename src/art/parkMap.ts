@@ -33,7 +33,6 @@ const H = PARK_CANVAS.height;
 
 const M = {
   paper: '#F3E9D2',
-  aged: '#E6D5B0',
   edge: '#C9A86A',
   ink: '#1B2340',
   ground: '#EFE6CC',
@@ -135,16 +134,6 @@ function bird(x: number, y: number): Shape {
   return { kind: 'path', d: `M${x - 5} ${y} Q${x - 2.5} ${y - 4} ${x} ${y} Q${x + 2.5} ${y - 4} ${x + 5} ${y}`, fill: 'none', stroke: M.ink, strokeWidth: 1.2, opacity: 0.6 };
 }
 
-function curl(x: number, y: number, sx: 1 | -1, sy: 1 | -1): Shape {
-  return {
-    kind: 'path',
-    d: `M${x} ${y + 30 * sy} Q${x} ${y} ${x + 30 * sx} ${y} M${x + 9 * sx} ${y + 18 * sy} Q${x + 9 * sx} ${y + 9 * sy} ${x + 18 * sx} ${y + 9 * sy}`,
-    fill: 'none',
-    stroke: M.edge,
-    strokeWidth: 2,
-  };
-}
-
 /** A carousel seen from above: a striped canopy. */
 function carrousel(c: Pt, r: number): Shape[] {
   const out: Shape[] = [{ kind: 'circle', cx: c.x, cy: c.y, r: r + 1.5, fill: M.walk, stroke: M.edge, strokeWidth: 0.8 }];
@@ -221,16 +210,8 @@ function snowCap(c: Pt, r: number): Shape {
 const L = PARK_GEO_LAYERS;
 const f = PARK_GEO_FEATURES;
 
-const frame: Shape[] = [
-  { kind: 'rect', x: 0, y: 0, w: W, h: H, fill: M.paper },
-  { kind: 'rect', x: 6, y: 6, w: W - 12, h: H - 12, rx: 16, fill: 'none', stroke: M.aged, strokeWidth: 10 },
-  { kind: 'rect', x: 12, y: 12, w: W - 24, h: H - 24, rx: 12, fill: 'none', stroke: M.edge, strokeWidth: 2 },
-  { kind: 'rect', x: 20, y: 20, w: W - 40, h: H - 40, rx: 8, fill: 'none', stroke: M.edge, strokeWidth: 1, dash: '3 5' },
-  curl(26, 26, 1, 1),
-  curl(W - 26, 26, -1, 1),
-  curl(26, H - 26, 1, -1),
-  curl(W - 26, H - 26, -1, -1),
-];
+// Plain paper with no border, so the map blends into the full-screen view around it.
+const frame: Shape[] = [{ kind: 'rect', x: 0, y: 0, w: W, h: H, fill: M.paper }];
 
 const ground: Shape[] = [
   { kind: 'path', d: L.ground, fill: M.ground },

@@ -17,7 +17,8 @@ import {
   ROCKET_SPINNER,
   TRAIN_PATH,
 } from '@/art/parkMap';
-import { MapStamp, MeDot, StoryMarker, type StoryMapStamp, type StoryMarkerData } from '@/components/StoryMap';
+import { MapStamp, MeDot, StoryMarker, type StoryMapStamp, type StoryMarkerData } from '@/components/MapMarkers';
+import { CounterScaled } from '@/components/ZoomableCanvas';
 import { Twinkle } from '@/components/Twinkle';
 import { copy } from '@/copy';
 import type { MapPoint } from '@/lib/mapGeometry';
@@ -27,8 +28,9 @@ import { colors, fonts } from '@/theme';
 export type LandMedallion = { landId: string; name: string; found: number; total: number };
 
 type Props = {
-  width: number;
-  /** Zoom into one land; null shows the whole park with a medallion per land. */
+  /** Pixels per map meter to draw at (the zoomable canvas scales it from there). */
+  renderScale: number;
+  /** The chosen land, or null for the whole park (medallions instead of stamps). */
   land: ParkLand | null;
   lands: ParkLand[];
   medallions: LandMedallion[];
@@ -41,8 +43,10 @@ type Props = {
   onSelectStory?: (id: string) => void;
 };
 
-const WHOLE = { x: 0, y: 0, w: PARK_CANVAS.width, h: PARK_CANVAS.height };
 const MEDALLION_WIDTH = 100;
+const MEDALLION_HEIGHT = 40;
+/** Room for a stamp or story marker, including its larger selected size. */
+const MARKER_BOX = 48;
 
 /** Repeats 0 → 1 forever at a steady pace (still at 0 with Reduce Motion). */
 function useCycle(durationMs: number, reduced: boolean) {
@@ -146,49 +150,48 @@ function PathRider({
 }
 
 /**
- * The illustrated park map: a train circling the berm, a riverboat looping the
- * island, a spinning rocket ride, a bobbing balloon and twinkles. The whole
- * park shows a progress medallion per land; a land view zooms in and shows
- * tappable spot stamps.
+ * The illustrated park map, drawn once at `renderScale` pixels per meter for
+ * the zoomable canvas: a train circling the berm, a riverboat looping the
+ * island, a spinning rocket ride, a bobbing balloon and twinkles. With no land
+ * chosen it shows a progress medallion per land; with a land chosen it shows
+ * that land's spot stamps and story markers. Markers keep their size at any zoom.
  */
-export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me, onSelect, onSelectLand, stories = [], onSelectStory }: Props) {
+export function ParkMap({ renderScale: R, land, lands, medallions, stamps, showRoute, me, onSelect, onSelectLand, stories = [], onSelectStory }: Props) {
   const reduced = useReducedMotion();
-  const view = land?.view ?? WHOLE;
-  const scale = width / view.w;
-  const height = view.h * scale;
-  const project = (p: { x: number; y: number }) => ({ x: (p.x - view.x) * scale, y: (p.y - view.y) * scale });
+  const width = PARK_CANVAS.width * R;
+  const height = PARK_CANVAS.height * R;
+  const project = (p: { x: number; y: number }) => ({ x: p.x * R, y: p.y * R });
   const train = useCycle(60000, reduced);
   const boat = useCycle(36000, reduced);
   const spin = useCycle(9000, reduced);
   const bob = useBob(2600, reduced);
   const shimmer = useBob(1400, reduced);
   const route = [...stamps].sort((a, b) => a.order - b.order);
-  // Sprites keep a readable size on the whole-park view.
-  const s = Math.max(scale, 0.7);
-  const engine = { w: 18 * s, h: 10 * s };
-  const car = { w: 15 * s, h: 9 * s };
-  const riverboat = { w: 20 * s, h: 11 * s };
-  const balloon = { w: 28 * s, h: 36 * s };
-  const spinner = Math.max(26 * scale, 22);
+  // Sprite sizes are in meters, so they grow and shrink with the map.
+  const engine = { w: 16 * R, h: 9 * R };
+  const car = { w: 13 * R, h: 8 * R };
+  const riverboat = { w: 22 * R, h: 12 * R };
+  const balloon = { w: 34 * R, h: 44 * R };
+  const spinner = 26 * R;
   const fountain = project(PARK_FOUNTAIN);
   const balloonAt = project(PARK_BALLOON);
   const spinnerAt = project(ROCKET_SPINNER);
-  const key = `${view.x},${view.y},${view.w},${width}`;
 
   return (
-    <View style={{ width, height, overflow: 'hidden', borderRadius: 12 }}>
-      <Artwork shapes={parkMap} palette={lockedPalette} size={width} canvas={PARK_CANVAS} view={view} />
+    <View style={{ width, height }}>
+      <Artwork shapes={parkMap} palette={lockedPalette} size={width} canvas={PARK_CANVAS} />
 
       <Animated.View
         pointerEvents="none"
         style={[
           styles.shimmer,
           {
-            left: fountain.x - 10 * scale,
-            top: fountain.y - 10 * scale,
-            width: 20 * scale,
-            height: 20 * scale,
-            borderRadius: 10 * scale,
+            left: fountain.x - 10 * R,
+            top: fountain.y - 10 * R,
+            width: 20 * R,
+            height: 20 * R,
+            borderRadius: 10 * R,
+            borderWidth: Math.max(1, R),
             opacity: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.7] }),
             transform: [{ scale: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.25] }) }],
           },
@@ -231,7 +234,7 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
       </Animated.View>
 
       {/* Riverboat looping the island. */}
-      <PathRider key={`boat${key}`} progress={boat} path={RIVERBOAT_PATH} project={project} w={riverboat.w} h={riverboat.h}>
+      <PathRider progress={boat} path={RIVERBOAT_PATH} project={project} w={riverboat.w} h={riverboat.h}>
         <Svg width={riverboat.w} height={riverboat.h} viewBox="0 0 20 11">
           <Path d="M1 3 L16 3 L19 5.5 L16 8 L1 8 Z" fill={colors.white} stroke={colors.midnight} strokeWidth={0.8} />
           <Rect x={4} y={4} width={8} height={3} fill="#F6D58E" />
@@ -242,14 +245,14 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
 
       {/* Train: an engine and two cars on the berm. */}
       {[2, 1].map((k) => (
-        <PathRider key={`car${k}${key}`} progress={train} path={TRAIN_PATH} lag={k * 0.012} project={project} w={car.w} h={car.h}>
+        <PathRider key={`car${k}`} progress={train} path={TRAIN_PATH} lag={k * 0.008} project={project} w={car.w} h={car.h}>
           <Svg width={car.w} height={car.h} viewBox="0 0 15 9">
             <Rect x={0.5} y={0.5} width={14} height={8} rx={2} fill={k === 1 ? '#F6D58E' : colors.rose} stroke={colors.midnight} strokeWidth={0.8} />
             <Rect x={3} y={2.5} width={9} height={4} rx={1} fill={colors.white} opacity={0.8} />
           </Svg>
         </PathRider>
       ))}
-      <PathRider key={`engine${key}`} progress={train} path={TRAIN_PATH} project={project} w={engine.w} h={engine.h}>
+      <PathRider progress={train} path={TRAIN_PATH} project={project} w={engine.w} h={engine.h}>
         <Svg width={engine.w} height={engine.h} viewBox="0 0 18 10">
           <Rect x={0.5} y={0.5} width={17} height={9} rx={2.5} fill={colors.midnight} />
           <Rect x={1.5} y={2} width={6} height={6} rx={1} fill={colors.rose} />
@@ -257,7 +260,7 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
         </Svg>
       </PathRider>
 
-      {/* Balloon bobbing in the margin. */}
+      {/* Balloon drifting in the corner. */}
       <Animated.View
         pointerEvents="none"
         accessibilityElementsHidden
@@ -267,7 +270,7 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
           left: balloonAt.x - balloon.w / 2,
           top: balloonAt.y - balloon.h / 2,
           transform: [
-            { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [-5 * s, 5 * s] }) },
+            { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [-5 * R, 5 * R] }) },
             { rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) },
           ],
         }}>
@@ -282,24 +285,40 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
       {!reduced
         ? PARK_TWINKLES.map((p, i) => {
             const at = project(p);
-            return <Twinkle key={`${p.x},${p.y}`} size={10 * s} delay={i * 450} style={{ left: at.x - 5 * s, top: at.y - 5 * s }} />;
+            return <Twinkle key={`${p.x},${p.y}`} size={12 * R} delay={i * 450} style={{ left: at.x - 6 * R, top: at.y - 6 * R }} />;
           })
         : null}
 
-      {land === null
-        ? parkMapLabels.map((label) => {
-            const at = project(label);
-            return (
-              <Text
-                key={label.text}
-                style={[styles.label, label.style === 'title' && styles.titleLabel, { left: at.x - 70, top: at.y - 9, fontSize: label.size * Math.max(scale * 1.6, 0.8) }]}
-                importantForAccessibility="no"
-                accessibilityElementsHidden>
-                {label.text}
-              </Text>
-            );
-          })
-        : null}
+      {parkMapLabels.map((label) => {
+        const at = project(label);
+        return (
+          <Text
+            key={label.text}
+            style={[
+              styles.label,
+              label.style === 'title' && styles.titleLabel,
+              { width: 180 * R, left: at.x - 90 * R, top: at.y - label.size * 0.7 * R, fontSize: label.size * R },
+            ]}
+            importantForAccessibility="no"
+            accessibilityElementsHidden>
+            {label.text}
+          </Text>
+        );
+      })}
+
+      {showRoute && route.length > 1 ? (
+        <Svg width={width} height={height} style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Polyline
+            points={route.map((r) => project(r.point)).map((p) => `${p.x},${p.y}`).join(' ')}
+            fill="none"
+            stroke={colors.midnight}
+            strokeWidth={1.4 * R}
+            strokeDasharray={`${0.1 * R} ${4 * R}`}
+            strokeLinecap="round"
+            opacity={0.55}
+          />
+        </Svg>
+      ) : null}
 
       {land === null
         ? medallions.map((m) => {
@@ -308,84 +327,61 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
             const at = project(spot.label);
             const complete = m.total > 0 && m.found >= m.total;
             return (
-              <Pressable
-                key={m.landId}
-                onPress={() => onSelectLand(m.landId)}
-                accessibilityRole="button"
-                accessibilityLabel={copy.map.landLabel(m.name, m.found, m.total)}
-                accessibilityHint={copy.map.landHint}
-                hitSlop={4}
-                style={({ pressed }) => [
-                  styles.medallion,
-                  complete && styles.medallionComplete,
-                  { left: at.x - MEDALLION_WIDTH / 2, top: at.y - 18 },
-                  pressed && styles.pressed,
-                ]}>
-                <Text style={styles.medallionName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
-                  {m.name}
-                </Text>
-                <View style={styles.medallionRow}>
-                  {complete ? <Ionicons name="checkmark-circle" size={12} color={colors.midnight} /> : null}
-                  <Text style={styles.medallionCount}>{copy.map.landCount(m.found, m.total)}</Text>
-                </View>
-              </Pressable>
+              <CounterScaled key={m.landId} x={at.x} y={at.y} w={MEDALLION_WIDTH} h={MEDALLION_HEIGHT}>
+                <Pressable
+                  onPress={() => onSelectLand(m.landId)}
+                  accessibilityRole="button"
+                  accessibilityLabel={copy.map.landLabel(m.name, m.found, m.total)}
+                  accessibilityHint={copy.map.landHint}
+                  hitSlop={4}
+                  style={({ pressed }) => [styles.medallion, complete && styles.medallionComplete, pressed && styles.pressed]}>
+                  <Text style={styles.medallionName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+                    {m.name}
+                  </Text>
+                  <View style={styles.medallionRow}>
+                    {complete ? <Ionicons name="checkmark-circle" size={12} color={colors.midnight} /> : null}
+                    <Text style={styles.medallionCount}>{copy.map.landCount(m.found, m.total)}</Text>
+                  </View>
+                </Pressable>
+              </CounterScaled>
             );
           })
         : null}
 
-      {showRoute && route.length > 1 ? (
-        <Svg width={width} height={height} style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Polyline
-            points={route.map((r) => project(r.point)).map((p) => `${p.x},${p.y}`).join(' ')}
-            fill="none"
-            stroke={colors.midnight}
-            strokeWidth={2}
-            strokeDasharray="2 6"
-            strokeLinecap="round"
-            opacity={0.55}
-          />
-        </Svg>
-      ) : null}
-
       {stories.map((story) => {
         const at = project(story.point);
-        return <StoryMarker key={story.id} story={story} x={at.x} y={at.y} onPress={() => onSelectStory?.(story.id)} />;
+        return (
+          <CounterScaled key={story.id} x={at.x} y={at.y} w={MARKER_BOX} h={MARKER_BOX}>
+            <StoryMarker story={story} onPress={() => onSelectStory?.(story.id)} />
+          </CounterScaled>
+        );
       })}
 
       {stamps.map((st) => {
         const at = project(st.point);
-        return <MapStamp key={st.id} stamp={st} x={at.x} y={at.y} onPress={() => onSelect(st.id)} />;
+        return (
+          <CounterScaled key={st.id} x={at.x} y={at.y} w={MARKER_BOX} h={MARKER_BOX}>
+            <MapStamp stamp={st} onPress={() => onSelect(st.id)} />
+          </CounterScaled>
+        );
       })}
 
-      {me ? <MeDot {...project(me)} /> : null}
-
-      <Text style={styles.credit} accessibilityLabel={copy.map.osmCredit}>
-        {copy.map.osmCredit}
-      </Text>
+      {me ? (
+        <CounterScaled x={project(me).x} y={project(me).y} w={24} h={24}>
+          <MeDot />
+        </CounterScaled>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  credit: {
-    position: 'absolute',
-    right: 6,
-    bottom: 4,
-    fontSize: 9,
-    color: colors.ink,
-    backgroundColor: 'rgba(250, 245, 234, 0.85)',
-    paddingHorizontal: 4,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
   shimmer: {
     position: 'absolute',
-    borderWidth: 2,
     borderColor: colors.white,
   },
   label: {
     position: 'absolute',
-    width: 140,
     textAlign: 'center',
     fontFamily: fonts.headingSemiBold,
     color: colors.midnight,
@@ -394,9 +390,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading,
   },
   medallion: {
-    position: 'absolute',
     width: MEDALLION_WIDTH,
-    minHeight: 36,
+    height: MEDALLION_HEIGHT,
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 12,

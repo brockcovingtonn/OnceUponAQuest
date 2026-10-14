@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,38 +9,33 @@ import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { StateView } from '@/components/StateView';
 import { LensButton } from '@/components/LensButton';
+import type { StoryMapStamp, StoryMarkerData } from '@/components/MapMarkers';
 import { ParkMap } from '@/components/ParkMap';
-import { type StoryMapStamp, type StoryMarkerData, StoryMap } from '@/components/StoryMap';
-import { PARK_LANDS } from '@/art/parkMap';
-import { STREET_STORY_SPOTS } from '@/art/streetMap';
+import { ZoomableCanvas } from '@/components/ZoomableCanvas';
+import { PARK_CANVAS, PARK_LANDS } from '@/art/parkMap';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
 import { getCurrentCoords, getLocationPermission, requestLocationPermission } from '@/lib/location';
-import {
-  approxLandmarkCoords,
-  PARK_REGION,
-  parkPlaceholderPoint,
-  placeholderPoint,
-  STREET_REGION,
-  toMapPoint,
-  toParkPoint,
-} from '@/lib/mapGeometry';
+import { approxLandmarkCoords, PARK_REGION, parkPlaceholderPoint, regionForView, toParkPoint } from '@/lib/mapGeometry';
 import { useIsOnline } from '@/lib/network';
 import { useParadeMode } from '@/lib/paradeMode';
 import { type MapSpot, useMapSpots, useMyProgress } from '@/lib/queries';
+import { useReducedMotion } from '@/lib/useReducedMotion';
 import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
 type MapStyle = 'storybook' | 'real';
 const ALL = 'all';
 const PARK = 'park';
-const STREET_LAND = 'dlp-main-street';
+/** Pixels per map meter the storybook map is drawn at (crisp up to about this zoom). */
+const RENDER_SCALE = 2.2;
+const WHOLE_PARK = { x: 0, y: 0, w: PARK_CANVAS.width, h: PARK_CANVAS.height };
 
 type Chip = { id: string; label: string };
 
 export default function MapScreen() {
   const { session } = useAuth();
-  const { width } = useWindowDimensions();
+  const reduced = useReducedMotion();
   const spots = useMapSpots();
   const progress = useMyProgress(session?.user.id);
   const { paradeMode } = useParadeMode();
@@ -105,9 +100,9 @@ export default function MapScreen() {
         ALL);
   const inLand = landId === PARK ? [] : all.filter((s) => s.land.id === landId);
   const shown = questId === ALL ? inLand : inLand.filter((s) => s.quest.id === questId);
-  const onStreet = landId === STREET_LAND;
   const parkLand = PARK_LANDS.find((l) => l.id === landId) ?? null;
-  const me = myCoords ? (onStreet ? toMapPoint(myCoords.lat, myCoords.lng) : toParkPoint(myCoords.lat, myCoords.lng)) : null;
+  const focusView = parkLand?.view ?? WHOLE_PARK;
+  const me = myCoords ? toParkPoint(myCoords.lat, myCoords.lng) : null;
 
   const stateOf = (s: MapSpot): StoryMapStamp['state'] =>
     foundSpots.has(s.id) ? 'found' : paradeMode && s.pauseDuringParades ? 'paused' : 'open';
@@ -116,16 +111,12 @@ export default function MapScreen() {
   const stamps: StoryMapStamp[] = shown.map((s) => {
     const qIndex = landQuests.findIndex((q) => q.id === s.quest.id);
     const hasPin = s.lat !== null && s.lng !== null;
-    const pinned = hasPin ? (onStreet ? toMapPoint(s.lat ?? 0, s.lng ?? 0) : toParkPoint(s.lat ?? 0, s.lng ?? 0)) : null;
+    const pinned = hasPin ? toParkPoint(s.lat ?? 0, s.lng ?? 0) : null;
     return {
       id: s.id,
       order: s.order,
       name: nameOf(s),
-      point:
-        pinned ??
-        (onStreet
-          ? placeholderPoint(qIndex, s.order, questTotal(s.quest.id))
-          : parkPlaceholderPoint(landId, qIndex, s.order, questTotal(s.quest.id))),
+      point: pinned ?? parkPlaceholderPoint(landId, qIndex, s.order, questTotal(s.quest.id)),
       state: stateOf(s),
       selected: s.id === selectedId,
     };
@@ -144,15 +135,14 @@ export default function MapScreen() {
 
   // Storybook Lens landmarks in this land (pinned where they are, else at stand-in spots).
   const landStories = landId === PARK || !storiesOn ? [] : (landmarks.data ?? []).filter((l) => l.land.id === landId);
-  const storyMarkers: StoryMarkerData[] = landStories.map((l, i) => {
-    // Pinned on site, else its approximate real-world spot, else a stand-in on the street map.
+  const storyMarkers: StoryMarkerData[] = landStories.map((l) => {
+    // Pinned on site, else its approximate real-world spot, else the middle of its land.
     const coords = l.lat !== null && l.lng !== null ? { lat: l.lat, lng: l.lng } : approxLandmarkCoords(l.slug);
-    const pinned = coords ? (onStreet ? toMapPoint(coords.lat, coords.lng) : toParkPoint(coords.lat, coords.lng)) : null;
-    const standIn = onStreet ? STREET_STORY_SPOTS[i % STREET_STORY_SPOTS.length] : (parkLand?.label ?? null);
+    const pinned = coords ? toParkPoint(coords.lat, coords.lng) : null;
     return {
       id: l.id,
       title: l.title,
-      point: pinned ?? standIn ?? { x: 0, y: 0 },
+      point: pinned ?? parkLand?.label ?? { x: 0, y: 0 },
       stamped: Boolean(lensStamps.data?.has(l.id)),
       selected: l.id === selectedStoryId,
     };
@@ -184,9 +174,8 @@ export default function MapScreen() {
         return;
       }
       const coords = await getCurrentCoords();
-      const point = onStreet ? toMapPoint(coords.lat, coords.lng) : toParkPoint(coords.lat, coords.lng);
       setMyCoords(coords);
-      if (!point) setLocateMessage(onStreet ? copy.map.notOnStreet : copy.map.notOnMap);
+      if (!toParkPoint(coords.lat, coords.lng)) setLocateMessage(copy.map.notOnMap);
     } catch {
       setLocateMessage(copy.location.unavailable);
     } finally {
@@ -251,56 +240,16 @@ export default function MapScreen() {
         />
       ) : null}
 
-      {view === 'storybook' ? (
-        <ScrollView contentContainerStyle={styles.mapContent}>
-          {landId === PARK ? (
-            <Text style={styles.note}>{copy.map.parkIntro}</Text>
-          ) : (
-            <View style={styles.noteRow}>
-              <Pressable
-                onPress={() => {
-                  setChosenLand(PARK);
-                  setSelectedId(null);
-                  setSelectedStoryId(null);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={copy.map.backToPark}
-                hitSlop={8}
-                style={({ pressed }) => [styles.backToPark, pressed && styles.pressed]}>
-                <Ionicons name="map-outline" size={16} color={colors.midnight} />
-                <Text style={styles.backToParkText}>{copy.map.backToPark}</Text>
-              </Pressable>
-              <View style={styles.noteLine}>
-                {anyApproximate ? <Text style={[styles.note, styles.noteFlex]}>{copy.map.approximate}</Text> : <View style={styles.noteFlex} />}
-                <Pressable
-                  onPress={() => {
-                    setStoriesOn((on) => !on);
-                    setSelectedStoryId(null);
-                  }}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: storiesOn }}
-                  accessibilityLabel={copy.lens.mapToggleLabel}
-                  hitSlop={6}
-                  style={[styles.storiesToggle, storiesOn && styles.storiesToggleOn]}>
-                  <Ionicons name="aperture-outline" size={14} color={storiesOn ? colors.midnight : colors.ink} />
-                  <Text style={styles.storiesToggleText}>{copy.lens.mapToggle}</Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
-          {onStreet ? (
-            <StoryMap
-              width={width - spacing.lg * 2}
-              stamps={stamps}
-              showRoute={questId !== ALL}
-              me={me}
-              onSelect={selectSpot}
-              stories={storyMarkers}
-              onSelectStory={selectStory}
-            />
-          ) : (
+      <View style={styles.mapArea}>
+        {view === 'storybook' ? (
+          <ZoomableCanvas
+            contentWidth={PARK_CANVAS.width * RENDER_SCALE}
+            contentHeight={PARK_CANVAS.height * RENDER_SCALE}
+            focus={{ x: focusView.x * RENDER_SCALE, y: focusView.y * RENDER_SCALE, w: focusView.w * RENDER_SCALE, h: focusView.h * RENDER_SCALE }}
+            focusKey={landId}
+            reduceMotion={reduced}>
             <ParkMap
-              width={width - spacing.lg * 2}
+              renderScale={RENDER_SCALE}
               land={landId === PARK ? null : parkLand}
               lands={PARK_LANDS}
               medallions={medallions}
@@ -317,26 +266,12 @@ export default function MapScreen() {
                 setSelectedStoryId(null);
               }}
             />
-          )}
-          <View style={styles.actionsRow}>
-            <View style={styles.noteFlex}>
-              <Button
-                variant="secondary"
-                label={myCoords ? copy.map.hideMe : copy.map.locateMe}
-                onPress={locate}
-                loading={locating}
-              />
-            </View>
-            <LensButton onPress={openLens} />
-          </View>
-          {locateMessage ? <Banner tone="info" message={locateMessage} /> : null}
-        </ScrollView>
-      ) : (
-        <View style={styles.realWrap}>
+          </ZoomableCanvas>
+        ) : (
           <MapView
-            key={onStreet ? 'street' : 'park'}
+            key={landId}
             style={StyleSheet.absoluteFill}
-            initialRegion={onStreet ? STREET_REGION : PARK_REGION}
+            initialRegion={parkLand ? regionForView(parkLand.view) : PARK_REGION}
             showsUserLocation={showUserOnRealMap}
             showsPointsOfInterests={false}
             showsCompass
@@ -362,61 +297,115 @@ export default function MapScreen() {
               />
             ))}
           </MapView>
-          <View style={styles.realOverlay} pointerEvents="box-none">
-            {pinnedShown.length === 0 ? <Banner tone="info" message={copy.map.noPins} /> : null}
-            {!online ? <Banner tone="info" message={copy.map.tilesNeedSignal} /> : null}
-            {locateMessage ? <Banner tone="info" message={locateMessage} /> : null}
+        )}
+
+        {/* Floating controls over the map. */}
+        <View style={styles.topOverlay} pointerEvents="box-none">
+          <View style={styles.topRow} pointerEvents="box-none">
+            {landId === PARK ? (
+              <View style={styles.pill}>
+                <Text style={styles.pillText}>{view === 'storybook' ? copy.map.parkIntro : copy.map.real}</Text>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  setChosenLand(PARK);
+                  setSelectedId(null);
+                  setSelectedStoryId(null);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={copy.map.backToPark}
+                hitSlop={6}
+                style={({ pressed }) => [styles.pill, styles.pillButton, pressed && styles.pressed]}>
+                <Ionicons name="chevron-back" size={16} color={colors.midnight} />
+                <Text style={styles.pillButtonText}>{copy.map.wholePark}</Text>
+              </Pressable>
+            )}
+            {landId !== PARK ? (
+              <Pressable
+                onPress={() => {
+                  setStoriesOn((on) => !on);
+                  setSelectedStoryId(null);
+                }}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: storiesOn }}
+                accessibilityLabel={copy.lens.mapToggleLabel}
+                hitSlop={6}
+                style={[styles.pill, styles.pillButton, storiesOn && styles.pillOn]}>
+                <Ionicons name="aperture-outline" size={14} color={colors.midnight} />
+                <Text style={styles.pillButtonText}>{copy.lens.mapToggle}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          {view === 'storybook' && landId !== PARK && anyApproximate ? (
+            <View style={[styles.pill, styles.notePill]}>
+              <Text style={styles.noteText}>{copy.map.approximate}</Text>
+            </View>
+          ) : null}
+          {view === 'real' && pinnedShown.length === 0 ? <Banner tone="info" message={copy.map.noPins} /> : null}
+          {view === 'real' && !online ? <Banner tone="info" message={copy.map.tilesNeedSignal} /> : null}
+          {locateMessage ? <Banner tone="info" message={locateMessage} /> : null}
+        </View>
+
+        {view === 'storybook' ? <Text style={styles.credit}>{copy.map.osmCredit}</Text> : null}
+
+        {!selected && !selectedStory ? (
+          <View style={styles.fabs} pointerEvents="box-none">
             <Pressable
-              onPress={showMeOnRealMap}
+              onPress={view === 'storybook' ? locate : showMeOnRealMap}
               accessibilityRole="button"
-              accessibilityLabel={showUserOnRealMap ? copy.map.hideMe : copy.map.locateMe}
-              style={styles.locateFab}>
-              <Ionicons name={showUserOnRealMap ? 'navigate' : 'navigate-outline'} size={22} color={colors.midnight} />
+              accessibilityLabel={(view === 'storybook' ? myCoords : showUserOnRealMap) ? copy.map.hideMe : copy.map.locateMe}
+              disabled={locating}
+              style={({ pressed }) => [styles.locateFab, pressed && styles.pressed]}>
+              <Ionicons
+                name={(view === 'storybook' ? myCoords : showUserOnRealMap) ? 'navigate' : 'navigate-outline'}
+                size={22}
+                color={colors.midnight}
+              />
+            </Pressable>
+            <LensButton onPress={openLens} />
+          </View>
+        ) : null}
+
+        {selected ? (
+          <View style={styles.card} accessibilityLiveRegion="polite">
+            <View style={styles.cardText}>
+              <Text style={styles.cardQuest}>{selected.quest.title}</Text>
+              <Text style={styles.cardTitle}>{`${selected.order} · ${nameOf(selected)}`}</Text>
+              <Text style={styles.cardState}>
+                {stateOf(selected) === 'found' ? copy.map.found : stateOf(selected) === 'paused' ? copy.map.paused : copy.map.notFound}
+              </Text>
+            </View>
+            <Button label={copy.map.openSpot} onPress={() => router.push({ pathname: '/spot/[id]', params: { id: selected.id } })} />
+            <Pressable
+              onPress={() => setSelectedId(null)}
+              accessibilityRole="button"
+              accessibilityLabel={copy.map.close}
+              style={styles.cardClose}>
+              <Ionicons name="close" size={22} color={colors.ink} />
             </Pressable>
           </View>
-        </View>
-      )}
-
-      {selected ? (
-        <View style={styles.card} accessibilityLiveRegion="polite">
-          <View style={styles.cardText}>
-            <Text style={styles.cardQuest}>{selected.quest.title}</Text>
-            <Text style={styles.cardTitle}>{`${selected.order} · ${nameOf(selected)}`}</Text>
-            <Text style={styles.cardState}>
-              {stateOf(selected) === 'found' ? copy.map.found : stateOf(selected) === 'paused' ? copy.map.paused : copy.map.notFound}
-            </Text>
+        ) : selectedStory ? (
+          <View style={styles.card} accessibilityLiveRegion="polite">
+            <View style={styles.cardText}>
+              <Text style={styles.cardQuest}>{copy.lens.name}</Text>
+              <Text style={styles.cardTitle}>{selectedStory.title}</Text>
+              <Text style={styles.cardState}>{selectedStory.teaser}</Text>
+            </View>
+            <Button
+              label={copy.lens.readStory}
+              onPress={() => router.push({ pathname: '/landmark/[slug]', params: { slug: selectedStory.slug } })}
+            />
+            <Pressable
+              onPress={() => setSelectedStoryId(null)}
+              accessibilityRole="button"
+              accessibilityLabel={copy.map.close}
+              style={styles.cardClose}>
+              <Ionicons name="close" size={22} color={colors.ink} />
+            </Pressable>
           </View>
-          <Button label={copy.map.openSpot} onPress={() => router.push({ pathname: '/spot/[id]', params: { id: selected.id } })} />
-          <Pressable
-            onPress={() => setSelectedId(null)}
-            accessibilityRole="button"
-            accessibilityLabel={copy.map.close}
-            style={styles.cardClose}>
-            <Ionicons name="close" size={22} color={colors.ink} />
-          </Pressable>
-        </View>
-      ) : selectedStory ? (
-        <View style={styles.card} accessibilityLiveRegion="polite">
-          <View style={styles.cardText}>
-            <Text style={styles.cardQuest}>{copy.lens.name}</Text>
-            <Text style={styles.cardTitle}>{selectedStory.title}</Text>
-            <Text style={styles.cardState}>{selectedStory.teaser}</Text>
-          </View>
-          <Button
-            label={copy.lens.readStory}
-            onPress={() => router.push({ pathname: '/landmark/[slug]', params: { slug: selectedStory.slug } })}
-          />
-          <Pressable
-            onPress={() => setSelectedStoryId(null)}
-            accessibilityRole="button"
-            accessibilityLabel={copy.map.close}
-            style={styles.cardClose}>
-            <Ionicons name="close" size={22} color={colors.ink} />
-          </Pressable>
-        </View>
-      ) : view === 'real' ? (
-        <LensButton style={styles.lensButton} onPress={openLens} />
-      ) : null}
+        ) : null}
+      </View>
     </SafeAreaView>
   );
 }
@@ -479,6 +468,82 @@ function ChipRow({
 }
 
 const styles = StyleSheet.create({
+  mapArea: {
+    flex: 1,
+    backgroundColor: '#F3E9D2',
+  },
+  topOverlay: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.md,
+    right: spacing.md,
+    gap: spacing.xs,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  pill: {
+    alignSelf: 'flex-start',
+    flexShrink: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.round,
+    backgroundColor: 'rgba(255, 253, 247, 0.94)',
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.midnight,
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  pillText: {
+    ...type.label,
+    color: colors.ink,
+  },
+  pillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: minTouchTarget - 8,
+    borderColor: colors.storybookGold,
+  },
+  pillOn: {
+    backgroundColor: colors.storybookGold,
+  },
+  pillButtonText: {
+    ...type.label,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.midnight,
+  },
+  notePill: {
+    paddingVertical: 4,
+  },
+  noteText: {
+    ...type.caption,
+    color: colors.ink,
+  },
+  credit: {
+    position: 'absolute',
+    left: 8,
+    bottom: 6,
+    fontSize: 9,
+    color: colors.ink,
+    backgroundColor: 'rgba(250, 245, 234, 0.85)',
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  fabs: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: spacing.md,
+    alignItems: 'center',
+    gap: spacing.md,
+  },
   safe: {
     flex: 1,
     backgroundColor: colors.parchment,
@@ -563,82 +628,8 @@ const styles = StyleSheet.create({
   chipTextOnDark: {
     color: colors.parchment,
   },
-  mapContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 140,
-    gap: spacing.md,
-  },
-  note: {
-    ...type.caption,
-    color: colors.inkMuted,
-  },
-  noteRow: {
-    gap: spacing.xs,
-  },
-  noteLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  noteFlex: {
-    flex: 1,
-  },
-  storiesToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    minHeight: minTouchTarget - 12,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.round,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-  },
-  storiesToggleOn: {
-    borderColor: colors.storybookGold,
-    backgroundColor: colors.storybookGold,
-  },
-  storiesToggleText: {
-    ...type.label,
-    fontFamily: fonts.bodySemiBold,
-    color: colors.midnight,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  lensButton: {
-    position: 'absolute',
-    right: spacing.lg,
-    bottom: spacing.md,
-  },
-  backToPark: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: spacing.xs,
-    minHeight: minTouchTarget - 12,
-  },
-  backToParkText: {
-    ...type.label,
-    fontFamily: fonts.bodySemiBold,
-    color: colors.midnight,
-    textDecorationLine: 'underline',
-  },
   pressed: {
     opacity: 0.7,
-  },
-  realWrap: {
-    flex: 1,
-  },
-  realOverlay: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.lg,
-    right: spacing.lg,
-    gap: spacing.sm,
-    alignItems: 'stretch',
   },
   locateFab: {
     alignSelf: 'flex-end',
