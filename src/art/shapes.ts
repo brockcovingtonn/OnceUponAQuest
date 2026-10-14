@@ -158,5 +158,3 @@ export const badgeGlyphs: Record<string, Shape[]> = {
   ...landBadgeGlyphs,
 };
 
-/** The app's logo mark: an open storybook with a star. */
-export const logoGlyph: Shape[] = avatarGlyphs.stamp_book;

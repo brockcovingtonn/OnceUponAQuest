@@ -48,6 +48,7 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - [ ] Confirm the facts in `src/legal/info.ts`: operator legal name (**"Higher Thinking Consulting"** was assumed — add LLC/Inc. if applicable), governing state (**California**), court venue (**Orange County**), effective date.
 - [ ] Decide whether to add an arbitration clause / class-action waiver (left out on purpose).
 - [ ] App name "Once Upon a Quest" — trademark search.
+- [ ] **New logo (Oct 2026)** — a golden keyhole on an open storybook, with fireworks and a wishing star glowing through it (`src/art/logoMark.ts`). Original artwork with no castle, characters or three-circle shapes. Include the mark in the trademark search. To change it, edit `logoMark.ts`, run `node scripts/generate-icons.mjs`, and make a new build (icons and the splash are native).
 - [ ] App icon, logo, stamp avatars, badge art and storybook scenes (all original, in `src/art/`).
 - [ ] Disclaimer wording (sign-in, About, Terms, store listings).
 - [ ] Spot titles naming real people or places, e.g. "Elias Disney window", "Walt's window", "Walt's lamp", "The Dominguez Palm", "Jingles", the WD/RD initials. Attraction and land names appear only as plain text describing locations (e.g. "Jungle Cruise boat names", "Toontown"). The land is shown as "Toontown", leaving the character name out of the app's headings.

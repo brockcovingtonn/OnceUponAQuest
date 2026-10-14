@@ -44,7 +44,7 @@ export const copy = {
   },
 
   signIn: {
-    logoLabel: 'Once Upon a Quest logo: an open storybook with a star',
+    logoLabel: 'Once Upon a Quest logo: a golden keyhole on an open storybook, with fireworks and a wishing star',
     emailLabel: 'Email',
     emailPlaceholder: 'you@example.com',
     invalidEmail: 'Enter a valid email address.',

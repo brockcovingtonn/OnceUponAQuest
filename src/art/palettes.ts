@@ -21,14 +21,6 @@ export const lockedPalette: Palette = {
   accent: muted,
 };
 
-/** Logo and app icon: midnight stamp with gold and parchment. */
-export const logoPalette: Palette = {
-  bg: colors.midnight,
-  frame: colors.storybookGold,
-  line: colors.parchment,
-  soft: colors.midnight,
-  accent: colors.storybookGold,
-};
 
 export function avatarPalette(frame: string, accent: string): Palette {
   return { bg: colors.parchment, frame, line: colors.midnight, soft: colors.white, accent };

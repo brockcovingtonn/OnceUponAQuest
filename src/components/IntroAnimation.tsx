@@ -100,7 +100,7 @@ export function IntroAnimation({ onDone }: { onDone: () => void }) {
                 { scale: v.logo.interpolate({ inputRange: [0, 1], outputRange: [1, 0.62] }) },
               ],
             }}>
-            <Logo accessibilityLabel={copy.signIn.logoLabel} size={SPLASH_LOGO} />
+            <Logo accessibilityLabel={copy.signIn.logoLabel} size={SPLASH_LOGO} variant="bare" />
             {burst ? <SparkleBurst radius={170} /> : null}
           </Animated.View>
           <Animated.Text
