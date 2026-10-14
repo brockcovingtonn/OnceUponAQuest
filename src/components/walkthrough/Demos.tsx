@@ -10,6 +10,7 @@ import { Animated, Easing, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { mainStreetNight } from '@/art/scenes';
 import { BadgeStamp } from '@/components/BadgeStamp';
+import { LensStamp } from '@/components/LensStamp';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Scene } from '@/components/Scene';
 import { SparkleBurst } from '@/components/SparkleBurst';
@@ -431,6 +432,47 @@ export function FriendsDemo() {
 // ---------------------------------------------------------------------------
 // 8. Safety — the three rules appear one by one
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// 8. Storybook Lens — turn toward a landmark, its story floats in, then stamp it
+// ---------------------------------------------------------------------------
+export function LensDemo() {
+  const step = useLoopStep(5, 1100);
+  const sweep = useOscillator(1600);
+  return (
+    <Stage dark>
+      <Scene shapes={mainStreetNight} height={STAGE_HEIGHT} />
+      <View style={[StyleSheet.absoluteFill, styles.lensDim]} />
+      <Animated.View
+        style={[
+          styles.lensRing,
+          { transform: [{ rotate: sweep.interpolate({ inputRange: [0, 1], outputRange: ['-25deg', '25deg'] }) }] },
+        ]}>
+        <View style={styles.lensTick} />
+      </Animated.View>
+      <View style={[StyleSheet.absoluteFill, styles.center]}>
+        {step >= 1 && step < 4 ? (
+          <PopIn key="card" rise={12}>
+            <View style={styles.lensCard}>
+              <Text style={styles.lensFacing}>{d.lensFacing}</Text>
+              <Text style={styles.lensTitle}>{d.lensTitle}</Text>
+              <Text style={styles.lensTeaser}>{d.lensTeaser}</Text>
+            </View>
+          </PopIn>
+        ) : null}
+        {step >= 4 ? (
+          <PopIn stamp key="stamp">
+            <View style={styles.center}>
+              <LensStamp stamped size={96} />
+              <SparkleBurst radius={80} />
+              <Text style={styles.lightText}>{d.lensStamped}</Text>
+            </View>
+          </PopIn>
+        ) : null}
+      </View>
+    </Stage>
+  );
+}
+
 export function SafetyDemo() {
   const step = useLoopStep(5, 900);
   return (
@@ -762,6 +804,48 @@ const styles = StyleSheet.create({
   lightText: {
     ...type.bodyStrong,
     color: colors.parchment,
+  },
+  lensDim: {
+    backgroundColor: 'rgba(27, 35, 64, 0.35)',
+  },
+  lensRing: {
+    position: 'absolute',
+    alignSelf: 'center',
+    top: (STAGE_HEIGHT - 210) / 2,
+    width: 210,
+    height: 210,
+    borderRadius: 105,
+    borderWidth: 3,
+    borderColor: colors.storybookGold,
+    alignItems: 'center',
+  },
+  lensTick: {
+    width: 4,
+    height: 16,
+    marginTop: 4,
+    borderRadius: 2,
+    backgroundColor: colors.storybookGold,
+  },
+  lensCard: {
+    width: 220,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: colors.storybookGold,
+    backgroundColor: colors.parchment,
+  },
+  lensFacing: {
+    ...type.caption,
+    color: colors.inkMuted,
+    letterSpacing: 1,
+  },
+  lensTitle: {
+    ...type.bodyStrong,
+    color: colors.midnight,
+  },
+  lensTeaser: {
+    ...type.caption,
+    color: colors.ink,
   },
   leaderRow: {
     position: 'absolute',

@@ -6,6 +6,9 @@ name: Smoke test
 - launchApp:
     clearState: true
     clearKeychain: true
+    permissions:
+      camera: deny
+      location: never
 - runScript: scripts/newTester.js
 
 # Intro animation (tap to skip if it's still playing)
@@ -103,6 +106,14 @@ name: Smoke test
     timeout: 10000
 - tapOn: 'Real map'
 - tapOn: 'Storybook'
+
+# Storybook Lens (camera and location denied: storybook view, Browse mode)
+- tapOn: 'Open the Storybook Lens'
+- extendedWaitUntil:
+    visible: 'Which land are you in?'
+    timeout: 10000
+- assertVisible: '.*Opens the story.*'
+- tapOn: 'Close the lens'
 
 # Friends and Profile
 - tapOn: 'Friends'

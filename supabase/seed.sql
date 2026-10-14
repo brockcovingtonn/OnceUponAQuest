@@ -211,3 +211,14 @@ from (values
 join public.quests q on q.slug = a.quest_slug
 join public.spots s on s.quest_id = q.id and s.sort_order = a.sort_order
 on conflict (spot_id) do update set accepted = excluded.accepted;
+
+-- Storybook Lens: link Main Street spots to their stories (the migration does
+-- this on databases that already had the seed).
+update public.spots s set landmark_id = l.id
+from public.quests q, public.landmarks l,
+  (values
+    ('walt-was-here', 1, 'firehouse-apartment'), ('walt-was-here', 2, 'firehouse-apartment'),
+    ('walt-was-here', 3, 'town-square'), ('windows-of-legends', 1, 'main-street-facades')
+  ) as link(quest_slug, spot_order, landmark_slug)
+where q.slug = link.quest_slug and s.quest_id = q.id and s.sort_order = link.spot_order
+  and l.slug = link.landmark_slug;

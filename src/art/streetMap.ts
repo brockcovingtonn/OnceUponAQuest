@@ -294,3 +294,13 @@ export const STREETCAR_TRACK = { x: 180, top: 176, bottom: 496 } as const;
 
 /** Where the hot-air balloon floats (canvas coordinates). */
 export const BALLOON_SPOT = { x: 34, y: 76 } as const;
+
+/** Stand-in spots for Main Street's Storybook Lens landmarks without a pin, in landmark order. */
+export const STREET_STORY_SPOTS = [
+  { x: 180, y: 622 },
+  { x: 180, y: 548 },
+  { x: 304, y: 330 },
+  { x: 62, y: 520 },
+  { x: 180, y: 300 },
+] as const;
+

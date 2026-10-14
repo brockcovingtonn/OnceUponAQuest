@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { onlineManager } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
@@ -33,7 +33,7 @@ import { useOfflineQueue, useQueuedCheckIn } from '@/lib/offlineQueue';
 import { useParadeMode } from '@/lib/paradeMode';
 import { uploadCheckinPhoto } from '@/lib/photos';
 import { type CheckInResult, useCheckIn, useIsAdmin, useMyProgress, useSpot } from '@/lib/queries';
-import { colors, radius, spacing, type } from '@/theme';
+import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
 
 const CELEBRATION_MS = 1400;
 const MISSES_BEFORE_HINT = 2;
@@ -288,6 +288,21 @@ export default function SpotScreen() {
             <Text style={styles.body}>{s.clue}</Text>
           </View>
 
+          {s.landmark ? (
+            <Pressable
+              onPress={() => router.push({ pathname: '/landmark/[slug]', params: { slug: s.landmark?.slug ?? '' } })}
+              accessibilityRole="button"
+              accessibilityLabel={`${copy.spot.storyBehind}: ${s.landmark.title}`}
+              style={({ pressed }) => [styles.storyLink, pressed && { opacity: 0.7 }]}>
+              <Ionicons name="aperture-outline" size={20} color={colors.midnight} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.storyLinkLabel}>{copy.spot.storyBehind}</Text>
+                <Text style={styles.sectionTitle}>{s.landmark.title}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.inkMuted} />
+            </Pressable>
+          ) : null}
+
           {s.holiday_note ? (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{copy.spot.holidayNote}</Text>
@@ -421,6 +436,22 @@ const styles = StyleSheet.create({
   body: {
     ...type.body,
     color: colors.ink,
+  },
+  storyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    minHeight: minTouchTarget,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.storybookGold,
+    backgroundColor: colors.white,
+  },
+  storyLinkLabel: {
+    ...type.caption,
+    color: colors.inkMuted,
+    letterSpacing: 1,
   },
   unverified: {
     ...type.caption,

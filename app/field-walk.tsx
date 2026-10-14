@@ -6,12 +6,13 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View }
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
+import { type FieldWalkLandmark, useFieldWalkLandmarks } from '@/lib/landmarks';
 import { type FieldWalkSpot, useFieldWalk, useIsAdmin } from '@/lib/queries';
 import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
 const f = copy.fieldWalk;
 
-const isSpotDone = (s: FieldWalkSpot) => s.pinned && s.hasPhoto && s.verified;
+const isSpotDone = (s: FieldWalkSpot | FieldWalkLandmark) => s.pinned && s.hasPhoto && s.verified;
 
 function Mark({ ok, label }: { ok: boolean; label: string }) {
   return (
@@ -27,6 +28,7 @@ export default function FieldWalkScreen() {
   const { session } = useAuth();
   const isAdmin = useIsAdmin(session?.user.id);
   const walk = useFieldWalk(isAdmin.data === true);
+  const walkLandmarks = useFieldWalkLandmarks(isAdmin.data === true);
   const [onlyUnfinished, setOnlyUnfinished] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -40,7 +42,7 @@ export default function FieldWalkScreen() {
 
   async function refresh() {
     setRefreshing(true);
-    await walk.refetch();
+    await Promise.all([walk.refetch(), walkLandmarks.refetch()]);
     setRefreshing(false);
   }
 
@@ -103,6 +105,37 @@ export default function FieldWalkScreen() {
           </View>
         );
       })}
+
+      {walkLandmarks.data && walkLandmarks.data.length > 0 ? (
+        <View style={styles.quest}>
+          <View style={styles.questHeader}>
+            <Text style={styles.questTitle}>{f.landmarksTitle}</Text>
+            <Text style={styles.landmarkCount}>
+              {f.landmarkSummary(walkLandmarks.data.filter(isSpotDone).length, walkLandmarks.data.length)}
+            </Text>
+          </View>
+          {(onlyUnfinished ? walkLandmarks.data.filter((l) => !isSpotDone(l)) : walkLandmarks.data).map((l) => (
+            <Pressable
+              key={l.id}
+              onPress={() => router.push({ pathname: '/landmark/[slug]', params: { slug: l.slug } })}
+              accessibilityRole="button"
+              accessibilityLabel={f.landmarkLabel(l.title, l.landName, l.pinned, l.hasPhoto, l.verified)}
+              style={({ pressed }) => [styles.spotRow, pressed && styles.pressed]}>
+              <Ionicons name="aperture-outline" size={18} color={isSpotDone(l) ? colors.fernText : colors.midnight} />
+              <View style={styles.spotText}>
+                <Text style={styles.teaser}>{l.title}</Text>
+                <Text style={styles.help2}>{l.landName}</Text>
+                <View style={styles.marks}>
+                  <Mark ok={l.pinned} label={f.pin} />
+                  <Mark ok={l.hasPhoto} label={f.photo} />
+                  <Mark ok={l.verified} label={f.verified} />
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.inkMuted} />
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -133,6 +166,14 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
     backgroundColor: colors.storybookGold,
+  },
+  landmarkCount: {
+    ...type.caption,
+    color: colors.inkMuted,
+  },
+  help2: {
+    ...type.caption,
+    color: colors.inkMuted,
   },
   help: {
     ...type.caption,

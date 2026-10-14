@@ -103,6 +103,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"landmarks": {
+                  Row: {
+                    "architecture": string | null,"created_at": string,"engineering": string | null,"history": string | null,"id": string,"land_id": string,"lat": number | null,"lng": number | null,"look_for": string,"photo_path": string | null,"radius_m": number,"slug": string,"sort_order": number,"source_url": string | null,"status": Database["public"]['Enums']["quest_status"],"story": string | null,"teaser": string,"title": string,"verified_on_site": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "architecture"?: string | null,"created_at"?: string,"engineering"?: string | null,"history"?: string | null,"id"?: string,"land_id": string,"lat"?: number | null,"lng"?: number | null,"look_for": string,"photo_path"?: string | null,"radius_m"?: number,"slug": string,"sort_order": number,"source_url"?: string | null,"status"?: Database["public"]['Enums']["quest_status"],"story"?: string | null,"teaser": string,"title": string,"verified_on_site"?: boolean
+                  }
+                  Update: {
+                    "architecture"?: string | null,"created_at"?: string,"engineering"?: string | null,"history"?: string | null,"id"?: string,"land_id"?: string,"lat"?: number | null,"lng"?: number | null,"look_for"?: string,"photo_path"?: string | null,"radius_m"?: number,"slug"?: string,"sort_order"?: number,"source_url"?: string | null,"status"?: Database["public"]['Enums']["quest_status"],"story"?: string | null,"teaser"?: string,"title"?: string,"verified_on_site"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "landmarks_land_id_fkey"
+      columns: ["land_id"]
+isOneToOne: false
+      referencedRelation: "lands"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"lands": {
                   Row: {
                     "id": string,"name": string,"park_id": string,"sort_order": number
@@ -120,6 +140,26 @@ isOneToOne: false
       columns: ["park_id"]
 isOneToOne: false
       referencedRelation: "parks"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lens_stamps": {
+                  Row: {
+                    "landmark_id": string,"stamped_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "landmark_id": string,"stamped_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "landmark_id"?: string,"stamped_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lens_stamps_landmark_id_fkey"
+      columns: ["landmark_id"]
+isOneToOne: false
+      referencedRelation: "landmarks"
       referencedColumns: ["id"]
     }
                   ]
@@ -205,17 +245,23 @@ isOneToOne: false
                   ]
                 },"spots": {
                   Row: {
-                    "clue": string,"created_at": string,"hint": string | null,"holiday_note": string | null,"id": string,"lat": number | null,"lng": number | null,"method": Database["public"]['Enums']["checkin_method"],"pause_during_parades": boolean,"photo_path": string | null,"prompt": string,"quest_id": string,"radius_m": number,"sort_order": number,"source_url": string | null,"teaser": string,"title": string,"verified_on_site": boolean,"where_to_stand": string
+                    "clue": string,"created_at": string,"hint": string | null,"holiday_note": string | null,"id": string,"landmark_id": string | null,"lat": number | null,"lng": number | null,"method": Database["public"]['Enums']["checkin_method"],"pause_during_parades": boolean,"photo_path": string | null,"prompt": string,"quest_id": string,"radius_m": number,"sort_order": number,"source_url": string | null,"teaser": string,"title": string,"verified_on_site": boolean,"where_to_stand": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "clue": string,"created_at"?: string,"hint"?: string | null,"holiday_note"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"method": Database["public"]['Enums']["checkin_method"],"pause_during_parades"?: boolean,"photo_path"?: string | null,"prompt": string,"quest_id": string,"radius_m"?: number,"sort_order": number,"source_url"?: string | null,"teaser": string,"title": string,"verified_on_site"?: boolean,"where_to_stand": string
+                    "clue": string,"created_at"?: string,"hint"?: string | null,"holiday_note"?: string | null,"id"?: string,"landmark_id"?: string | null,"lat"?: number | null,"lng"?: number | null,"method": Database["public"]['Enums']["checkin_method"],"pause_during_parades"?: boolean,"photo_path"?: string | null,"prompt": string,"quest_id": string,"radius_m"?: number,"sort_order": number,"source_url"?: string | null,"teaser": string,"title": string,"verified_on_site"?: boolean,"where_to_stand": string
                   }
                   Update: {
-                    "clue"?: string,"created_at"?: string,"hint"?: string | null,"holiday_note"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"method"?: Database["public"]['Enums']["checkin_method"],"pause_during_parades"?: boolean,"photo_path"?: string | null,"prompt"?: string,"quest_id"?: string,"radius_m"?: number,"sort_order"?: number,"source_url"?: string | null,"teaser"?: string,"title"?: string,"verified_on_site"?: boolean,"where_to_stand"?: string
+                    "clue"?: string,"created_at"?: string,"hint"?: string | null,"holiday_note"?: string | null,"id"?: string,"landmark_id"?: string | null,"lat"?: number | null,"lng"?: number | null,"method"?: Database["public"]['Enums']["checkin_method"],"pause_during_parades"?: boolean,"photo_path"?: string | null,"prompt"?: string,"quest_id"?: string,"radius_m"?: number,"sort_order"?: number,"source_url"?: string | null,"teaser"?: string,"title"?: string,"verified_on_site"?: boolean,"where_to_stand"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "spots_landmark_id_fkey"
+      columns: ["landmark_id"]
+isOneToOne: false
+      referencedRelation: "landmarks"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "spots_quest_id_fkey"
       columns: ["quest_id"]
 isOneToOne: false
@@ -324,6 +370,12 @@ isOneToOne: false
 "admin_set_quest_cover":
 { Args: { "p_photo_path": string,"p_quest_id": string }; Returns: undefined
                            },
+"admin_update_landmark":
+{ Args: { "p_landmark_id": string,"p_lat"?: number,"p_lng"?: number,"p_photo_path"?: string,"p_verified"?: boolean }; Returns: undefined
+                           },
+"admin_update_landmark_content":
+{ Args: { "p_changes": Json,"p_landmark_id": string }; Returns: undefined
+                           },
 "admin_update_quest_content":
 { Args: { "p_quest_id": string,"p_story": string,"p_title": string }; Returns: undefined
                            },
@@ -349,6 +401,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "avatar_key": string,"avatar_url": string,"badges": number,"is_me": boolean,"spots_found": number,"user_id": string,"username": string
             }[]
+                           },
+"stamp_landmark":
+{ Args: { "p_landmark_id": string,"p_lat"?: number,"p_lng"?: number }; Returns: Json
                            },
 "username_available":
 { Args: { "p_username": string }; Returns: boolean

@@ -258,3 +258,19 @@ export const landBadgeGlyphs: Record<string, Shape[]> = {
     ...twinkle(74, 28, 3),
   ],
 };
+
+/** Storybook Lens page stamp: an open page under a magnifying lens, with a sparkle. */
+export const lensPageGlyph: Shape[] = [
+  { kind: 'path', d: 'M24 40 C32 36 42 36 50 41 L50 72 C42 67 32 67 24 71 Z', fill: 'soft', stroke: 'line', strokeWidth: 2.5 },
+  { kind: 'path', d: 'M50 41 C58 36 68 36 76 40 L76 71 C68 67 58 67 50 72 Z', fill: 'soft', stroke: 'line', strokeWidth: 2.5 },
+  { kind: 'line', x1: 29, y1: 48, x2: 44, y2: 47, stroke: 'line', strokeWidth: 1.5 },
+  { kind: 'line', x1: 29, y1: 54, x2: 44, y2: 53, stroke: 'line', strokeWidth: 1.5 },
+  { kind: 'line', x1: 29, y1: 60, x2: 40, y2: 59, stroke: 'line', strokeWidth: 1.5 },
+  { kind: 'line', x1: 66, y1: 60, x2: 75, y2: 70, stroke: 'line', strokeWidth: 5 },
+  { kind: 'circle', cx: 60, cy: 52, r: 11, fill: 'soft', stroke: 'line', strokeWidth: 3.5 },
+  { kind: 'polygon', points: star(60, 52, 6, 2.6), fill: 'accent' },
+  { kind: 'path', d: 'M53 47 C54 45 56 43 58 43', fill: 'none', stroke: 'line', strokeWidth: 1.5 },
+  ...twinkle(30, 30, 3.5),
+  ...twinkle(70, 28, 2.5),
+];
+

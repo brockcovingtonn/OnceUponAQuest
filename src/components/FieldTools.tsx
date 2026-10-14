@@ -15,7 +15,7 @@ const MAX_PIN_ACCURACY_M = 25;
 
 type Message = { text: string; tone: 'info' | 'error' };
 
-function Panel({ children }: { children: ReactNode }) {
+export function Panel({ children }: { children: ReactNode }) {
   return (
     <View style={styles.panel}>
       <Text style={styles.title}>{copy.fieldTools.title}</Text>

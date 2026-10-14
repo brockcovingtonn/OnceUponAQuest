@@ -8,11 +8,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { StateView } from '@/components/StateView';
+import { LensButton } from '@/components/LensButton';
 import { ParkMap } from '@/components/ParkMap';
-import { type StoryMapStamp, StoryMap } from '@/components/StoryMap';
+import { type StoryMapStamp, type StoryMarkerData, StoryMap } from '@/components/StoryMap';
 import { PARK_LANDS } from '@/art/parkMap';
+import { STREET_STORY_SPOTS } from '@/art/streetMap';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
+import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
 import { getCurrentCoords, getLocationPermission, requestLocationPermission } from '@/lib/location';
 import {
   PARK_REGION,
@@ -45,6 +48,10 @@ export default function MapScreen() {
   const [chosenLand, setChosenLand] = useState<string | null>(null);
   const [chosenQuest, setChosenQuest] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
+  const [storiesOn, setStoriesOn] = useState(true);
+  const landmarks = useLandmarks();
+  const lensStamps = useMyLensStamps(session?.user.id);
   const [myCoords, setMyCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locateMessage, setLocateMessage] = useState<string>();
@@ -134,6 +141,34 @@ export default function MapScreen() {
     landId === PARK ? [] : [...landQuests.map((q) => ({ id: q.id, label: q.title })), { id: ALL, label: copy.map.allInLand }];
   const selected = all.find((s) => s.id === selectedId) ?? null;
 
+  // Storybook Lens landmarks in this land (pinned where they are, else at stand-in spots).
+  const landStories = landId === PARK || !storiesOn ? [] : (landmarks.data ?? []).filter((l) => l.land.id === landId);
+  const storyMarkers: StoryMarkerData[] = landStories.map((l, i) => {
+    const pinned =
+      l.lat !== null && l.lng !== null ? (onStreet ? toMapPoint(l.lat, l.lng) : toParkPoint(l.lat, l.lng)) : null;
+    const standIn = onStreet ? STREET_STORY_SPOTS[i % STREET_STORY_SPOTS.length] : parkLand?.stories[i % (parkLand?.stories.length || 1)];
+    return {
+      id: l.id,
+      title: l.title,
+      point: pinned ?? standIn ?? { x: 0, y: 0 },
+      stamped: Boolean(lensStamps.data?.has(l.id)),
+      selected: l.id === selectedStoryId,
+    };
+  });
+  const selectedStory = (landmarks.data ?? []).find((l) => l.id === selectedStoryId) ?? null;
+  const pinnedStories = storiesOn
+    ? (landmarks.data ?? []).filter((l) => l.lat !== null && l.lng !== null && (landId === PARK || l.land.id === landId))
+    : [];
+  const openLens = () => router.push({ pathname: '/lens', params: landId !== PARK ? { land: landId } : {} });
+  const selectSpot = (id: string) => {
+    setSelectedStoryId(null);
+    setSelectedId(id === selectedId ? null : id);
+  };
+  const selectStory = (id: string) => {
+    setSelectedId(null);
+    setSelectedStoryId(id === selectedStoryId ? null : id);
+  };
+
   async function locate() {
     if (myCoords) {
       setMyCoords(null);
@@ -198,6 +233,7 @@ export default function MapScreen() {
           setChosenQuest(null);
           setSelectedId(null);
           setLocateMessage(undefined);
+          setSelectedStoryId(null);
         }}
       />
       {questChips.length > 0 ? (
@@ -223,6 +259,7 @@ export default function MapScreen() {
                 onPress={() => {
                   setChosenLand(PARK);
                   setSelectedId(null);
+                  setSelectedStoryId(null);
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={copy.map.backToPark}
@@ -231,7 +268,22 @@ export default function MapScreen() {
                 <Ionicons name="map-outline" size={16} color={colors.midnight} />
                 <Text style={styles.backToParkText}>{copy.map.backToPark}</Text>
               </Pressable>
-              {anyApproximate ? <Text style={styles.note}>{copy.map.approximate}</Text> : null}
+              <View style={styles.noteLine}>
+                {anyApproximate ? <Text style={[styles.note, styles.noteFlex]}>{copy.map.approximate}</Text> : <View style={styles.noteFlex} />}
+                <Pressable
+                  onPress={() => {
+                    setStoriesOn((on) => !on);
+                    setSelectedStoryId(null);
+                  }}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: storiesOn }}
+                  accessibilityLabel={copy.lens.mapToggleLabel}
+                  hitSlop={6}
+                  style={[styles.storiesToggle, storiesOn && styles.storiesToggleOn]}>
+                  <Ionicons name="aperture-outline" size={14} color={storiesOn ? colors.midnight : colors.ink} />
+                  <Text style={styles.storiesToggleText}>{copy.lens.mapToggle}</Text>
+                </Pressable>
+              </View>
             </View>
           )}
           {onStreet ? (
@@ -240,7 +292,9 @@ export default function MapScreen() {
               stamps={stamps}
               showRoute={questId !== ALL}
               me={me}
-              onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
+              onSelect={selectSpot}
+              stories={storyMarkers}
+              onSelectStory={selectStory}
             />
           ) : (
             <ParkMap
@@ -251,20 +305,28 @@ export default function MapScreen() {
               stamps={stamps}
               showRoute={questId !== ALL}
               me={me}
-              onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
+              onSelect={selectSpot}
+              stories={storyMarkers}
+              onSelectStory={selectStory}
               onSelectLand={(id) => {
                 setChosenLand(id);
                 setChosenQuest(null);
                 setSelectedId(null);
+                setSelectedStoryId(null);
               }}
             />
           )}
-          <Button
-            variant="secondary"
-            label={myCoords ? copy.map.hideMe : copy.map.locateMe}
-            onPress={locate}
-            loading={locating}
-          />
+          <View style={styles.actionsRow}>
+            <View style={styles.noteFlex}>
+              <Button
+                variant="secondary"
+                label={myCoords ? copy.map.hideMe : copy.map.locateMe}
+                onPress={locate}
+                loading={locating}
+              />
+            </View>
+            <LensButton onPress={openLens} />
+          </View>
           {locateMessage ? <Banner tone="info" message={locateMessage} /> : null}
         </ScrollView>
       ) : (
@@ -284,7 +346,17 @@ export default function MapScreen() {
                 title={`${s.order} · ${nameOf(s)}`}
                 description={s.quest.title}
                 pinColor={foundSpots.has(s.id) ? colors.storybookGold : colors.midnight}
-                onPress={() => setSelectedId(s.id)}
+                onPress={() => selectSpot(s.id)}
+              />
+            ))}
+            {pinnedStories.map((l) => (
+              <Marker
+                key={l.id}
+                coordinate={{ latitude: l.lat ?? 0, longitude: l.lng ?? 0 }}
+                title={l.title}
+                description={copy.lens.name}
+                pinColor={colors.storybookGold}
+                onPress={() => selectStory(l.id)}
               />
             ))}
           </MapView>
@@ -321,6 +393,27 @@ export default function MapScreen() {
             <Ionicons name="close" size={22} color={colors.ink} />
           </Pressable>
         </View>
+      ) : selectedStory ? (
+        <View style={styles.card} accessibilityLiveRegion="polite">
+          <View style={styles.cardText}>
+            <Text style={styles.cardQuest}>{copy.lens.name}</Text>
+            <Text style={styles.cardTitle}>{selectedStory.title}</Text>
+            <Text style={styles.cardState}>{selectedStory.teaser}</Text>
+          </View>
+          <Button
+            label={copy.lens.readStory}
+            onPress={() => router.push({ pathname: '/landmark/[slug]', params: { slug: selectedStory.slug } })}
+          />
+          <Pressable
+            onPress={() => setSelectedStoryId(null)}
+            accessibilityRole="button"
+            accessibilityLabel={copy.map.close}
+            style={styles.cardClose}>
+            <Ionicons name="close" size={22} color={colors.ink} />
+          </Pressable>
+        </View>
+      ) : view === 'real' ? (
+        <LensButton style={styles.lensButton} onPress={openLens} />
       ) : null}
     </SafeAreaView>
   );
@@ -479,6 +572,44 @@ const styles = StyleSheet.create({
   },
   noteRow: {
     gap: spacing.xs,
+  },
+  noteLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  noteFlex: {
+    flex: 1,
+  },
+  storiesToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: minTouchTarget - 12,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.round,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  storiesToggleOn: {
+    borderColor: colors.storybookGold,
+    backgroundColor: colors.storybookGold,
+  },
+  storiesToggleText: {
+    ...type.label,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.midnight,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  lensButton: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.md,
   },
   backToPark: {
     flexDirection: 'row',

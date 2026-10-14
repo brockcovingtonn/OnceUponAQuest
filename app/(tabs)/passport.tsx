@@ -6,11 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { Flourish } from '@/components/Flourish';
+import { LensStamp } from '@/components/LensStamp';
 import { Stamp } from '@/components/Stamp';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
+import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
 import { useMyProgress, usePassportContent } from '@/lib/queries';
 import { colors, minTouchTarget, spacing, type } from '@/theme';
 
@@ -24,11 +26,13 @@ export default function PassportScreen() {
   const { session } = useAuth();
   const content = usePassportContent();
   const progress = useMyProgress(session?.user.id);
+  const landmarks = useLandmarks();
+  const lensStamps = useMyLensStamps(session?.user.id);
   const [refreshing, setRefreshing] = useState(false);
 
   async function refresh() {
     setRefreshing(true);
-    await Promise.all([content.refetch(), progress.refetch()]);
+    await Promise.all([content.refetch(), progress.refetch(), landmarks.refetch(), lensStamps.refetch()]);
     setRefreshing(false);
   }
 
@@ -80,6 +84,34 @@ export default function PassportScreen() {
             })}
           </View>
         </View>
+
+        {landmarks.data && landmarks.data.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader} accessibilityRole="header">
+              {copy.lens.passportTitle}
+            </Text>
+            <Text style={styles.hint}>
+              {lensStamps.data && lensStamps.data.size > 0
+                ? copy.lens.passportCount(lensStamps.data.size, landmarks.data.length)
+                : copy.lens.passportEmpty}
+            </Text>
+            <View style={styles.grid}>
+              {landmarks.data.map((l) => {
+                const stamped = Boolean(lensStamps.data?.has(l.id));
+                return (
+                  <Pressable
+                    key={l.id}
+                    onPress={() => router.push({ pathname: '/landmark/[slug]', params: { slug: l.slug } })}
+                    accessibilityRole="button"
+                    accessibilityLabel={copy.lens.passportStamp(l.title, stamped)}
+                    style={({ pressed }) => [styles.gridCell, pressed && styles.pressed]}>
+                    <LensStamp stamped={stamped} size={STAMP_SIZE} />
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
 
         {lands.map((land) => (
           <View key={land.id} style={styles.section}>

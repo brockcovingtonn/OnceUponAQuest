@@ -110,7 +110,7 @@ export async function removeOldAvatars(userId: string, keepPath: string | null) 
 
 /** Upload to spot-photos at `<spots|quests>/<id>-<timestamp>.jpg` and return that path. */
 export async function uploadContentPhoto(
-  folder: 'spots' | 'quests',
+  folder: 'spots' | 'quests' | 'landmarks',
   id: string,
   photo: CapturedPhoto,
 ): Promise<string> {

@@ -378,3 +378,20 @@ export const questScenes: Record<string, Shape[]> = {
 export function sceneForQuest(slug: string | null | undefined): Shape[] {
   return (slug && questScenes[slug]) || mainStreetNight;
 }
+
+/** A scene that sets the mood for each land (used by Storybook Lens stories). */
+const LAND_SCENES: Record<string, string> = {
+  'dlp-main-street': 'main-street-senses',
+  'dlp-adventureland': 'jungle-expedition',
+  'dlp-new-orleans-square': 'royal-street-secrets',
+  'dlp-bayou-country': 'bayou-bend',
+  'dlp-frontierland': 'river-life',
+  'dlp-galaxys-edge': 'outpost-wanderer',
+  'dlp-fantasyland': 'knights-and-carrousel',
+  'dlp-toontown': 'toontown-town-tour',
+  'dlp-tomorrowland': 'retro-rockets',
+};
+
+export function sceneForLand(landId: string | null | undefined): Shape[] {
+  return sceneForQuest(landId ? LAND_SCENES[landId] : null);
+}

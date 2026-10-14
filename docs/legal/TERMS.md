@@ -1,6 +1,6 @@
 # Once Upon a Quest — Terms of Service
 
-_Effective October 11, 2026_
+_Effective October 15, 2026_
 
 These Terms of Service ("Terms") are an agreement between you and Higher Thinking Consulting ("we", "us") about your use of the Once Upon a Quest mobile app (the "App"). Please read them carefully. By creating an account or using the App, you agree to these Terms and to our Privacy Policy. If you do not agree, do not use the App.
 
@@ -32,7 +32,7 @@ Quests take place in busy, real-world places. Your safety, and the safety of tho
 - Turn on Parade mode during parades and fireworks, and do not check in at paused spots.
 - Stay aware of your surroundings and do not use the App while walking through crowds, near vehicles, or anywhere it would be unsafe to look at your phone.
 - Parents and guardians are responsible for supervising minors at all times.
-- Spots, clues, hints and answers are researched in good faith but may be inaccurate, out of date, seasonal, or temporarily unavailable. Places change without notice.
+- Spots, clues, hints, answers and Storybook Lens stories (design and history notes about park landmarks) are researched in good faith and written in our own words, but may be inaccurate, out of date, seasonal, or temporarily unavailable. Places change without notice. The Storybook Lens is for looking, not walking: stop and step aside before you point your phone around.
 
 You understand that visiting theme parks and other public places involves risks, including crowds, weather, uneven surfaces and physical exertion. You voluntarily choose to take part in quests and assume all risks of doing so. We do not operate, control or inspect any park or location shown in the App.
 

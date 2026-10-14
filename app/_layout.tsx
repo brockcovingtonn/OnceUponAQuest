@@ -142,6 +142,8 @@ function RootNavigator() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="quest/[slug]" options={{ title: 'Quest' }} />
           <Stack.Screen name="spot/[id]" options={{ title: 'Spot' }} />
+          <Stack.Screen name="landmark/[slug]" options={{ title: copy.lens.name }} />
+          <Stack.Screen name="lens" options={{ headerShown: false, animation: 'fade', gestureEnabled: false }} />
           <Stack.Screen
             name="badge/[slug]"
             options={{ presentation: 'modal', title: 'Badge earned' }}

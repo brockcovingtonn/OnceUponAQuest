@@ -20,6 +20,7 @@ import {
   FindDemo,
   FriendsDemo,
   HintParadeDemo,
+  LensDemo,
   MethodsDemo,
   OfflineDemo,
   QuestDemo,
@@ -33,7 +34,7 @@ import { useReducedMotion } from '@/lib/useReducedMotion';
 import { markWalkthroughSeen } from '@/lib/walkthrough';
 import { colors, minTouchTarget, spacing, type } from '@/theme';
 
-const DEMOS = [QuestDemo, FindDemo, MethodsDemo, StampsDemo, HintParadeDemo, OfflineDemo, FriendsDemo, SafetyDemo];
+const DEMOS = [QuestDemo, FindDemo, MethodsDemo, StampsDemo, HintParadeDemo, OfflineDemo, FriendsDemo, LensDemo, SafetyDemo];
 const PAGES = copy.walkthrough.pages;
 
 /** "How quests work": shown once after onboarding, and any time from Profile or the Quests screen. */

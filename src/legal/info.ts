@@ -7,7 +7,7 @@ export const legalInfo = {
   /** Legal name of the business that operates the app. */
   operator: 'Higher Thinking Consulting',
   contactEmail: 'higherthinkingconsulting@gmail.com',
-  effectiveDate: 'October 11, 2026',
+  effectiveDate: 'October 15, 2026',
   governingState: 'California',
   venue: 'Orange County, California',
   dataLocation: 'the United States (West Coast)',

@@ -12,6 +12,15 @@ import { MAP_CANVAS, type MapPoint } from '@/lib/mapGeometry';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { colors, fonts } from '@/theme';
 
+/** A Storybook Lens landmark marker. */
+export type StoryMarkerData = {
+  id: string;
+  title: string;
+  point: MapPoint;
+  stamped: boolean;
+  selected: boolean;
+};
+
 export type StoryMapStamp = {
   id: string;
   order: number;
@@ -28,6 +37,8 @@ type Props = {
   showRoute: boolean;
   me: MapPoint | null;
   onSelect: (id: string) => void;
+  stories?: StoryMarkerData[];
+  onSelectStory?: (id: string) => void;
 };
 
 const STAMP = 34;
@@ -50,7 +61,7 @@ function useLoop(durationMs: number, reduced: boolean) {
 }
 
 /** The illustrated street map: a little streetcar on the rails, a bobbing balloon, twinkles, and tappable spot stamps. */
-export function StoryMap({ width, stamps, showRoute, me, onSelect }: Props) {
+export function StoryMap({ width, stamps, showRoute, me, onSelect, stories = [], onSelectStory }: Props) {
   const reduced = useReducedMotion();
   const scale = width / MAP_CANVAS.width;
   const height = MAP_CANVAS.height * scale;
@@ -168,6 +179,10 @@ export function StoryMap({ width, stamps, showRoute, me, onSelect }: Props) {
         </Svg>
       ) : null}
 
+      {stories.map((st) => (
+        <StoryMarker key={st.id} story={st} x={st.point.x * scale} y={st.point.y * scale} onPress={() => onSelectStory?.(st.id)} />
+      ))}
+
       {stamps.map((s) => (
         <MapStamp key={s.id} stamp={s} x={s.point.x * scale} y={s.point.y * scale} onPress={() => onSelect(s.id)} />
       ))}
@@ -204,6 +219,29 @@ export function MapStamp({ stamp, x, y, onPress }: { stamp: StoryMapStamp; x: nu
   );
 }
 
+const STORY = 30;
+
+/** A landmark story marker: a little lens-in-a-frame, gold once stamped. */
+export function StoryMarker({ story, x, y, onPress }: { story: StoryMarkerData; x: number; y: number; onPress: () => void }) {
+  const size = story.selected ? STORY + 6 : STORY;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={copy.lens.markerLabel(story.title, story.stamped)}
+      accessibilityState={{ selected: story.selected }}
+      hitSlop={7}
+      style={[
+        styles.story,
+        { width: size, height: size, left: x - size / 2, top: y - size / 2 },
+        story.stamped && styles.storyStamped,
+        story.selected && styles.stampSelected,
+      ]}>
+      <Ionicons name="aperture-outline" size={16} color={story.stamped ? colors.midnight : colors.storybookGold} />
+    </Pressable>
+  );
+}
+
 /** "You are here" dot centered on (x, y) in screen points. */
 export function MeDot({ x, y }: { x: number; y: number }) {
   return <View style={[styles.me, { left: x - 9, top: y - 9 }]} accessible accessibilityLabel={copy.map.youAreHere} />;
@@ -236,6 +274,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.parchment,
     borderWidth: 2.5,
+    borderColor: colors.midnight,
+  },
+  story: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 9,
+    backgroundColor: colors.midnight,
+    borderWidth: 2,
+    borderColor: colors.storybookGold,
+    transform: [{ rotate: '45deg' }],
+  },
+  storyStamped: {
+    backgroundColor: colors.storybookGold,
     borderColor: colors.midnight,
   },
   stampFound: {

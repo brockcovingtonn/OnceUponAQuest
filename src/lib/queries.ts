@@ -216,7 +216,8 @@ export function useMyProgress(userId: string | undefined) {
 const spotDetailSelect = `
   id, quest_id, sort_order, teaser, title, where_to_stand, clue, hint, prompt, method,
   lat, lng, radius_m, pause_during_parades, holiday_note, photo_path, verified_on_site,
-  quest:quests ( slug, title, spots ( count ) )
+  quest:quests ( slug, title, spots ( count ) ),
+  landmark:landmarks ( slug, title )
 ` as const;
 
 export const spotKeys = {

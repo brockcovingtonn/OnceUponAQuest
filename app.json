@@ -51,7 +51,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Once Upon a Quest checks your location only when you tap Check in, to confirm you are at the spot.",
+          "locationWhenInUsePermission": "Once Upon a Quest uses your location only while the app is open: to confirm you are at a spot when you check in, and to show which landmarks you are facing in the Storybook Lens.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
@@ -59,9 +59,18 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Once Upon a Quest uses the camera when you take a photo to check in at a spot.",
+          "cameraPermission": "Once Upon a Quest uses the camera to take check-in photos and to show the Storybook Lens view. Nothing is recorded unless you take a photo.",
           "microphonePermission": false,
           "photosPermission": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Once Upon a Quest uses the camera to take check-in photos and to show the Storybook Lens view. Nothing is recorded unless you take a photo.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
         }
       ],
       [

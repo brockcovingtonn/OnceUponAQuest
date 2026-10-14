@@ -636,6 +636,8 @@ export type ParkLand = {
   view: { x: number; y: number; w: number; h: number };
   /** Walking routes used for spots that aren't pinned yet (one per quest in the land). */
   lanes: Pt[][];
+  /** Stand-in spots for Storybook Lens landmarks without a pin, in landmark order. */
+  stories: Pt[];
 };
 
 export const PARK_LANDS: ParkLand[] = [
@@ -643,12 +645,14 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-main-street',
     label: { x: 360, y: 800 },
     view: { x: 280, y: 450, w: 160, h: 420 },
+    stories: [{ x: 360, y: 846 }, { x: 360, y: 788 }, { x: 320, y: 640 }, { x: 318, y: 580 }, { x: 360, y: 700 }],
     lanes: [[{ x: 330, y: 790 }, { x: 330, y: 580 }], [{ x: 390, y: 790 }, { x: 390, y: 580 }]],
   },
   {
     id: 'dlp-adventureland',
     label: { x: 236, y: 690 },
     view: { x: 160, y: 520, w: 200, h: 220 },
+    stories: [{ x: 298, y: 570 }, { x: 250, y: 690 }, { x: 264, y: 600 }, { x: 195, y: 641 }],
     lanes: [
       [{ x: 196, y: 690 }, { x: 214, y: 632 }, { x: 262, y: 584 }, { x: 320, y: 560 }],
       [{ x: 250, y: 712 }, { x: 290, y: 668 }, { x: 322, y: 626 }, { x: 336, y: 590 }],
@@ -658,6 +662,7 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-new-orleans-square',
     label: { x: 150, y: 470 },
     view: { x: 56, y: 430, w: 210, h: 230 },
+    stories: [{ x: 150, y: 520 }, { x: 205, y: 500 }, { x: 100, y: 500 }, { x: 180, y: 575 }],
     lanes: [
       [{ x: 88, y: 576 }, { x: 122, y: 522 }, { x: 178, y: 494 }, { x: 232, y: 482 }],
       [{ x: 120, y: 600 }, { x: 168, y: 578 }, { x: 214, y: 546 }, { x: 246, y: 512 }],
@@ -667,6 +672,7 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-bayou-country',
     label: { x: 176, y: 178 },
     view: { x: 70, y: 140, w: 200, h: 180 },
+    stories: [{ x: 140, y: 195 }, { x: 195, y: 215 }, { x: 240, y: 305 }, { x: 220, y: 268 }],
     lanes: [
       [{ x: 104, y: 238 }, { x: 128, y: 200 }, { x: 170, y: 184 }, { x: 214, y: 190 }],
       [{ x: 126, y: 276 }, { x: 166, y: 258 }, { x: 204, y: 236 }, { x: 238, y: 222 }],
@@ -676,6 +682,7 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-frontierland',
     label: { x: 296, y: 380 },
     view: { x: 210, y: 240, w: 180, h: 280 },
+    stories: [{ x: 262, y: 395 }, { x: 232, y: 440 }, { x: 300, y: 300 }, { x: 287, y: 367 }, { x: 222, y: 350 }],
     lanes: [
       [{ x: 300, y: 504 }, { x: 266, y: 452 }, { x: 266, y: 384 }, { x: 282, y: 330 }, { x: 290, y: 280 }],
       [{ x: 334, y: 490 }, { x: 336, y: 430 }, { x: 330, y: 376 }, { x: 330, y: 318 }, { x: 318, y: 272 }],
@@ -685,6 +692,7 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-galaxys-edge',
     label: { x: 140, y: 64 },
     view: { x: 24, y: 24, w: 260, h: 210 },
+    stories: [{ x: 104, y: 70 }, { x: 116, y: 104 }, { x: 205, y: 58 }, { x: 60, y: 150 }],
     lanes: [
       [{ x: 48, y: 170 }, { x: 52, y: 128 }, { x: 60, y: 88 }, { x: 96, y: 56 }, { x: 150, y: 48 }],
       [{ x: 84, y: 128 }, { x: 116, y: 100 }, { x: 150, y: 82 }, { x: 186, y: 62 }, { x: 222, y: 48 }],
@@ -694,6 +702,7 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-fantasyland',
     label: { x: 452, y: 268 },
     view: { x: 330, y: 146, w: 250, h: 310 },
+    stories: [{ x: 360, y: 445 }, { x: 396, y: 392 }, { x: 500, y: 200 }, { x: 478, y: 432 }, { x: 520, y: 246 }],
     lanes: [
       [{ x: 368, y: 432 }, { x: 408, y: 360 }, { x: 400, y: 300 }, { x: 440, y: 284 }, { x: 470, y: 296 }],
       [{ x: 540, y: 410 }, { x: 520, y: 350 }, { x: 516, y: 286 }, { x: 494, y: 236 }],
@@ -703,6 +712,7 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-toontown',
     label: { x: 474, y: 126 },
     view: { x: 370, y: 40, w: 240, h: 140 },
+    stories: [{ x: 420, y: 100 }, { x: 484, y: 118 }, { x: 520, y: 84 }, { x: 440, y: 52 }],
     lanes: [
       [{ x: 392, y: 120 }, { x: 430, y: 116 }, { x: 466, y: 96 }, { x: 500, y: 92 }],
       [{ x: 460, y: 144 }, { x: 500, y: 146 }, { x: 540, y: 124 }, { x: 576, y: 112 }],
@@ -712,6 +722,7 @@ export const PARK_LANDS: ParkLand[] = [
     id: 'dlp-tomorrowland',
     label: { x: 600, y: 470 },
     view: { x: 420, y: 460, w: 270, h: 330 },
+    stories: [{ x: 592, y: 712 }, { x: 556, y: 768 }, { x: 640, y: 540 }, { x: 630, y: 620 }, { x: 474, y: 584 }],
     lanes: [
       [{ x: 444, y: 520 }, { x: 476, y: 630 }, { x: 520, y: 694 }, { x: 556, y: 746 }, { x: 610, y: 764 }],
       [{ x: 520, y: 560 }, { x: 572, y: 566 }, { x: 628, y: 556 }, { x: 650, y: 660 }, { x: 650, y: 740 }],

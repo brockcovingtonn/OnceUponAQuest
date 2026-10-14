@@ -17,7 +17,7 @@ import {
   ROCKET_SPINNER,
   TRAIN_PATH,
 } from '@/art/parkMap';
-import { MapStamp, MeDot, type StoryMapStamp } from '@/components/StoryMap';
+import { MapStamp, MeDot, StoryMarker, type StoryMapStamp, type StoryMarkerData } from '@/components/StoryMap';
 import { Twinkle } from '@/components/Twinkle';
 import { copy } from '@/copy';
 import type { MapPoint } from '@/lib/mapGeometry';
@@ -37,6 +37,8 @@ type Props = {
   me: MapPoint | null;
   onSelect: (id: string) => void;
   onSelectLand: (landId: string) => void;
+  stories?: StoryMarkerData[];
+  onSelectStory?: (id: string) => void;
 };
 
 const WHOLE = { x: 0, y: 0, w: PARK_CANVAS.width, h: PARK_CANVAS.height };
@@ -149,7 +151,7 @@ function PathRider({
  * park shows a progress medallion per land; a land view zooms in and shows
  * tappable spot stamps.
  */
-export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me, onSelect, onSelectLand }: Props) {
+export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me, onSelect, onSelectLand, stories = [], onSelectStory }: Props) {
   const reduced = useReducedMotion();
   const view = land?.view ?? WHOLE;
   const scale = width / view.w;
@@ -344,6 +346,11 @@ export function ParkMap({ width, land, lands, medallions, stamps, showRoute, me,
           />
         </Svg>
       ) : null}
+
+      {stories.map((story) => {
+        const at = project(story.point);
+        return <StoryMarker key={story.id} story={story} x={at.x} y={at.y} onPress={() => onSelectStory?.(story.id)} />;
+      })}
 
       {stamps.map((st) => {
         const at = project(st.point);

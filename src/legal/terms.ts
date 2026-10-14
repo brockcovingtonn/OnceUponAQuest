@@ -44,7 +44,7 @@ export const terms: LegalDocument = {
         'Turn on Parade mode during parades and fireworks, and do not check in at paused spots.',
         'Stay aware of your surroundings and do not use the App while walking through crowds, near vehicles, or anywhere it would be unsafe to look at your phone.',
         'Parents and guardians are responsible for supervising minors at all times.',
-        'Spots, clues, hints and answers are researched in good faith but may be inaccurate, out of date, seasonal, or temporarily unavailable. Places change without notice.',
+        'Spots, clues, hints, answers and Storybook Lens stories (design and history notes about park landmarks) are researched in good faith and written in our own words, but may be inaccurate, out of date, seasonal, or temporarily unavailable. Places change without notice. The Storybook Lens is for looking, not walking: stop and step aside before you point your phone around.',
       ],
     },
     {

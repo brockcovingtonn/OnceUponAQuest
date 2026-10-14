@@ -26,8 +26,10 @@ export const privacy: LegalDocument = {
     {
       heading: '2. Information collected when you use the App',
       bullets: [
-        'Precise location — only at the moment you tap Check in at a spot that has a location pin, and only if you allow location access. It is sent to our server to confirm you are near the spot and is not stored. The App never uses location in the background.',
-        'Camera — only when you tap a button to take a photo.',
+        'Precise location — only if you allow location access, and only while the App is open: at the moment you tap Check in or stamp a Storybook Lens page at a place that has a location pin (sent to our server to confirm you are nearby, and not stored), and while the Storybook Lens is open (used on your phone to show which landmarks are around you, and never sent to us). The App never uses location in the background.',
+        'Camera — when you tap a button to take a photo, and while the Storybook Lens is open to show a live view. The Lens view is never recorded, saved or sent anywhere.',
+        'Compass direction — while the Storybook Lens is open, to show which landmarks you are facing. It stays on your phone.',
+        'Storybook Lens stamps — which landmark stories you have stamped, and when.',
         'Photo library — only through your phone\'s system picker, and only for the single photo you choose as your profile photo.',
         'On your device only — your sign-in session (kept in your phone\'s secure storage), your Parade mode setting, a copy of quest content and your progress so the App works without signal, and check-ins (including photos) made offline until they upload. Signing out clears the copy and any check-ins waiting to upload.',
         'Server logs — our hosting provider records basic technical data such as IP address, time of request and error messages, to keep the service secure and working.',
@@ -50,7 +52,7 @@ export const privacy: LegalDocument = {
       heading: '4. Who can see your information',
       bullets: [
         'Any signed-in user: your username, display name and avatar or profile photo (for example, when they search for your username or see a friend request).',
-        'Friends you accept: which spots you have found and when (including Snack Passport entries), and your badges. Friends cannot see your check-in photos.',
+        'Friends you accept: which spots you have found and when (including Snack Passport entries), your Storybook Lens stamps, and your badges. Friends cannot see your check-in photos.',
         'Only you: your check-in photos and your email address.',
         'Only you: the list of people you have blocked. People you block are not told.',
         'Only us: problem reports, reports about users (the person reported is never told who reported them), server logs, and your email address. We access account data only as needed to operate, secure, moderate and support the App.',
@@ -84,7 +86,7 @@ export const privacy: LegalDocument = {
     {
       heading: '7. How long we keep information',
       paragraphs: [
-        'We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile, check-ins, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.',
+        'We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile, check-ins, Storybook Lens stamps, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.',
       ],
     },
     {
@@ -92,14 +94,14 @@ export const privacy: LegalDocument = {
       bullets: [
         'Update your display name and avatar any time in Profile → Edit profile.',
         'Delete your account and data any time in Profile → Delete my account.',
-        'Turn location or camera access on or off in your phone\'s settings. The App works without them, but location-pinned and photo spots cannot be checked in.',
+        'Turn location or camera access on or off in your phone\'s settings. The App works without them, but location-pinned and photo spots cannot be checked in, location-pinned Lens pages cannot be stamped, and the Storybook Lens shows a storybook picture instead of the camera.',
         'Ask for a copy of your information, or ask us to correct or delete it, by emailing ' + L.contactEmail + '. We will verify your request using your account email.',
       ],
     },
     {
       heading: '9. California privacy rights',
       paragraphs: [
-        'If you live in California, you have the right to know what personal information we collect, use and disclose; to request access to, correction of, and deletion of your personal information; to opt out of the sale or sharing of personal information (we do neither); and to limit the use of sensitive personal information. The only sensitive information we use is precise location, and only to confirm a check-in at your request. We will not discriminate against you for exercising these rights. You may use an authorized agent, who must provide proof of your permission. Send requests to ' + L.contactEmail + '.',
+        'If you live in California, you have the right to know what personal information we collect, use and disclose; to request access to, correction of, and deletion of your personal information; to opt out of the sale or sharing of personal information (we do neither); and to limit the use of sensitive personal information. The only sensitive information we use is precise location, and only to confirm a check-in or Lens stamp at your request and, on your phone, to show nearby landmarks in the Storybook Lens. We will not discriminate against you for exercising these rights. You may use an authorized agent, who must provide proof of your permission. Send requests to ' + L.contactEmail + '.',
       ],
     },
     {
