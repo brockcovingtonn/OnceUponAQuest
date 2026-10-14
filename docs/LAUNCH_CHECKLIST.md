@@ -78,6 +78,8 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 
 ## 5. Check on real phones
 
+- [ ] **Tester accounts** user1@ … user4@onceuponaquest.com (on hosted and local) sign in with one shared 6-digit test code instead of an emailed code; the code is kept out of the repo. To change it: `TEST_CODE=<6 digits> node scripts/create-test-accounts.mjs` (add `--local` for the local stack). Before going public, either delete these accounts in Supabase → Authentication → Users or set a new code, and remove `src/lib/testAccounts.ts` if you no longer need it.
+
 - [ ] Before each TestFlight build, run the smoke test on the simulator: `npm run db:start`, `npm run e2e:build` (after app changes), then `npm run e2e`. It signs up a brand-new explorer, onboards, checks in, and visits every tab, then deletes its test accounts.
 - [ ] Storybook Lens on a real phone: the camera permission prompt reads well, the live view and brass bezel look right in daylight and at night, Point mode cards follow the compass smoothly, Browse mode works with the camera turned off, and the lens stops the camera when you open a story.
 - [ ] Listen to the stamp, badge chime and "saved" sounds on a real phone (with the ringer on); turn Sounds / Vibration off in Profile → Settings and confirm they go quiet.

@@ -19,6 +19,7 @@ import { Scene } from '@/components/Scene';
 import { Twinkle } from '@/components/Twinkle';
 import { copy } from '@/copy';
 import { supabase } from '@/lib/supabase';
+import { isTestAccount } from '@/lib/testAccounts';
 import { mainStreetNight } from '@/art/scenes';
 import { colors, spacing, type } from '@/theme';
 
@@ -60,6 +61,14 @@ export default function SignInScreen() {
     }
     setEmailError(undefined);
     setBanner(undefined);
+    // Tester accounts use a shared test code, so no email is sent.
+    if (isTestAccount(address)) {
+      setCodeSentTo(address);
+      setCode('');
+      setCodeError(undefined);
+      setBanner({ message: copy.signIn.testAccount, tone: 'info' });
+      return;
+    }
     setSending(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: address,
@@ -82,11 +91,9 @@ export default function SignInScreen() {
     setBanner(undefined);
     setCodeError(undefined);
     setVerifying(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email: codeSentTo,
-      token,
-      type: 'email',
-    });
+    const { error } = isTestAccount(codeSentTo)
+      ? await supabase.auth.signInWithPassword({ email: codeSentTo, password: token })
+      : await supabase.auth.verifyOtp({ email: codeSentTo, token, type: 'email' });
     setVerifying(false);
     if (error) {
       if (isAuthRetryableFetchError(error)) {
