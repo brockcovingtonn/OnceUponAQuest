@@ -1,8 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as Location from 'expo-location';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Line, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
@@ -17,6 +16,7 @@ import { useFeedback } from '@/lib/feedback';
 import { bearingDegrees, type Landmark, relativeAngle, useLandmarks, useMyLensStamps } from '@/lib/landmarks';
 import { distanceMeters, getLocationPermission, openAppSettings, requestLocationPermission } from '@/lib/location';
 import { approxLandmarkCoords } from '@/lib/mapGeometry';
+import { useHeading, useLivePosition as usePosition } from '@/lib/useLiveLocation';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
@@ -27,58 +27,6 @@ const NEARBY_M = 500;
 /** Horizontal field of view, in degrees, for placing cards over the camera. */
 const FOV = 50;
 const MAX_FLOATING = 3;
-
-/** Live heading (degrees from north), smoothed so cards don't jitter. Null when there's no compass. */
-function useHeading(enabled: boolean) {
-  const [heading, setHeading] = useState<number | null>(null);
-  const last = useRef<number | null>(null);
-  useEffect(() => {
-    if (!enabled) return;
-    let sub: Location.LocationSubscription | undefined;
-    let cancelled = false;
-    Location.watchHeadingAsync((h) => {
-      const raw = h.trueHeading >= 0 ? h.trueHeading : h.magHeading;
-      if (raw < 0) return;
-      const prev = last.current;
-      const next = prev === null ? raw : (prev + 0.3 * relativeAngle(raw, prev) + 360) % 360;
-      last.current = next;
-      setHeading(next);
-    })
-      .then((s) => {
-        if (cancelled) s.remove();
-        else sub = s;
-      })
-      .catch(() => setHeading(null));
-    return () => {
-      cancelled = true;
-      sub?.remove();
-    };
-  }, [enabled]);
-  return heading;
-}
-
-/** Live position while the lens is open. */
-function usePosition(enabled: boolean) {
-  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
-  useEffect(() => {
-    if (!enabled) return;
-    let sub: Location.LocationSubscription | undefined;
-    let cancelled = false;
-    Location.watchPositionAsync({ accuracy: Location.Accuracy.High, distanceInterval: 5 }, (p) =>
-      setPosition({ lat: p.coords.latitude, lng: p.coords.longitude }),
-    )
-      .then((s) => {
-        if (cancelled) s.remove();
-        else sub = s;
-      })
-      .catch(() => setPosition(null));
-    return () => {
-      cancelled = true;
-      sub?.remove();
-    };
-  }, [enabled]);
-  return position;
-}
 
 export default function LensScreen() {
   const params = useLocalSearchParams<{ land?: string }>();

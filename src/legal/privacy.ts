@@ -14,7 +14,7 @@ export const privacy: LegalDocument = {
       bullets: [
         'Email address — to send your sign-in code and important account notices.',
         'Username and optional display name.',
-        'Avatar — one of our stamp avatars, or a profile photo you choose from your photo library.',
+        'Your explorer avatar — the cartoon look you build (skin tone, hair, eyes, freckles) and the outfit items you wear — or a profile photo you choose from your photo library.',
         'Age confirmation (that you are 13 or older) and the date you accepted the Terms.',
         'Check-ins — which spots you found and when. Typed answers are checked and then discarded; we do not store them.',
         'Check-in photos you take for photo spots, and optional snack photos.',
@@ -26,9 +26,10 @@ export const privacy: LegalDocument = {
     {
       heading: '2. Information collected when you use the App',
       bullets: [
-        'Precise location — only if you allow location access, and only while the App is open: at the moment you tap Check in or stamp a Storybook Lens page at a place that has a location pin (sent to our server to confirm you are nearby, and not stored), and while the Storybook Lens is open (used on your phone to show which landmarks are around you, and never sent to us). The App never uses location in the background.',
+        'Precise location — only if you allow location access, and only while the App is open: at the moment you tap Check in or stamp a Storybook Lens page at a place that has a location pin (sent to our server to confirm you are nearby, and not stored), while the Storybook Lens is open (used on your phone to show which landmarks are around you), and while you turn on "Show me" on the Map (used on your phone to place your explorer on the map). Location used by the Lens and the Map is never sent to us, and your position is never shown to anyone else. The App never uses location in the background.',
         'Camera — when you tap a button to take a photo, and while the Storybook Lens is open to show a live view. The Lens view is never recorded, saved or sent anywhere.',
-        'Compass direction — while the Storybook Lens is open, to show which landmarks you are facing. It stays on your phone.',
+        'Compass direction — while the Storybook Lens is open, to show which landmarks you are facing, and while "Show me" is on in the Map, to point your explorer\'s arrow. It stays on your phone.',
+        'Wishing Stars and wardrobe — the stars you earn and spend, and the outfit items you own. Only you can see your stars and wardrobe; others see only what your explorer is wearing.',
         'Storybook Lens stamps — which landmark stories you have stamped, and when.',
         'Saved quests — quests you save for your next visit. Only you can see them.',
         'Photo library — only through your phone\'s system picker, and only for the single photo you choose as your profile photo.',
@@ -52,7 +53,7 @@ export const privacy: LegalDocument = {
     {
       heading: '4. Who can see your information',
       bullets: [
-        'Any signed-in user: your username, display name and avatar or profile photo (for example, when they search for your username or see a friend request).',
+        'Any signed-in user: your username, display name, explorer avatar (including what it is wearing) and profile photo if you chose one (for example, when they search for your username or see a friend request).',
         'Friends you accept: which spots you have found and when (including Snack Passport entries), your Storybook Lens stamps, and your badges. Friends cannot see your check-in photos.',
         'Only you: your check-in photos and your email address.',
         'Only you: the list of people you have blocked. People you block are not told.',
@@ -87,7 +88,7 @@ export const privacy: LegalDocument = {
     {
       heading: '7. How long we keep information',
       paragraphs: [
-        'We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile, check-ins, Storybook Lens stamps, saved quests, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.',
+        'We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile (including your explorer avatar), check-ins, Storybook Lens stamps, Wishing Stars, wardrobe items, saved quests, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.',
       ],
     },
     {

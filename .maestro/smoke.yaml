@@ -1,5 +1,5 @@
-# Smoke test: a brand-new explorer signs in, onboards, checks in, and visits
-# every tab. Runs against the local Supabase stack — see scripts/e2e.mjs.
+# Smoke test: a brand-new explorer signs in, onboards (making an avatar),
+# checks in, buys a hat in the wardrobe, and visits every tab. Runs against the local Supabase stack — see scripts/e2e.mjs.
 appId: app.onceuponaquest
 name: Smoke test
 ---
@@ -49,6 +49,11 @@ name: Smoke test
     visible: 'Available'
     timeout: 15000
 - tapOn: 'Next'
+- extendedWaitUntil:
+    visible: 'Make your explorer'
+    timeout: 10000
+- tapOn: 'Surprise me'
+- tapOn: 'Next'
 - tapOn: 'Got it, next'
 - tapOn: "I'm 13 or older"
 - tapOn: 'I agree to the Terms and Privacy Policy'
@@ -78,9 +83,10 @@ name: Smoke test
     visible: '.*0 of 4.*'
     timeout: 15000
 - tapOn: '.*Spot 1:.*'
-- extendedWaitUntil:
-    visible: 'I heard it'
-    timeout: 15000
+- scrollUntilVisible:
+    element: 'I heard it'
+    direction: DOWN
+    timeout: 20000
 - tapOn: 'I heard it'
 - extendedWaitUntil:
     visible: '.*1 of 4.*'
@@ -121,6 +127,19 @@ name: Smoke test
     visible: 'LEADERBOARD'
     timeout: 15000
 - tapOn: 'Profile'
+
+# Wardrobe: 60 welcome stars + 10 for the spot buys a hat
+- tapOn: 'Wardrobe'
+- extendedWaitUntil:
+    visible: 'Outfits'
+    timeout: 15000
+- tapOn: 'Hats'
+- tapOn: '.*Straw Boater.*'
+- tapOn: 'Buy for 60 stars'
+- extendedWaitUntil:
+    visible: 'Straw Boater is yours!'
+    timeout: 15000
+- tapOn: 'Back'
 - scrollUntilVisible:
     element: 'Sounds'
     direction: DOWN

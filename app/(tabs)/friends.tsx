@@ -79,7 +79,7 @@ function IconButton({
 function PersonRow({ friend, children }: { friend: FriendProfile; children: ReactNode }) {
   return (
     <View style={styles.personRow}>
-      <ProfileAvatar avatarKey={friend.avatarKey} avatarPath={friend.avatarUrl} size={40} />
+      <ProfileAvatar avatarKey={friend.avatarKey} avatarPath={friend.avatarUrl} avatar={friend.avatar} size={40} />
       <Text style={styles.personName} numberOfLines={1}>
         @{friend.username}
       </Text>
@@ -279,7 +279,7 @@ export default function FriendsScreen() {
                   accessible
                   accessibilityLabel={copy.friends.rowLabel(index + 1, name, row.spotsFound, row.badges)}>
                   <Text style={styles.rank}>{index + 1}</Text>
-                  <ProfileAvatar avatarKey={row.avatarKey} avatarPath={row.avatarUrl} size={40} />
+                  <ProfileAvatar avatarKey={row.avatarKey} avatarPath={row.avatarUrl} avatar={row.avatar} size={40} />
                   <Text style={[styles.personName, row.isMe && styles.meName]} numberOfLines={1}>
                     {name}
                   </Text>

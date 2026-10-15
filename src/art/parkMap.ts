@@ -6,8 +6,9 @@
  * land colors and little original details — and nothing is traced from any
  * park's official map art.
  *
- * Hard rules: no castle silhouette (the castle footprint is a plain rounded
- * block), no film ships (the famous freighter is a round landing pad), no
+ * Hard rules: no Disney castle design (the real castle's footprint is a plain
+ * block, with our own Lantern Keep from src/art/lanternKeep.ts drawn on it,
+ * and no sparkles, arcs or fireworks nearby), no film ships (the famous freighter is a round landing pad), no
  * characters, no three-circle shapes, and no names drawn on the map itself.
  * Text labels, progress medallions and the moving pieces (train, riverboat,
  * balloon, rocket spinner) are added on top by ParkMap.
@@ -100,6 +101,8 @@ export const ROCKET_SPINNER: Pt = PARK_GEO_FEATURES.rocketSpinner;
 export const PARK_FOUNTAIN: Pt = PARK_GEO_FEATURES.hub;
 /** Hot-air balloon drifting in the empty top-right corner. */
 export const PARK_BALLOON: Pt = { x: W - 70, y: 80 };
+/** Lantern Keep stands on the castle footprint: base center and width, in map meters. */
+export const PARK_KEEP = { x: 478, y: 421, width: 52 };
 /** Painted sparkles that twinkle. */
 export const PARK_TWINKLES: Pt[] = [
   { x: W - 40, y: 170 }, { x: 40, y: H - 150 }, { x: W - 140, y: H - 30 }, { x: 330, y: 40 }, { x: 60, y: 120 },
@@ -326,4 +329,5 @@ export const PARK_LANDS: ParkLand[] = Object.entries(PARK_GEO_LANDS).map(([id, l
 export const parkMapLabels = [
   { text: 'The Park Atlas', x: 126, y: H - 58, size: 12, style: 'title' },
   { text: 'N', x: W - 62, y: H - 110, size: 10, style: 'plain' },
+  { text: 'Lantern Keep', x: 478, y: 428, size: 5, style: 'title' },
 ] as const;

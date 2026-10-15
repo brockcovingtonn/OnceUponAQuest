@@ -54,6 +54,14 @@ Wrong answer: friendly retry message, unlimited tries, "Need a hint?" reveals th
 - Report a problem on any spot ("this spot changed / is unsafe / answer is wrong") → saved to `spot_reports` for review.
 - Delete account (required by both app stores).
 
+### 7. Explorer avatar, Wishing Stars and wardrobe (added October 2026)
+- Onboarding step "Make your explorer": an original chibi avatar (skin tone, hairstyle, hair color, eyes, freckles, starter outfit). Shown on Profile, Friends and the leaderboard; a profile photo is optional.
+- **Wishing Stars** are earned only (never bought, sold or traded): welcome 60, spot 10, quest badge 50, whole land 200, Lens stamp 15, dress-the-part +5. Recorded server-side in `star_ledger` by triggers.
+- **Wardrobe**: hats, outfits, backs and in-hand items for every land, with generic, storybook-park names; story items follow public-domain books. Some unlock only by finishing a land or quest. `buy_avatar_item()` checks unlocks and balance.
+- **Story companions**: a public-domain character per land who talks to your explorer on spots (lines, the hint, a quote from the book).
+- Your explorer appears on stamp and badge screens, share cards, and the Map (live position plus a compass arrow, foreground only, never shared with others).
+- **Lantern Keep**: our own original castle on the Map (see hard rule 2 for castle rules).
+
 ## Not in Phase 1
 Pins and trading, outfit closet, audio tours, camera recognition, meetups, payments, push notifications, Walt Disney World content, other lands. Leave a `is_premium` flag on quests but do not build payments.
 

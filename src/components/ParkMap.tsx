@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { type ReactNode, useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path, Polyline, Rect } from 'react-native-svg';
+import Svg, { Circle, Path, Polyline, Rect, SvgXml } from 'react-native-svg';
 
 import { Artwork } from '@/art/Artwork';
 import { lockedPalette } from '@/art/palettes';
@@ -9,6 +9,7 @@ import {
   PARK_BALLOON,
   PARK_CANVAS,
   PARK_FOUNTAIN,
+  PARK_KEEP,
   PARK_TWINKLES,
   type ParkLand,
   parkMap,
@@ -17,7 +18,9 @@ import {
   ROCKET_SPINNER,
   TRAIN_PATH,
 } from '@/art/parkMap';
-import { MapStamp, MeDot, StoryMarker, type StoryMapStamp, type StoryMarkerData } from '@/components/MapMarkers';
+import type { AvatarLook } from '@/art/avatar';
+import { LANTERN_KEEP_BOX, lanternKeepSvg } from '@/art/lanternKeep';
+import { MapStamp, ME_BOX, MeAvatar, MeDot, StoryMarker, type StoryMapStamp, type StoryMarkerData } from '@/components/MapMarkers';
 import { CounterScaled } from '@/components/ZoomableCanvas';
 import { Twinkle } from '@/components/Twinkle';
 import { copy } from '@/copy';
@@ -37,6 +40,10 @@ type Props = {
   stamps: StoryMapStamp[];
   showRoute: boolean;
   me: MapPoint | null;
+  /** Your explorer, drawn at your position (a plain dot if you haven't made one). */
+  myLook?: AvatarLook | null;
+  /** Compass heading, for the arrow at your feet. */
+  heading?: number | null;
   onSelect: (id: string) => void;
   onSelectLand: (landId: string) => void;
   stories?: StoryMarkerData[];
@@ -156,7 +163,7 @@ function PathRider({
  * chosen it shows a progress medallion per land; with a land chosen it shows
  * that land's spot stamps and story markers. Markers keep their size at any zoom.
  */
-export function ParkMap({ renderScale: R, land, lands, medallions, stamps, showRoute, me, onSelect, onSelectLand, stories = [], onSelectStory }: Props) {
+export function ParkMap({ renderScale: R, land, lands, medallions, stamps, showRoute, me, myLook, heading = null, onSelect, onSelectLand, stories = [], onSelectStory }: Props) {
   const reduced = useReducedMotion();
   const width = PARK_CANVAS.width * R;
   const height = PARK_CANVAS.height * R;
@@ -197,6 +204,23 @@ export function ParkMap({ renderScale: R, land, lands, medallions, stamps, showR
           },
         ]}
       />
+
+      {/* Lantern Keep, our own castle, standing on the castle footprint. */}
+      <View
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{
+          position: 'absolute',
+          left: (PARK_KEEP.x - PARK_KEEP.width / 2) * R,
+          top: (PARK_KEEP.y - (PARK_KEEP.width * LANTERN_KEEP_BOX.height) / LANTERN_KEEP_BOX.width) * R,
+        }}>
+        <SvgXml
+          xml={lanternKeepSvg}
+          width={PARK_KEEP.width * R}
+          height={((PARK_KEEP.width * LANTERN_KEEP_BOX.height) / LANTERN_KEEP_BOX.width) * R}
+        />
+      </View>
 
       {/* Rocket ride: arms spin around the hub. */}
       <Animated.View
@@ -366,7 +390,11 @@ export function ParkMap({ renderScale: R, land, lands, medallions, stamps, showR
         );
       })}
 
-      {me ? (
+      {me && myLook ? (
+        <CounterScaled x={project(me).x} y={project(me).y} w={ME_BOX} h={ME_BOX}>
+          <MeAvatar look={myLook} heading={heading} />
+        </CounterScaled>
+      ) : me ? (
         <CounterScaled x={project(me).x} y={project(me).y} w={24} h={24}>
           <MeDot />
         </CounterScaled>

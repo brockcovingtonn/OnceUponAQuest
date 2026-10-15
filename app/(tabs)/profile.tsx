@@ -4,18 +4,21 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, AppState, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { parseLook } from '@/art/avatar';
+import { AvatarFigure } from '@/components/Avatar';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { SettingsRow } from '@/components/SettingsRow';
 import { SettingsSwitchRow } from '@/components/SettingsSwitchRow';
 import { ProfileAvatar } from '@/components/ProfileAvatar';
+import { StarCount } from '@/components/StarCount';
 import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { openAppSettings } from '@/lib/location';
 import { usePreferences } from '@/lib/preferences';
 import { getPermissionStatuses, type PermissionStatuses } from '@/lib/permissions';
-import { useDeleteAccount, useFieldWalk, useIsAdmin, useOpenReports, useProfile } from '@/lib/queries';
+import { useDeleteAccount, useFieldWalk, useIsAdmin, useOpenReports, useProfile, useWardrobe } from '@/lib/queries';
 import { fieldToolsEnabled } from '@/lib/fieldTools';
 import { supabase } from '@/lib/supabase';
 import { colors, spacing, type } from '@/theme';
@@ -51,12 +54,14 @@ export default function ProfileScreen() {
   const walkSpots = fieldWalk.data?.flatMap((q) => q.spots) ?? [];
   const walkDone = walkSpots.filter((s) => s.pinned && s.hasPhoto && s.verified).length;
   const [signingOut, setSigningOut] = useState(false);
+  const wardrobe = useWardrobe(userId);
 
   if (profile.isPending) return <StateView kind="loading" />;
   if (profile.isError || !profile.data) {
     return <StateView kind="error" message={copy.profile.loadError} onRetry={() => profile.refetch()} />;
   }
   const p = profile.data;
+  const look = parseLook(p.avatar);
 
   async function signOut() {
     setSigningOut(true);
@@ -77,12 +82,37 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <ProfileAvatar avatarKey={p.avatar_key} avatarPath={p.avatar_url} size={96} />
+          {look ? (
+            <AvatarFigure look={look} size={110} pose="wave" />
+          ) : (
+            <ProfileAvatar avatarKey={p.avatar_key} avatarPath={p.avatar_url} avatar={p.avatar} size={96} />
+          )}
           <Text style={styles.name} accessibilityRole="header">
             {p.display_name ?? p.username}
           </Text>
           {p.display_name ? <Text style={styles.username}>@{p.username}</Text> : null}
           <Text style={styles.since}>{copy.profile.exploringSince(p.created_at)}</Text>
+          {wardrobe.data ? (
+            <StarCount
+              count={wardrobe.data.balance}
+              onPress={() => router.push('/wardrobe')}
+              accessibilityHint={copy.wardrobe.openHint}
+              style={styles.stars}
+            />
+          ) : null}
+          {look ? (
+            <Button
+              label={copy.wardrobe.open}
+              accessibilityHint={copy.wardrobe.openHint}
+              onPress={() => router.push('/wardrobe')}
+              style={styles.editButton}
+            />
+          ) : (
+            <>
+              <Banner message={copy.avatar.makeBanner} tone="info" />
+              <Button label={copy.avatar.makeBannerButton} onPress={() => router.push('/avatar')} style={styles.editButton} />
+            </>
+          )}
           <Button
             variant="secondary"
             label={copy.profile.editProfile}
@@ -219,6 +249,10 @@ const styles = StyleSheet.create({
   since: {
     ...type.label,
     color: colors.inkMuted,
+  },
+  stars: {
+    alignSelf: 'center',
+    marginTop: spacing.xs,
   },
   editButton: {
     marginTop: spacing.sm,

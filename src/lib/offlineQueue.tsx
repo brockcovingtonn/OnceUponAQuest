@@ -142,6 +142,8 @@ export function OfflineQueueProvider({ children }: { children: ReactNode }) {
           failedCount: outcome.newlyFailed.length,
           at: Date.now(),
         });
+        queryClient.invalidateQueries({ queryKey: ['wardrobe'] });
+        queryClient.invalidateQueries({ queryKey: ['star-history'] });
         await queryClient.invalidateQueries({ queryKey: questKeys.progress(userId) });
       }
     } finally {

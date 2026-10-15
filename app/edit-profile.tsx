@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 
+import { DEFAULT_LOOK, parseLook } from '@/art/avatar';
 import { AvatarPicker } from '@/components/AvatarPicker';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
@@ -72,12 +73,14 @@ function EditProfileForm({ profile, userId }: { profile: Profile; userId: string
         <Text style={styles.subtitle}>{copy.editProfile.avatarTitle}</Text>
         <AvatarPicker
           choice={avatar.choice}
-          onSelectStamp={avatar.selectStamp}
+          look={parseLook(profile.avatar) ?? DEFAULT_LOOK}
+          onSelectExplorer={avatar.selectExplorer}
           onSelectPhoto={avatar.selectPhoto}
           onPickPhoto={avatar.pickPhoto}
           picking={avatar.picking}
         />
         <Text style={styles.note}>{copy.avatarPhoto.note}</Text>
+        <Button variant="text" label={copy.editProfile.lookButton} onPress={() => router.push('/avatar')} />
 
         {error ? <Banner message={error} /> : null}
         <Button label={copy.editProfile.save} onPress={save} loading={saving} />

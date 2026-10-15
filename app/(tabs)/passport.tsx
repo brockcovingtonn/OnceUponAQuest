@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { parseLook } from '@/art/avatar';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { Button } from '@/components/Button';
 import { Flourish } from '@/components/Flourish';
@@ -88,6 +89,7 @@ export default function PassportScreen() {
               badges={badges.filter((b) => badgeIds.has(b.id)).map((b) => ({ id: b.id, artKey: b.artKey }))}
               milestones={milestones}
               lands={landProgress}
+              look={parseLook(profile.data?.avatar)}
             />
           </ShareSheet>
         </View>

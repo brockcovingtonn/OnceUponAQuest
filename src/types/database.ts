@@ -23,7 +23,65 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "badges": {
+            "avatar_items": {
+                  Row: {
+                    "description": string,"id": string,"is_active": boolean,"is_starter": boolean,"land_id": string | null,"name": string,"price": number,"slot": Database["public"]['Enums']["avatar_slot"],"sort_order": number,"story": string | null,"unlock_land_id": string | null,"unlock_quest_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description": string,"id": string,"is_active"?: boolean,"is_starter"?: boolean,"land_id"?: string | null,"name": string,"price"?: number,"slot": Database["public"]['Enums']["avatar_slot"],"sort_order"?: number,"story"?: string | null,"unlock_land_id"?: string | null,"unlock_quest_id"?: string | null
+                  }
+                  Update: {
+                    "description"?: string,"id"?: string,"is_active"?: boolean,"is_starter"?: boolean,"land_id"?: string | null,"name"?: string,"price"?: number,"slot"?: Database["public"]['Enums']["avatar_slot"],"sort_order"?: number,"story"?: string | null,"unlock_land_id"?: string | null,"unlock_quest_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "avatar_items_land_id_fkey"
+      columns: ["land_id"]
+isOneToOne: false
+      referencedRelation: "lands"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "avatar_items_unlock_land_id_fkey"
+      columns: ["unlock_land_id"]
+isOneToOne: false
+      referencedRelation: "lands"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "avatar_items_unlock_quest_id_fkey"
+      columns: ["unlock_quest_id"]
+isOneToOne: false
+      referencedRelation: "quests"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"avatar_owned": {
+                  Row: {
+                    "acquired_at": string,"item_id": string,"price_paid": number,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "acquired_at"?: string,"item_id": string,"price_paid"?: number,"user_id": string
+                  }
+                  Update: {
+                    "acquired_at"?: string,"item_id"?: string,"price_paid"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "avatar_owned_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "avatar_items"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "avatar_owned_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"badges": {
                   Row: {
                     "art_key": string,"description": string | null,"id": string,"slug": string,"title": string
                   }
@@ -179,14 +237,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "age_confirmed_13": boolean,"avatar_key": string | null,"avatar_url": string | null,"created_at": string,"display_name": string | null,"id": string,"suspended_at": string | null,"terms_accepted_at": string | null,"username": string
+                    "age_confirmed_13": boolean,"avatar": Json | null,"avatar_key": string | null,"avatar_url": string | null,"created_at": string,"display_name": string | null,"id": string,"suspended_at": string | null,"terms_accepted_at": string | null,"username": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "age_confirmed_13"?: boolean,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id": string,"suspended_at"?: string | null,"terms_accepted_at"?: string | null,"username": string
+                    "age_confirmed_13"?: boolean,"avatar"?: Json | null,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id": string,"suspended_at"?: string | null,"terms_accepted_at"?: string | null,"username": string
                   }
                   Update: {
-                    "age_confirmed_13"?: boolean,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id"?: string,"suspended_at"?: string | null,"terms_accepted_at"?: string | null,"username"?: string
+                    "age_confirmed_13"?: boolean,"avatar"?: Json | null,"avatar_key"?: string | null,"avatar_url"?: string | null,"created_at"?: string,"display_name"?: string | null,"id"?: string,"suspended_at"?: string | null,"terms_accepted_at"?: string | null,"username"?: string
                   }
                   Relationships: [
                     
@@ -286,6 +344,26 @@ isOneToOne: false
       columns: ["quest_id"]
 isOneToOne: false
       referencedRelation: "quests"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"star_ledger": {
+                  Row: {
+                    "amount": number,"created_at": string,"id": string,"reason": string,"ref": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"id"?: string,"reason": string,"ref": string,"user_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"id"?: string,"reason"?: string,"ref"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "star_ledger_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -411,6 +489,9 @@ isOneToOne: false
 "block_user":
 { Args: { "p_user_id": string }; Returns: undefined
                            },
+"buy_avatar_item":
+{ Args: { "p_item": string }; Returns: Json
+                           },
 "check_in":
 { Args: { "p_answer"?: string,"p_found_at"?: string,"p_lat"?: number,"p_lng"?: number,"p_parade_mode"?: boolean,"p_photo_path"?: string,"p_spot_id": string }; Returns: Json
                            },
@@ -419,8 +500,11 @@ isOneToOne: false
                            },
 "friends_leaderboard":
 { Args: Record<PropertyKey, never>; Returns: {
-              "avatar_key": string,"avatar_url": string,"badges": number,"is_me": boolean,"spots_found": number,"user_id": string,"username": string
+              "avatar": Json,"avatar_key": string,"avatar_url": string,"badges": number,"is_me": boolean,"spots_found": number,"user_id": string,"username": string
             }[]
+                           },
+"my_wardrobe":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "stamp_landmark":
 { Args: { "p_landmark_id": string,"p_lat"?: number,"p_lng"?: number }; Returns: Json
@@ -430,7 +514,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "checkin_method": "answer"|"photo"|"listen"|"snack","friendship_status": "pending"|"accepted","quest_status": "draft"|"live"|"retired","report_reason": "spot_changed"|"unsafe"|"answer_wrong"|"other","report_status": "open"|"actioned"|"dismissed","user_report_reason": "inappropriate_photo"|"offensive_name"|"harassment"|"spam"|"other"
+            "avatar_slot": "hat"|"outfit"|"back"|"held","checkin_method": "answer"|"photo"|"listen"|"snack","friendship_status": "pending"|"accepted","quest_status": "draft"|"live"|"retired","report_reason": "spot_changed"|"unsafe"|"answer_wrong"|"other","report_status": "open"|"actioned"|"dismissed","user_report_reason": "inappropriate_photo"|"offensive_name"|"harassment"|"spam"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -550,7 +634,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "checkin_method": ["answer", "photo", "listen", "snack"],"friendship_status": ["pending", "accepted"],"quest_status": ["draft", "live", "retired"],"report_reason": ["spot_changed", "unsafe", "answer_wrong", "other"],"report_status": ["open", "actioned", "dismissed"],"user_report_reason": ["inappropriate_photo", "offensive_name", "harassment", "spam", "other"]
+            "avatar_slot": ["hat", "outfit", "back", "held"],"checkin_method": ["answer", "photo", "listen", "snack"],"friendship_status": ["pending", "accepted"],"quest_status": ["draft", "live", "retired"],"report_reason": ["spot_changed", "unsafe", "answer_wrong", "other"],"report_status": ["open", "actioned", "dismissed"],"user_report_reason": ["inappropriate_photo", "offensive_name", "harassment", "spam", "other"]
           }
         }
 } as const

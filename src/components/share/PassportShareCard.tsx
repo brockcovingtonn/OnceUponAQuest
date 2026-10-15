@@ -1,6 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
+import type { AvatarLook } from '@/art/avatar';
+import { AvatarFigure } from '@/components/Avatar';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { Flourish } from '@/components/Flourish';
 import { Logo } from '@/components/Logo';
@@ -19,10 +21,12 @@ type Props = {
   badges: { id: string; artKey: string }[];
   milestones: Milestone[];
   lands: { id: string; name: string; found: number; total: number }[];
+  /** Your explorer, on the Passport page. */
+  look?: AvatarLook | null;
 };
 
 /** A storybook Passport page, shared as an image. */
-export function PassportShareCard({ name, spots, snacks, lensPages, badges, milestones, lands }: Props) {
+export function PassportShareCard({ name, spots, snacks, lensPages, badges, milestones, lands, look }: Props) {
   const shown = badges.slice(0, MAX_BADGES);
   const stats = [
     { value: spots, label: copy.share.stats.spots },
@@ -34,7 +38,7 @@ export function PassportShareCard({ name, spots, snacks, lensPages, badges, mile
     <View style={styles.card}>
       <View style={styles.inner}>
         <View style={styles.header}>
-          <Logo accessibilityLabel={copy.signIn.logoLabel} size={40} />
+          {look ? <AvatarFigure look={look} size={48} pose="wave" shadow={false} /> : <Logo accessibilityLabel={copy.signIn.logoLabel} size={40} />}
           <View style={styles.headerText}>
             <Text style={styles.kicker}>{copy.appName.toUpperCase()}</Text>
             <Text style={styles.title} numberOfLines={2}>

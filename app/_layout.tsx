@@ -155,6 +155,8 @@ function RootNavigator() {
             name="edit-profile"
             options={{ presentation: 'modal', title: copy.editProfile.title }}
           />
+          <Stack.Screen name="avatar" options={{ presentation: 'modal', title: copy.avatar.previewLabel }} />
+          <Stack.Screen name="wardrobe" options={{ title: copy.wardrobe.title }} />
           <Stack.Screen name="safety" options={{ title: copy.safety.title }} />
           <Stack.Screen name="about" options={{ title: copy.about.title }} />
         <Stack.Screen name="blocked" options={{ title: copy.blocked.title }} />

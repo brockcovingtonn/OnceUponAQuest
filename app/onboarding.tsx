@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AvatarPicker } from '@/components/AvatarPicker';
+import { DEFAULT_LOOK } from '@/art/avatar';
+import { AvatarMaker } from '@/components/AvatarMaker';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { Checkbox } from '@/components/Checkbox';
@@ -20,12 +21,11 @@ import { Input } from '@/components/Input';
 import { ProgressDots } from '@/components/ProgressDots';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
-import { useAvatarChoice } from '@/lib/useAvatarChoice';
 import { USERNAME_PATTERN, useCreateProfile, useUsernameAvailable } from '@/lib/queries';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { colors, minTouchTarget, spacing, type } from '@/theme';
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 function isUniqueViolation(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505';
@@ -36,9 +36,7 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
   const [username, setUsername] = useState('');
   const [usernameConflict, setUsernameConflict] = useState(false);
-  const avatar = useAvatarChoice();
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
+  const [look, setLook] = useState(DEFAULT_LOOK);
   const [is13OrOlder, setIs13OrOlder] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -72,29 +70,15 @@ export default function OnboardingScreen() {
 
   async function finish() {
     if (!session) return;
-    const userId = session.user.id;
-    setAvatarError(false);
-    setUploadingAvatar(true);
-    let saved;
-    try {
-      saved = await avatar.resolve(userId);
-    } catch {
-      setAvatarError(true);
-      return;
-    } finally {
-      setUploadingAvatar(false);
-    }
     createProfile.mutate(
       {
-        id: userId,
+        id: session.user.id,
         username: trimmed,
-        avatar_key: saved.avatarKey,
-        avatar_url: saved.avatarUrl,
+        avatar: look,
         age_confirmed_13: true,
         terms_accepted_at: new Date().toISOString(),
       },
       {
-        onSuccess: () => avatar.cleanUp(userId, saved),
         onError: (error) => {
           if (isUniqueViolation(error)) {
             setUsernameConflict(true);
@@ -159,20 +143,20 @@ export default function OnboardingScreen() {
                 testID="username-input"
                 maxLength={24}
               />
-
-              <Text style={styles.subtitle}>{copy.onboarding.avatarTitle}</Text>
-              <AvatarPicker
-                choice={avatar.choice}
-                onSelectStamp={avatar.selectStamp}
-                onSelectPhoto={avatar.selectPhoto}
-                onPickPhoto={avatar.pickPhoto}
-                picking={avatar.picking}
-              />
-              <Text style={styles.note}>{copy.avatarPhoto.note}</Text>
             </>
           ) : null}
 
           {step === 1 ? (
+            <>
+              <Text style={styles.title} accessibilityRole="header">
+                {copy.avatar.makeTitle}
+              </Text>
+              <Text style={styles.body}>{copy.avatar.makeIntro}</Text>
+              <AvatarMaker look={look} onChange={setLook} withStarterOutfit />
+            </>
+          ) : null}
+
+          {step === 2 ? (
             <>
               <Text style={styles.title} accessibilityRole="header">
                 {copy.onboarding.rulesTitle}
@@ -186,7 +170,7 @@ export default function OnboardingScreen() {
             </>
           ) : null}
 
-          {step === 2 ? (
+          {step === 3 ? (
             <>
               <Text style={styles.title} accessibilityRole="header">
                 {copy.onboarding.finalTitle}
@@ -209,7 +193,6 @@ export default function OnboardingScreen() {
                 <Button variant="text" label={copy.onboarding.privacy} onPress={() => router.push('/privacy')} />
               </View>
               {showSaveError ? <Banner message={copy.common.networkError} /> : null}
-              {avatarError ? <Banner message={copy.avatarPhoto.uploadFailed} /> : null}
             </>
           ) : null}
         </ScrollView>
@@ -218,14 +201,15 @@ export default function OnboardingScreen() {
           {step === 0 ? (
             <Button label={copy.onboarding.next} onPress={() => setStep(1)} disabled={!usernameReady} />
           ) : null}
-          {step === 1 ? <Button label={copy.onboarding.rulesNext} onPress={() => setStep(2)} /> : null}
-          {step === 2 ? (
+          {step === 1 ? <Button label={copy.onboarding.next} onPress={() => setStep(2)} /> : null}
+          {step === 2 ? <Button label={copy.onboarding.rulesNext} onPress={() => setStep(3)} /> : null}
+          {step === 3 ? (
             <>
               <Button
                 label={copy.onboarding.start}
                 onPress={finish}
                 disabled={!is13OrOlder || !agreedToTerms}
-                loading={uploadingAvatar || createProfile.isPending}
+                loading={createProfile.isPending}
               />
               <Button
                 variant="text"

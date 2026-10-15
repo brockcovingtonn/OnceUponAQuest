@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import type { AvatarLook } from '@/art/avatar';
 import { sceneForQuest } from '@/art/scenes';
+import { AvatarFigure } from '@/components/Avatar';
 import { Flourish } from '@/components/Flourish';
 import { Logo } from '@/components/Logo';
 import { Scene } from '@/components/Scene';
@@ -16,14 +18,17 @@ type Props = {
   questSlug: string;
   landName: string | null;
   foundAt: string;
+  /** Your explorer, posing in the scene like a postcard. */
+  look?: AvatarLook | null;
 };
 
 /** A storybook card for a found spot, shared as an image. */
-export function SpotShareCard({ title, questTitle, questSlug, landName, foundAt }: Props) {
+export function SpotShareCard({ title, questTitle, questSlug, landName, foundAt, look }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.scene}>
         <Scene shapes={sceneForQuest(questSlug)} height={150} />
+        {look ? <AvatarFigure look={look} size={72} pose="wave" style={styles.me} /> : null}
         <View style={styles.stamp}>
           <Text style={styles.stampStar}>★</Text>
           <Text style={styles.stampText}>{copy.share.found}</Text>
@@ -61,6 +66,11 @@ const styles = StyleSheet.create({
     margin: spacing.sm,
     borderRadius: radius.md,
     overflow: 'hidden',
+  },
+  me: {
+    position: 'absolute',
+    left: 14,
+    bottom: -2,
   },
   stamp: {
     position: 'absolute',

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { CheckInReason, CheckInResult } from '@/lib/offlineSync';
 import { supabase } from '@/lib/supabase';
-import type { Tables, TablesInsert } from '@/types/database';
+import type { Json, Tables, TablesInsert } from '@/types/database';
 
 export type Profile = Tables<'profiles'>;
 
@@ -216,7 +216,7 @@ export function useMyProgress(userId: string | undefined) {
 const spotDetailSelect = `
   id, quest_id, sort_order, teaser, title, where_to_stand, clue, hint, prompt, method,
   lat, lng, radius_m, pause_during_parades, holiday_note, photo_path, verified_on_site,
-  quest:quests ( slug, title, spots ( count ), land:lands ( name ) ),
+  quest:quests ( slug, title, spots ( count ), land:lands ( id, name ) ),
   landmark:landmarks ( slug, title )
 ` as const;
 
@@ -298,7 +298,10 @@ export function useCheckIn(userId: string | undefined) {
       return parseCheckInResult(data);
     },
     onSuccess: async (result) => {
-      if (result.ok) await queryClient.invalidateQueries({ queryKey: questKeys.progress(userId) });
+      if (!result.ok) return;
+      queryClient.invalidateQueries({ queryKey: wardrobeKeys.wardrobe(userId) });
+      queryClient.invalidateQueries({ queryKey: wardrobeKeys.stars(userId) });
+      await queryClient.invalidateQueries({ queryKey: questKeys.progress(userId) });
     },
   });
 }
@@ -396,7 +399,13 @@ export function usePassportContent() {
 // Friends
 // ---------------------------------------------------------------------------
 
-export type FriendProfile = { id: string; username: string; avatarKey: string | null; avatarUrl: string | null };
+export type FriendProfile = {
+  id: string;
+  username: string;
+  avatarKey: string | null;
+  avatarUrl: string | null;
+  avatar: Json | null;
+};
 
 export type Friendships = {
   /** Requests other explorers sent to me, waiting for my answer. */
@@ -412,6 +421,7 @@ export type LeaderboardRow = {
   username: string;
   avatarKey: string | null;
   avatarUrl: string | null;
+  avatar: Json | null;
   spotsFound: number;
   badges: number;
   isMe: boolean;
@@ -442,8 +452,8 @@ export function useFriendships(userId: string | undefined) {
     queryFn: async (): Promise<FriendshipRows> => {
       const { data, error } = await supabase.from('friendships').select(`
         requester, addressee, status,
-        requester_profile:profiles!friendships_requester_fkey ( id, username, avatar_key, avatar_url ),
-        addressee_profile:profiles!friendships_addressee_fkey ( id, username, avatar_key, avatar_url )
+        requester_profile:profiles!friendships_requester_fkey ( id, username, avatar_key, avatar_url, avatar ),
+        addressee_profile:profiles!friendships_addressee_fkey ( id, username, avatar_key, avatar_url, avatar )
       `);
       if (error) throw error;
       return data.map((row) => {
@@ -452,7 +462,7 @@ export function useFriendships(userId: string | undefined) {
         return {
           status: row.status,
           iAmRequester,
-          other: { id: p.id, username: p.username, avatarKey: p.avatar_key, avatarUrl: p.avatar_url },
+          other: { id: p.id, username: p.username, avatarKey: p.avatar_key, avatarUrl: p.avatar_url, avatar: p.avatar },
         };
       });
     },
@@ -472,6 +482,7 @@ export function useLeaderboard(userId: string | undefined) {
         username: row.username,
         avatarKey: row.avatar_key ?? null,
         avatarUrl: row.avatar_url ?? null,
+        avatar: row.avatar ?? null,
         spotsFound: row.spots_found,
         badges: row.badges,
         isMe: row.is_me,
@@ -1163,5 +1174,121 @@ export function useToggleSavedQuest(userId: string | undefined) {
       if (context) queryClient.setQueryData(key, context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Avatar, Wishing Stars and the wardrobe
+// ---------------------------------------------------------------------------
+
+export type WardrobeItem = {
+  id: string;
+  slot: 'hat' | 'outfit' | 'back' | 'held';
+  name: string;
+  description: string;
+  story: string | null;
+  landId: string | null;
+  price: number;
+  isStarter: boolean;
+  unlockLandId: string | null;
+  unlockQuestId: string | null;
+  owned: boolean;
+  unlocked: boolean;
+};
+
+export type Wardrobe = { balance: number; items: WardrobeItem[] };
+
+export const wardrobeKeys = {
+  wardrobe: (userId: string | undefined) => ['wardrobe', userId] as const,
+  stars: (userId: string | undefined) => ['star-history', userId] as const,
+};
+
+export function parseWardrobe(raw: unknown): Wardrobe {
+  const r = (raw ?? {}) as { balance?: unknown; items?: unknown };
+  const items = Array.isArray(r.items) ? (r.items as Record<string, unknown>[]) : [];
+  return {
+    balance: typeof r.balance === 'number' ? r.balance : 0,
+    items: items.map((i) => ({
+      id: String(i.id),
+      slot: i.slot as WardrobeItem['slot'],
+      name: String(i.name),
+      description: String(i.description),
+      story: typeof i.story === 'string' ? i.story : null,
+      landId: typeof i.land_id === 'string' ? i.land_id : null,
+      price: Number(i.price) || 0,
+      isStarter: i.is_starter === true,
+      unlockLandId: typeof i.unlock_land_id === 'string' ? i.unlock_land_id : null,
+      unlockQuestId: typeof i.unlock_quest_id === 'string' ? i.unlock_quest_id : null,
+      owned: i.owned === true,
+      unlocked: i.unlocked === true,
+    })),
+  };
+}
+
+/** Your Wishing Stars and every wardrobe item, with what you own and what's unlocked. */
+export function useWardrobe(userId: string | undefined) {
+  return useQuery({
+    queryKey: wardrobeKeys.wardrobe(userId),
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<Wardrobe> => {
+      const { data, error } = await supabase.rpc('my_wardrobe');
+      if (error) throw error;
+      return parseWardrobe(data);
+    },
+  });
+}
+
+export type BuyStatus = 'ok' | 'owned' | 'locked' | 'short' | 'not_found';
+
+export function useBuyItem(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (itemId: string): Promise<{ status: BuyStatus; balance: number }> => {
+      const { data, error } = await supabase.rpc('buy_avatar_item', { p_item: itemId });
+      if (error) throw error;
+      const r = (data ?? {}) as { status?: unknown; balance?: unknown };
+      const status = (['ok', 'owned', 'locked', 'short', 'not_found'] as const).find((s) => s === r.status) ?? 'not_found';
+      return { status, balance: typeof r.balance === 'number' ? r.balance : 0 };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wardrobeKeys.wardrobe(userId) });
+      queryClient.invalidateQueries({ queryKey: wardrobeKeys.stars(userId) });
+    },
+  });
+}
+
+/** Saves the explorer's look (and what they're wearing) on their profile. */
+export function useSaveLook(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (look: Json): Promise<Profile> => {
+      if (!userId) throw new Error('Not signed in');
+      const { data, error } = await supabase.from('profiles').update({ avatar: look }).eq('id', userId).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.profile(profile.id), profile);
+      queryClient.invalidateQueries({ queryKey: friendKeys.leaderboard(userId) });
+    },
+  });
+}
+
+export type StarEntry = { id: string; amount: number; reason: string; ref: string; createdAt: string };
+
+/** Your most recent Wishing Star earnings and purchases. */
+export function useStarHistory(userId: string | undefined) {
+  return useQuery({
+    queryKey: wardrobeKeys.stars(userId),
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<StarEntry[]> => {
+      const { data, error } = await supabase
+        .from('star_ledger')
+        .select('id, amount, reason, ref, created_at')
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (error) throw error;
+      return data.map((r) => ({ id: r.id, amount: r.amount, reason: r.reason, ref: r.ref, createdAt: r.created_at }));
+    },
   });
 }

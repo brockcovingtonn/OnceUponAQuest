@@ -1,27 +1,37 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import type { AvatarLook } from '@/art/avatar';
+import { AvatarBust } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { ProfileAvatar } from '@/components/ProfileAvatar';
-import { StampAvatar } from '@/components/StampAvatar';
 import { copy } from '@/copy';
-import { stampAvatars } from '@/lib/avatars';
 import type { AvatarChoice } from '@/lib/useAvatarChoice';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, type } from '@/theme';
 
 type Props = {
   choice: AvatarChoice;
-  onSelectStamp: (key: string) => void;
+  look: AvatarLook;
+  onSelectExplorer: () => void;
   onSelectPhoto: () => void;
   onPickPhoto: () => void;
   picking?: boolean;
 };
 
-/** The 8 stamp avatars plus "Use my own photo". Exactly one option is selected. */
-export function AvatarPicker({ choice, onSelectStamp, onSelectPhoto, onPickPhoto, picking }: Props) {
+/** The profile picture: your explorer, or your own photo. Exactly one option is selected. */
+export function AvatarPicker({ choice, look, onSelectExplorer, onSelectPhoto, onPickPhoto, picking }: Props) {
   const hasPhoto = Boolean(choice.photo);
   return (
     <View style={styles.wrapper}>
       <View style={styles.grid} accessibilityRole="radiogroup">
+        <Pressable
+          onPress={onSelectExplorer}
+          accessibilityRole="radio"
+          accessibilityLabel={copy.avatarPhoto.explorerLabel}
+          accessibilityState={{ selected: choice.mode === 'explorer' }}
+          style={[styles.option, choice.mode === 'explorer' && styles.selected]}>
+          <AvatarBust look={look} size={72} />
+          <Text style={styles.caption}>{copy.avatarPhoto.explorerLabel}</Text>
+        </Pressable>
         {hasPhoto ? (
           <Pressable
             onPress={onSelectPhoto}
@@ -33,24 +43,11 @@ export function AvatarPicker({ choice, onSelectStamp, onSelectPhoto, onPickPhoto
               avatarKey={choice.stampKey}
               avatarPath={choice.photo?.path}
               localUri={choice.photo?.localUri}
-              size={56}
+              size={72}
             />
+            <Text style={styles.caption}>{copy.avatarPhoto.optionLabel}</Text>
           </Pressable>
         ) : null}
-        {stampAvatars.map((avatar) => {
-          const selected = choice.mode === 'stamp' && avatar.key === choice.stampKey;
-          return (
-            <Pressable
-              key={avatar.key}
-              onPress={() => onSelectStamp(avatar.key)}
-              accessibilityRole="radio"
-              accessibilityLabel={avatar.label}
-              accessibilityState={{ selected }}
-              style={[styles.option, selected && styles.selected]}>
-              <StampAvatar avatar={avatar} size={56} />
-            </Pressable>
-          );
-        })}
       </View>
       <Button
         variant="secondary"
@@ -69,15 +66,21 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   option: {
-    padding: spacing.xs,
-    borderRadius: radius.round,
+    alignItems: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radius.md,
     borderWidth: 3,
     borderColor: 'transparent',
   },
   selected: {
     borderColor: colors.storybookGold,
+  },
+  caption: {
+    ...type.label,
+    color: colors.ink,
   },
 });

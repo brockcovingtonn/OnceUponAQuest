@@ -60,6 +60,12 @@ export const terms: LegalDocument = {
       ],
     },
     {
+      heading: '',
+      paragraphs: [
+        'Wishing Stars and wardrobe items are just for fun. You earn stars only by playing (finding spots, finishing quests and lands, stamping Storybook Lens pages and dressing the part); they cannot be bought with real money, sold, traded, transferred or exchanged for anything outside the App, and they have no cash value. We may change how many stars things earn or cost, add or retire items, and correct mistakes in balances. Stars and items end when your account ends.',
+      ],
+    },
+    {
       heading: '6. Your content',
       paragraphs: [
         'Your content includes your username, display name, profile photo, check-in photos, snack logs, problem reports and anything else you submit. You keep ownership of your content.',
@@ -74,7 +80,7 @@ export const terms: LegalDocument = {
         'Harass, bully, threaten, stalk, or impersonate anyone, or share hateful, sexual, violent, or otherwise inappropriate content.',
         'Use the App to arrange to meet strangers, especially minors.',
         'Upload content that infringes someone else\'s copyright, trademark, privacy or publicity rights.',
-        'Fake check-ins with automated tools, spoof your location, or otherwise cheat the game.',
+        'Fake check-ins with automated tools, spoof your location, or otherwise cheat the game (including to earn Wishing Stars).',
         'Copy, scrape, reverse engineer, or interfere with the App, its security, or its servers, or try to access data that is not yours.',
         'Submit false or misleading problem reports.',
         'Use the App for any unlawful purpose or in violation of any park\'s rules.',

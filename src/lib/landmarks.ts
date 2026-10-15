@@ -158,7 +158,10 @@ export function useStampLandmark(userId: string | undefined) {
       return parseStampResult(data);
     },
     onSuccess: (result) => {
-      if (result.ok) return queryClient.invalidateQueries({ queryKey: landmarkKeys.stamps(userId) });
+      if (!result.ok) return;
+      queryClient.invalidateQueries({ queryKey: ['wardrobe'] });
+      queryClient.invalidateQueries({ queryKey: ['star-history'] });
+      return queryClient.invalidateQueries({ queryKey: landmarkKeys.stamps(userId) });
     },
   });
 }

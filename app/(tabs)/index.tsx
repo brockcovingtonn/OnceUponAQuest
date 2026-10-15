@@ -13,11 +13,20 @@ import { QuestCard } from '@/components/QuestCard';
 import { UpdateBanner } from '@/components/UpdateBanner';
 import { StateView } from '@/components/StateView';
 import { mainStreetNight } from '@/art/scenes';
+import { StarCount } from '@/components/StarCount';
 import { copy } from '@/copy';
 import { useAppUpdate } from '@/lib/appUpdates';
 import { useIsOnline } from '@/lib/network';
 import { useAuth } from '@/lib/auth';
-import { type QuestSummary, useMyProgress, useProfile, useQuests, useSavedQuests, useToggleSavedQuest } from '@/lib/queries';
+import {
+  type QuestSummary,
+  useMyProgress,
+  useProfile,
+  useQuests,
+  useSavedQuests,
+  useToggleSavedQuest,
+  useWardrobe,
+} from '@/lib/queries';
 import { prefetchStorageImages } from '@/lib/storageImage';
 import { hasSeenWalkthrough } from '@/lib/walkthrough';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
@@ -37,6 +46,7 @@ function groupByLand(quests: QuestSummary[]): LandSection[] {
 export default function QuestsScreen() {
   const { session } = useAuth();
   const userId = session?.user.id;
+  const wardrobe = useWardrobe(userId);
   const profile = useProfile(userId);
   const quests = useQuests();
   const progress = useMyProgress(userId);
@@ -97,6 +107,14 @@ export default function QuestsScreen() {
               ? copy.quests.greeting(new Date().getHours(), profile.data.display_name ?? profile.data.username)
               : ''}
           </Text>
+          {wardrobe.data ? (
+            <StarCount
+              count={wardrobe.data.balance}
+              onPress={() => router.push('/wardrobe')}
+              accessibilityHint={copy.wardrobe.openHint}
+              style={styles.starChip}
+            />
+          ) : null}
           <Pressable
             onPress={() => router.push('/walkthrough')}
             accessibilityRole="button"
@@ -226,6 +244,9 @@ export default function QuestsScreen() {
 }
 
 const styles = StyleSheet.create({
+  starChip: {
+    alignSelf: 'center',
+  },
   safe: {
     flex: 1,
     backgroundColor: colors.parchment,

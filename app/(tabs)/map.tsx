@@ -1,10 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { parseLook } from '@/art/avatar';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { StateView } from '@/components/StateView';
@@ -16,11 +17,12 @@ import { PARK_CANVAS, PARK_LANDS } from '@/art/parkMap';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
-import { getCurrentCoords, getLocationPermission, requestLocationPermission } from '@/lib/location';
+import { getLocationPermission, requestLocationPermission } from '@/lib/location';
 import { approxLandmarkCoords, PARK_REGION, parkPlaceholderPoint, regionForView, toParkPoint } from '@/lib/mapGeometry';
 import { useIsOnline } from '@/lib/network';
 import { useParadeMode } from '@/lib/paradeMode';
-import { type MapSpot, useMapSpots, useMyProgress } from '@/lib/queries';
+import { type MapSpot, useMapSpots, useMyProgress, useProfile } from '@/lib/queries';
+import { useHeading, useLivePosition } from '@/lib/useLiveLocation';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { colors, fonts, minTouchTarget, radius, spacing, type } from '@/theme';
 
@@ -48,8 +50,21 @@ export default function MapScreen() {
   const [storiesOn, setStoriesOn] = useState(true);
   const landmarks = useLandmarks();
   const lensStamps = useMyLensStamps(session?.user.id);
-  const [myCoords, setMyCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating] = useState(false);
+  // "Show me": your explorer follows you on the map (foreground only, and only while this tab is open).
+  const [tracking, setTracking] = useState(false);
+  const [focused, setFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+  const live = useLivePosition(tracking && focused && view === 'storybook');
+  const heading = useHeading(tracking && focused && view === 'storybook');
+  const myCoords = tracking ? live : null;
+  const locating = tracking && !live;
+  const profile = useProfile(session?.user.id);
+  const myLook = useMemo(() => parseLook(profile.data?.avatar), [profile.data?.avatar]);
   const [locateMessage, setLocateMessage] = useState<string>();
   const [showUserOnRealMap, setShowUserOnRealMap] = useState(false);
 
@@ -162,25 +177,16 @@ export default function MapScreen() {
   };
 
   async function locate() {
-    if (myCoords) {
-      setMyCoords(null);
+    if (tracking) {
+      setTracking(false);
       return;
     }
     setLocateMessage(undefined);
-    setLocating(true);
-    try {
-      if ((await getLocationPermission()) !== 'granted' && !(await requestLocationPermission())) {
-        setLocateMessage(copy.location.off);
-        return;
-      }
-      const coords = await getCurrentCoords();
-      setMyCoords(coords);
-      if (!toParkPoint(coords.lat, coords.lng)) setLocateMessage(copy.map.notOnMap);
-    } catch {
-      setLocateMessage(copy.location.unavailable);
-    } finally {
-      setLocating(false);
+    if ((await getLocationPermission()) !== 'granted' && !(await requestLocationPermission())) {
+      setLocateMessage(copy.location.off);
+      return;
     }
+    setTracking(true);
   }
 
   async function showMeOnRealMap() {
@@ -256,6 +262,8 @@ export default function MapScreen() {
               stamps={stamps}
               showRoute={questId !== ALL}
               me={me}
+              myLook={myLook}
+              heading={heading}
               onSelect={selectSpot}
               stories={storyMarkers}
               onSelectStory={selectStory}
@@ -345,6 +353,7 @@ export default function MapScreen() {
           {view === 'real' && pinnedShown.length === 0 ? <Banner tone="info" message={copy.map.noPins} /> : null}
           {view === 'real' && !online ? <Banner tone="info" message={copy.map.tilesNeedSignal} /> : null}
           {locateMessage ? <Banner tone="info" message={locateMessage} /> : null}
+          {view === 'storybook' && myCoords && !me ? <Banner tone="info" message={copy.map.notOnMap} /> : null}
         </View>
 
         {view === 'storybook' ? <Text style={styles.credit}>{copy.map.osmCredit}</Text> : null}
@@ -354,11 +363,11 @@ export default function MapScreen() {
             <Pressable
               onPress={view === 'storybook' ? locate : showMeOnRealMap}
               accessibilityRole="button"
-              accessibilityLabel={(view === 'storybook' ? myCoords : showUserOnRealMap) ? copy.map.hideMe : copy.map.locateMe}
-              disabled={locating}
+              accessibilityLabel={(view === 'storybook' ? tracking : showUserOnRealMap) ? copy.map.hideMe : copy.map.locateMe}
+              accessibilityState={{ busy: locating }}
               style={({ pressed }) => [styles.locateFab, pressed && styles.pressed]}>
               <Ionicons
-                name={(view === 'storybook' ? myCoords : showUserOnRealMap) ? 'navigate' : 'navigate-outline'}
+                name={(view === 'storybook' ? tracking : showUserOnRealMap) ? 'navigate' : 'navigate-outline'}
                 size={22}
                 color={colors.midnight}
               />

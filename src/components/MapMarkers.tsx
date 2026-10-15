@@ -1,6 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Ellipse, Path } from 'react-native-svg';
 
+import type { AvatarLook } from '@/art/avatar';
+import { AvatarFigure } from '@/components/Avatar';
 import { copy } from '@/copy';
 import type { MapPoint } from '@/lib/mapGeometry';
 import { colors, fonts } from '@/theme';
@@ -78,6 +81,58 @@ export function StoryMarker({ story, onPress }: { story: StoryMarkerData; onPres
 /** "You are here" dot. */
 export function MeDot() {
   return <View style={styles.me} accessible accessibilityLabel={copy.map.youAreHere} />;
+}
+
+/** Size of the "you are here" avatar marker's box; your position is its center. */
+export const ME_BOX = 100;
+const C = ME_BOX / 2;
+const TILT = 0.4; // squash for drawing on the ground
+
+/** A point on the ground at distance r and compass angle a (degrees) from your feet. */
+function ground(r: number, a: number): string {
+  const rad = (a * Math.PI) / 180;
+  return `${(C + r * Math.sin(rad)).toFixed(1)} ${(C - r * Math.cos(rad) * TILT).toFixed(1)}`;
+}
+
+/**
+ * "You are here": your explorer standing on a gold ring, with a soft beam and
+ * an arrow showing which way you're facing when the compass is available.
+ */
+export function MeAvatar({ look, heading }: { look: AvatarLook; heading: number | null }) {
+  const figure = 44;
+  const figureHeight = (figure * 140) / 120;
+  const feet = (figureHeight * 129) / 140;
+  return (
+    <View
+      style={{ width: ME_BOX, height: ME_BOX }}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={heading === null ? copy.map.youAreHere : copy.map.youAreHereFacing(compassWord(heading))}>
+      <Svg width={ME_BOX} height={ME_BOX} style={StyleSheet.absoluteFill}>
+        {heading !== null ? (
+          <Path d={`M${C} ${C}L${ground(40, heading - 28)}L${ground(42, heading)}L${ground(40, heading + 28)}Z`} fill="#E2B04A" opacity={0.28} />
+        ) : null}
+        <Ellipse cx={C} cy={C} rx={16} ry={16 * TILT} fill="#1B2340" opacity={0.18} />
+        <Ellipse cx={C} cy={C} rx={16} ry={16 * TILT} fill="none" stroke="#E2B04A" strokeWidth={2.2} />
+      </Svg>
+      <AvatarFigure look={look} size={figure} shadow={false} style={{ position: 'absolute', left: C - figure / 2, top: C - feet }} />
+      {heading !== null ? (
+        <Svg width={ME_BOX} height={ME_BOX} style={StyleSheet.absoluteFill}>
+          <Path
+            d={`M${ground(23, heading)}L${ground(15, heading - 22)}L${ground(15, heading + 22)}Z`}
+            fill="#E2B04A"
+            stroke="#1B2340"
+            strokeWidth={1.2}
+            strokeLinejoin="round"
+          />
+        </Svg>
+      ) : null}
+    </View>
+  );
+}
+
+function compassWord(heading: number): string {
+  return copy.map.compass[Math.round(heading / 45) % 8];
 }
 
 const styles = StyleSheet.create({

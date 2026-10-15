@@ -4,7 +4,9 @@ import { stampAvatars } from '@/lib/avatars';
 import { type CapturedPhoto, pickAvatarPhoto, removeOldAvatars, uploadAvatarPhoto } from '@/lib/photos';
 
 export type AvatarChoice = {
-  mode: 'stamp' | 'photo';
+  /** 'explorer': the explorer avatar is the profile picture. 'photo': the user's own photo. */
+  mode: 'explorer' | 'photo';
+  /** Older profiles' stamp, kept as the fallback picture. */
   stampKey: string;
   /** The user's own photo: already uploaded (path) or just picked (local). */
   photo: { path?: string; localUri?: string; local?: CapturedPhoto } | null;
@@ -12,10 +14,10 @@ export type AvatarChoice = {
 
 export type SavedAvatar = { avatarKey: string; avatarUrl: string | null };
 
-/** State + actions for picking a stamp avatar or the user's own photo. */
+/** State + actions for choosing the explorer avatar or the user's own photo as the profile picture. */
 export function useAvatarChoice(initial?: { avatarKey: string | null; avatarUrl: string | null }) {
   const [choice, setChoice] = useState<AvatarChoice>(() => ({
-    mode: initial?.avatarUrl ? 'photo' : 'stamp',
+    mode: initial?.avatarUrl ? 'photo' : 'explorer',
     stampKey: stampAvatars.find((a) => a.key === initial?.avatarKey)?.key ?? stampAvatars[0].key,
     photo: initial?.avatarUrl ? { path: initial.avatarUrl } : null,
   }));
@@ -33,7 +35,7 @@ export function useAvatarChoice(initial?: { avatarKey: string | null; avatarUrl:
 
   /** Uploads a newly picked photo if needed; returns what to store on the profile. */
   async function resolve(userId: string): Promise<SavedAvatar> {
-    if (choice.mode === 'stamp' || !choice.photo) return { avatarKey: choice.stampKey, avatarUrl: null };
+    if (choice.mode === 'explorer' || !choice.photo) return { avatarKey: choice.stampKey, avatarUrl: null };
     if (choice.photo.local) {
       const path = await uploadAvatarPhoto(userId, choice.photo.local);
       return { avatarKey: choice.stampKey, avatarUrl: path };
@@ -50,7 +52,7 @@ export function useAvatarChoice(initial?: { avatarKey: string | null; avatarUrl:
     choice,
     picking,
     pickPhoto,
-    selectStamp: (key: string) => setChoice((c) => ({ ...c, mode: 'stamp', stampKey: key })),
+    selectExplorer: () => setChoice((c) => ({ ...c, mode: 'explorer' })),
     selectPhoto: () => setChoice((c) => (c.photo ? { ...c, mode: 'photo' } : c)),
     resolve,
     cleanUp,

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 
+import { parseLook } from '@/art/avatar';
+import { AvatarFigure } from '@/components/Avatar';
 import { Banner } from '@/components/Banner';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { Button } from '@/components/Button';
@@ -16,7 +18,7 @@ import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useFeedback } from '@/lib/feedback';
 import { suggestNextQuest } from '@/lib/nextAdventure';
-import { useBadge, useMyProgress, useQuests, useSavedQuests, useToggleSavedQuest } from '@/lib/queries';
+import { useBadge, useMyProgress, useProfile, useQuests, useSavedQuests, useToggleSavedQuest } from '@/lib/queries';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 
 export default function BadgeEarnedScreen() {
@@ -27,6 +29,7 @@ export default function BadgeEarnedScreen() {
   const progress = useMyProgress(session?.user.id);
   const saved = useSavedQuests(session?.user.id);
   const toggleSaved = useToggleSavedQuest(session?.user.id);
+  const profile = useProfile(session?.user.id);
   const [saveError, setSaveError] = useState(false);
   const shareCard = useRef<View>(null);
   const scale = useState(() => new Animated.Value(0.3))[0];
@@ -51,6 +54,7 @@ export default function BadgeEarnedScreen() {
   const b = badge.data;
   const quest = b.quests[0];
   const spotCount = quest?.spots[0]?.count ?? 0;
+  const look = parseLook(profile.data?.avatar);
 
   // Your next adventure: a quest you've started, else the next one nearby.
   const currentId = quests.data?.find((q) => q.slug === quest?.slug)?.id;
@@ -91,13 +95,16 @@ export default function BadgeEarnedScreen() {
         <Text style={styles.sparkles} importantForAccessibility="no" accessibilityElementsHidden>
           ✦ ✦ ✦
         </Text>
-        <Animated.View
-          style={{ transform: [{ scale }] }}
-          accessible
-          accessibilityRole="image"
-          accessibilityLabel={copy.badge.stampLabel(b.title)}>
-          <BadgeStamp artKey={b.art_key} earned size={140} />
-        </Animated.View>
+        <View style={styles.stampRow}>
+          {look ? <AvatarFigure look={look} size={88} pose="cheer" /> : null}
+          <Animated.View
+            style={{ transform: [{ scale }] }}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={copy.badge.stampLabel(b.title)}>
+            <BadgeStamp artKey={b.art_key} earned size={look ? 124 : 140} />
+          </Animated.View>
+        </View>
         {loaded ? <SparkleBurst radius={160} delay={250} /> : null}
         <Text style={styles.badgeTitle}>{b.title}</Text>
         <Text style={styles.title} accessibilityRole="header">
@@ -106,6 +113,7 @@ export default function BadgeEarnedScreen() {
         <Flourish width={180} />
         {quest ? <Text style={styles.quest}>{quest.title}</Text> : null}
         {spotCount > 0 ? <Text style={styles.body}>{copy.badge.foundAll(spotCount)}</Text> : null}
+        <Text style={styles.stars}>★ {copy.stars.earned(50)}</Text>
         <Text style={styles.brand}>{copy.appName}</Text>
       </View>
 
@@ -151,6 +159,15 @@ export default function BadgeEarnedScreen() {
 }
 
 const styles = StyleSheet.create({
+  stampRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  stars: {
+    ...type.bodyStrong,
+    color: colors.midnight,
+  },
   content: {
     flexGrow: 1,
     padding: spacing.lg,

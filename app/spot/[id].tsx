@@ -4,9 +4,12 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { parseLook } from '@/art/avatar';
+import { companionForLand } from '@/art/companions';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
 import { CheckInCard, type CheckInSubmission } from '@/components/CheckInCard';
+import { CompanionCard } from '@/components/CompanionCard';
 import { OfflineStatus } from '@/components/OfflineStatus';
 import { SpotFieldTools } from '@/components/FieldTools';
 import { ReportProblemSheet } from '@/components/ReportProblemSheet';
@@ -34,7 +37,7 @@ import { isNetworkError } from '@/lib/network';
 import { useOfflineQueue, useQueuedCheckIn } from '@/lib/offlineQueue';
 import { useParadeMode } from '@/lib/paradeMode';
 import { uploadCheckinPhoto } from '@/lib/photos';
-import { type CheckInResult, useCheckIn, useIsAdmin, useMyProgress, useSpot } from '@/lib/queries';
+import { type CheckInResult, useCheckIn, useIsAdmin, useMyProgress, useProfile, useSpot, useWardrobe } from '@/lib/queries';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
 
 const CELEBRATION_MS = 1400;
@@ -62,6 +65,8 @@ export default function SpotScreen() {
   const isAdmin = useIsAdmin(userId);
   const offlineQueue = useOfflineQueue();
   const queued = useQueuedCheckIn(id);
+  const profile = useProfile(userId);
+  const wardrobe = useWardrobe(userId);
 
   const [submitting, setSubmitting] = useState(false);
   const [misses, setMisses] = useState(0);
@@ -92,6 +97,20 @@ export default function SpotScreen() {
   const foundAt = progress.data.foundSpots.get(s.id);
   const paused = !foundAt && paradeMode && s.pause_during_parades;
   const total = s.quest.spots[0]?.count ?? 0;
+  const look = parseLook(profile.data?.avatar);
+  const landId = s.quest.land?.id ?? null;
+  const companion = companionForLand(landId);
+  const companionLine = companion ? companion.lines[Math.abs(s.sort_order - 1) % companion.lines.length] : '';
+  // Dress the part: anything you're wearing from this land earns bonus stars here.
+  const landItems = (wardrobe.data?.items ?? []).filter((i) => i.landId && i.landId === landId);
+  const worn = look ? [look.hat, look.outfit, look.back, look.held] : [];
+  const dressedItem = landItems.find((i) => worn.includes(i.id));
+  const ownedItem = landItems.find((i) => i.owned);
+  const dressText = dressedItem
+    ? copy.companion.dressed
+    : ownedItem
+      ? copy.companion.wearOwned(ownedItem.name)
+      : copy.companion.landTip(s.quest.land?.name ?? '');
 
   async function celebrate(result: Extract<CheckInResult, { ok: true }>) {
     fx.stamp();
@@ -270,6 +289,7 @@ export default function SpotScreen() {
                 questSlug={s.quest.slug}
                 landName={s.quest.land?.name ?? null}
                 foundAt={foundAt}
+                look={look}
               />
             </ShareSheet>
           ) : null}
@@ -304,6 +324,30 @@ export default function SpotScreen() {
             <Text style={styles.sectionTitle}>{copy.spot.clue}</Text>
             <Text style={styles.body}>{s.clue}</Text>
           </View>
+
+          {companion ? (
+            <CompanionCard
+              companion={companion}
+              text={foundAt ? companion.quote : companionLine}
+              quote={Boolean(foundAt)}
+              look={look}
+            />
+          ) : null}
+
+          {!foundAt && landItems.length > 0 ? (
+            <Pressable
+              onPress={() => router.push('/wardrobe')}
+              accessibilityRole="button"
+              accessibilityLabel={dressText}
+              accessibilityHint={copy.wardrobe.openHint}
+              style={({ pressed }) => [styles.dressRow, dressedItem && styles.dressRowOn, pressed && { opacity: 0.7 }]}>
+              <Ionicons name={dressedItem ? 'sparkles' : 'shirt-outline'} size={18} color={dressedItem ? colors.fernText : colors.midnight} />
+              <Text style={[styles.dressText, dressedItem && styles.dressTextOn]}>
+                {dressText}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.inkMuted} />
+            </Pressable>
+          ) : null}
 
           {s.landmark ? (
             <Pressable
@@ -379,10 +423,14 @@ export default function SpotScreen() {
 
               {s.hint && misses >= MISSES_BEFORE_HINT ? (
                 hintShown ? (
-                  <View style={styles.notice}>
-                    <Text style={styles.sectionTitle}>{copy.spot.hint}</Text>
-                    <Text style={styles.body}>{s.hint}</Text>
-                  </View>
+                  companion ? (
+                    <CompanionCard companion={companion} text={s.hint} lead={copy.companion.hintLead} look={look} />
+                  ) : (
+                    <View style={styles.notice}>
+                      <Text style={styles.sectionTitle}>{copy.spot.hint}</Text>
+                      <Text style={styles.body}>{s.hint}</Text>
+                    </View>
+                  )
                 ) : (
                   <Button variant="secondary" label={copy.spot.needHint} onPress={() => setHintShown(true)} />
                 )
@@ -406,13 +454,36 @@ export default function SpotScreen() {
         }}
       />
 
-      {celebrating === 'stamped' ? <StampCelebration /> : null}
+      {celebrating === 'stamped' ? <StampCelebration look={look} stars={10} bonus={dressedItem ? 5 : 0} /> : null}
       {celebrating === 'saved' ? <StampCelebration icon="hourglass-outline" label={copy.offline.savedTitle} /> : null}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  dressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    minHeight: minTouchTarget,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  dressRowOn: {
+    borderColor: colors.fern,
+    backgroundColor: '#EAF4EE',
+  },
+  dressText: {
+    ...type.label,
+    color: colors.ink,
+    flex: 1,
+  },
+  dressTextOn: {
+    color: colors.fernText,
+  },
   flex: {
     flex: 1,
     backgroundColor: colors.parchment,
