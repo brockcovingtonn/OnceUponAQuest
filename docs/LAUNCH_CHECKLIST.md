@@ -91,7 +91,8 @@ The walk happens on cellular, so use the **hosted** database (pins and photos la
 - [ ] Offline: open each quest once with signal, then turn on Airplane mode — quests, spots, Passport and Friends should still open; check in at a photo spot and a typed-answer spot (both say "Saved for later"); turn Airplane mode off and confirm the "synced" banner, the stamps, and any badge.
 - [ ] Largest system text size on every screen (iOS: Settings → Accessibility → Display & Text Size → Larger Text; Android: Font size).
 - [ ] VoiceOver (iOS) and TalkBack (Android) through sign-in, a check-in and the Passport.
-- [ ] Reduce Motion on: the intro should just show the logo briefly and fade.
+- [ ] Intro on a real phone (added Oct 15, 2026): the camera should glide smoothly through the keyhole into the night park, and the fireworks shouldn't stutter. Try an older iPhone too. Tapping skips it.
+- [ ] Reduce Motion on: the intro should skip the camera move and fireworks, show the night park with the title for a moment, and fade.
 - [ ] Intro and sparkle animations feel smooth on an older phone.
 
 ## 6. Small decisions you can make any time
