@@ -108,8 +108,6 @@ export function parseLook(raw: unknown): AvatarLook | null {
 
 export type Pose = 'stand' | 'cheer' | 'wave';
 
-const INK = '#2A2A33';
-
 // ---------------------------------------------------------------------------
 // The body's measurements.
 // ---------------------------------------------------------------------------
