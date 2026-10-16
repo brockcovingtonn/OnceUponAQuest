@@ -7,7 +7,7 @@ import { colors } from '@/theme';
 
 type FigureProps = {
   look: AvatarLook;
-  /** Width in points; the height follows the 120 × 140 canvas. */
+  /** Width in points; the height follows the 120 × 168 canvas. */
   size: number;
   pose?: Pose;
   shadow?: boolean;
@@ -18,7 +18,9 @@ type FigureProps = {
 
 /** The explorer avatar, head to toe. */
 export function AvatarFigure({ look, size, pose = 'stand', shadow = true, accessibilityLabel, style }: FigureProps) {
-  const xml = useMemo(() => avatarSvg(look, { pose, shadow }), [look, pose, shadow]);
+  // Small figures (map markers, wardrobe grids) skip the finest texture.
+  const detail = size < 90 ? 'lite' : 'full';
+  const xml = useMemo(() => avatarSvg(look, { pose, shadow, detail }), [look, pose, shadow, detail]);
   const height = (size * AVATAR_CANVAS.height) / AVATAR_CANVAS.width;
   return (
     <View
@@ -35,7 +37,8 @@ export function AvatarFigure({ look, size, pose = 'stand', shadow = true, access
 
 /** Head and shoulders in a gold-ringed circle: the explorer as a profile picture. Decorative. */
 export function AvatarBust({ look, size }: { look: AvatarLook; size: number }) {
-  const xml = useMemo(() => avatarSvg(look, { crop: 'bust' }), [look]);
+  const detail = size < 64 ? 'lite' : 'full';
+  const xml = useMemo(() => avatarSvg(look, { crop: 'bust', detail }), [look, detail]);
   const inner = size - 6;
   return (
     <View
