@@ -70,7 +70,7 @@ const questListSelect = `
 ` as const;
 
 const questDetailSelect = `
-  id, slug, title, story, est_minutes, cover_photo_path,
+  id, slug, title, story, est_minutes, cover_photo_path, is_premium,
   badge:badges ( id, slug, title, description, art_key ),
   spots ( id, sort_order, teaser, title, method, pause_during_parades, holiday_note, photo_path, verified_on_site )
 ` as const;
@@ -247,6 +247,7 @@ export const CHECK_IN_REASONS = [
   'location_required',
   'wrong_answer',
   'photo_required',
+  'pass_required',
 ] as const satisfies readonly CheckInReason[];
 export type { CheckInReason, CheckInResult };
 
@@ -1194,9 +1195,15 @@ export type WardrobeItem = {
   unlockQuestId: string | null;
   owned: boolean;
   unlocked: boolean;
+  /** Comes with this outfit pack (bought in the store, not with stars). */
+  packId: string | null;
+  /** A Quest Pass gift for this month ('YYYY-MM'). */
+  passMonth: string | null;
 };
 
-export type Wardrobe = { balance: number; items: WardrobeItem[] };
+export type OutfitPack = { id: string; productId: string; name: string; description: string; story: string | null; owned: boolean };
+
+export type Wardrobe = { balance: number; hasPass: boolean; giftMonth: string; items: WardrobeItem[]; packs: OutfitPack[] };
 
 export const wardrobeKeys = {
   wardrobe: (userId: string | undefined) => ['wardrobe', userId] as const,
@@ -1204,10 +1211,21 @@ export const wardrobeKeys = {
 };
 
 export function parseWardrobe(raw: unknown): Wardrobe {
-  const r = (raw ?? {}) as { balance?: unknown; items?: unknown };
+  const r = (raw ?? {}) as { balance?: unknown; items?: unknown; packs?: unknown; has_pass?: unknown; gift_month?: unknown };
   const items = Array.isArray(r.items) ? (r.items as Record<string, unknown>[]) : [];
+  const packs = Array.isArray(r.packs) ? (r.packs as Record<string, unknown>[]) : [];
   return {
     balance: typeof r.balance === 'number' ? r.balance : 0,
+    hasPass: r.has_pass === true,
+    giftMonth: typeof r.gift_month === 'string' ? r.gift_month : '',
+    packs: packs.map((p) => ({
+      id: String(p.id),
+      productId: String(p.product_id),
+      name: String(p.name),
+      description: String(p.description),
+      story: typeof p.story === 'string' ? p.story : null,
+      owned: p.owned === true,
+    })),
     items: items.map((i) => ({
       id: String(i.id),
       slot: i.slot as WardrobeItem['slot'],
@@ -1221,6 +1239,8 @@ export function parseWardrobe(raw: unknown): Wardrobe {
       unlockQuestId: typeof i.unlock_quest_id === 'string' ? i.unlock_quest_id : null,
       owned: i.owned === true,
       unlocked: i.unlocked === true,
+      packId: typeof i.pack_id === 'string' ? i.pack_id : null,
+      passMonth: typeof i.pass_month === 'string' ? i.pass_month : null,
     })),
   };
 }
@@ -1238,7 +1258,7 @@ export function useWardrobe(userId: string | undefined) {
   });
 }
 
-export type BuyStatus = 'ok' | 'owned' | 'locked' | 'short' | 'not_found';
+export type BuyStatus = 'ok' | 'owned' | 'locked' | 'short' | 'not_found' | 'not_for_stars';
 
 export function useBuyItem(userId: string | undefined) {
   const queryClient = useQueryClient();
@@ -1247,7 +1267,7 @@ export function useBuyItem(userId: string | undefined) {
       const { data, error } = await supabase.rpc('buy_avatar_item', { p_item: itemId });
       if (error) throw error;
       const r = (data ?? {}) as { status?: unknown; balance?: unknown };
-      const status = (['ok', 'owned', 'locked', 'short', 'not_found'] as const).find((s) => s === r.status) ?? 'not_found';
+      const status = (['ok', 'owned', 'locked', 'short', 'not_found', 'not_for_stars'] as const).find((s) => s === r.status) ?? 'not_found';
       return { status, balance: typeof r.balance === 'number' ? r.balance : 0 };
     },
     onSettled: () => {
@@ -1290,5 +1310,19 @@ export function useStarHistory(userId: string | undefined) {
       if (error) throw error;
       return data.map((r) => ({ id: r.id, amount: r.amount, reason: r.reason, ref: r.ref, createdAt: r.created_at }));
     },
+  });
+}
+
+/** Pass holders claim this month's free outfit (kept forever). */
+export function useClaimPassGift(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<'ok' | 'owned' | 'no_pass' | 'none'> => {
+      const { data, error } = await supabase.rpc('claim_pass_gift');
+      if (error) throw error;
+      const status = (data as { status?: unknown } | null)?.status;
+      return status === 'ok' || status === 'owned' || status === 'no_pass' ? status : 'none';
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: wardrobeKeys.wardrobe(userId) }),
   });
 }

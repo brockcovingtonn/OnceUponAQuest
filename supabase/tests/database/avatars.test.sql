@@ -38,7 +38,10 @@ grant select on t to authenticated;
 
 select pg_temp.act_as('a5000000-0000-0000-0000-000000000001');
 select is(pg_temp.balance(), 60, 'a new explorer gets 60 welcome stars');
-select is(jsonb_array_length(public.my_wardrobe() -> 'items'), 55, 'the wardrobe lists every item');
+select is(jsonb_array_length(public.my_wardrobe() -> 'items')::bigint,
+  (select count(*) from public.avatar_items
+   where is_active and (pass_month is null or pass_month = to_char(now() at time zone 'America/Los_Angeles', 'YYYY-MM'))),
+  'the wardrobe lists every item (and only this month''s Pass gift)');
 select ok((select bool_and((i ->> 'owned')::boolean) from jsonb_array_elements(public.my_wardrobe() -> 'items') i
            where (i ->> 'is_starter')::boolean), 'starter items are owned by everyone');
 

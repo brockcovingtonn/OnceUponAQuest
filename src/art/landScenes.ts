@@ -892,12 +892,51 @@ const dockingBayDays: Shape[] = [
   { kind: 'line', x1: 0, y1: 206, x2: 400, y2: 206, stroke: GOLD, strokeWidth: 2, dash: '14 10', opacity: 0.6 },
 ];
 
+// Premium: Hollow Haunts — a moonlit hill with an iron fence, a crooked tree,
+// little headstones and a lantern. No mansion drawn: the house stays a mystery.
+const hollowHaunts: Shape[] = [
+  sky('#0E1230', '#2A2456'),
+  ...stars(),
+  { kind: 'circle', cx: 300, cy: 58, r: 30, fill: '#F6E7B8' },
+  { kind: 'circle', cx: 300, cy: 58, r: 44, fill: '#F6E7B8', opacity: 0.18 },
+  // Bats crossing the moon.
+  ...[[284, 48], [312, 66], [270, 74]].map(([x, y]): Shape => ({
+    kind: 'path',
+    d: `M${x - 7} ${y} C${x - 4} ${y - 4} ${x - 2} ${y - 2} ${x} ${y + 1} C${x + 2} ${y - 2} ${x + 4} ${y - 4} ${x + 7} ${y} C${x + 4} ${y - 1} ${x + 2} ${y + 2} ${x} ${y + 3} C${x - 2} ${y + 2} ${x - 4} ${y - 1} ${x - 7} ${y} Z`,
+    fill: '#1B1A2E',
+  })),
+  // The hill.
+  { kind: 'path', d: 'M0 170 C80 130 180 120 260 138 C320 150 370 150 400 142 L400 240 L0 240 Z', fill: '#2B3550' },
+  // A crooked tree.
+  { kind: 'path', d: 'M70 166 C68 140 64 120 52 100 C60 104 66 112 70 120 C72 104 80 90 94 82 C86 96 80 112 78 130 C88 120 100 116 112 118 C98 124 86 134 80 166 Z', fill: '#1B1A2E' },
+  // Headstones on the hill.
+  ...[[150, 150, 14], [182, 146, 12], [214, 150, 16], [246, 154, 12]].flatMap(([x, y, w]): Shape[] => [
+    { kind: 'path', d: `M${x} ${y + 22} V${y + w / 2} A${w / 2} ${w / 2} 0 0 1 ${x + w} ${y + w / 2} V${y + 22} Z`, fill: '#8E8AA6', stroke: '#1B1A2E', strokeWidth: 1.5 },
+    { kind: 'line', x1: x + 3, y1: y + 12, x2: x + w - 3, y2: y + 12, stroke: '#1B1A2E', strokeWidth: 1, opacity: 0.6 },
+  ]),
+  // The iron fence along the front.
+  { kind: 'rect', x: 0, y: 178, w: 400, h: 4, fill: '#1B1A2E' },
+  { kind: 'rect', x: 0, y: 206, w: 400, h: 4, fill: '#1B1A2E' },
+  ...Array.from({ length: 21 }, (_, i): Shape => ({
+    kind: 'path',
+    d: `M${8 + i * 19} 214 V178 L${11 + i * 19} 170 L${14 + i * 19} 178 V214 Z`,
+    fill: '#1B1A2E',
+  })),
+  { kind: 'rect', x: 0, y: 214, w: 400, h: 26, fill: '#3A3550' },
+  // A lantern on a post, glowing.
+  { kind: 'circle', cx: 342, cy: 160, r: 22, fill: '#F6D58E', opacity: 0.25 },
+  { kind: 'rect', x: 340, y: 168, w: 4, h: 46, fill: '#1B1A2E' },
+  { kind: 'rect', x: 334, y: 150, w: 16, h: 20, rx: 2, fill: '#F6D58E', stroke: '#1B1A2E', strokeWidth: 2 },
+  { kind: 'polygon', points: '331,150 353,150 342,140', fill: '#1B1A2E' },
+];
+
 /** Vignette per quest slug outside Main Street. */
 export const landQuestScenes: Record<string, Shape[]> = {
   'jungle-expedition': jungleExpedition,
   'tiki-garden': tikiGarden,
   'royal-street-secrets': royalStreet,
   'riverfront-and-rails': riverfrontRails,
+  'hollow-haunts': hollowHaunts,
   'bayou-bend': bayouBend,
   'bayou-critters': bayouCritters,
   'frontier-fort': frontierFort,

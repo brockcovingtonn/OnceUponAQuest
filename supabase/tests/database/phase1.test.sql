@@ -45,8 +45,8 @@ insert into auth.users (id, email) values
 -- ---------------------------------------------------------------------------
 -- Seed content
 -- ---------------------------------------------------------------------------
-select is((select count(*) from public.quests where status = 'live'), 20::bigint, 'seed: 20 live quests');
-select is((select count(*) from public.spots), 93::bigint, 'seed: 93 spots');
+select is((select count(*) from public.quests where status = 'live' and not is_premium), 20::bigint, 'seed: 20 free live quests');
+select is((select count(*) from public.spots s join public.quests q on q.id = s.quest_id where not q.is_premium), 93::bigint, 'seed: 93 spots in free quests');
 select is((select count(*) from public.lands where park_id = 'disneyland-park'), 9::bigint, 'seed: 9 lands');
 select is(
   (select count(*) from public.lands l

@@ -14,9 +14,12 @@ import { StateView } from '@/components/StateView';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useFeedback } from '@/lib/feedback';
+import { storeEnabled, useBuyPack, usePackPrices } from '@/lib/purchases';
 import {
+  type OutfitPack,
   type Profile,
   useBuyItem,
+  useClaimPassGift,
   useProfile,
   useQuests,
   useSaveLook,
@@ -55,6 +58,10 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
   const saveLook = useSaveLook(userId);
   const buy = useBuyItem(userId);
   const history = useStarHistory(userId);
+  const packPrices = usePackPrices(wardrobe.packs.map((p) => p.productId));
+  const buyPack = useBuyPack(userId);
+  const claimGift = useClaimPassGift(userId);
+  const [packBusy, setPackBusy] = useState<string | null>(null);
   const look = parseLook(profile.avatar) ?? DEFAULT_LOOK;
   const [slot, setSlot] = useState<Slot>('outfit');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -67,6 +74,8 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
   // Try the selected item on (outfits can't be taken off, the rest can).
   const preview: AvatarLook = selected ? { ...look, [selected.slot]: selected.id } : look;
   const wearing = (item: WardrobeItem) => look[item.slot] === item.id;
+  const packs = new Map(wardrobe.packs.map((p) => [p.id, p]));
+  const gift = wardrobe.items.find((i) => i.passMonth === wardrobe.giftMonth);
 
   function select(item: WardrobeItem) {
     feedback.tap();
@@ -97,6 +106,51 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
     });
   }
 
+  async function purchasePack(pack: OutfitPack) {
+    const product = packPrices.data?.get(pack.productId);
+    if (!product) return;
+    setMessage(null);
+    setPackBusy(pack.id);
+    const outcome = await buyPack(product, pack.id);
+    setPackBusy(null);
+    if (outcome === 'done') {
+      feedback.badge();
+      setMessage({ text: copy.packs.bought(pack.name), tone: 'info' });
+    } else if (outcome === 'pending') {
+      setMessage({ text: copy.packs.pending, tone: 'info' });
+    } else if (outcome === 'failed') {
+      setMessage({ text: copy.packs.failed, tone: 'error' });
+    }
+  }
+
+  function claim() {
+    if (!wardrobe.hasPass) {
+      router.push('/quest-pass');
+      return;
+    }
+    claimGift.mutate(undefined, {
+      onSuccess: (status) => {
+        if (status === 'ok' || status === 'owned') {
+          feedback.badge();
+          setMessage({ text: copy.pass.claimed(gift?.name ?? ''), tone: 'info' });
+          // Put it straight on your explorer.
+          if (gift) wear(gift);
+        } else if (status === 'no_pass') {
+          router.push('/quest-pass');
+        }
+      },
+      onError: () => setMessage({ text: copy.pass.claimFailed, tone: 'error' }),
+    });
+  }
+
+  /** The store button for a pack: its price, "Yours", or "Coming soon". */
+  function packButton(pack: OutfitPack) {
+    if (pack.owned) return <Text style={styles.state}>{copy.packs.owned}</Text>;
+    const product = packPrices.data?.get(pack.productId);
+    if (!storeEnabled || !product) return <Text style={styles.locked}>{copy.packs.comingSoon}</Text>;
+    return <Button label={copy.packs.buy(product.priceString)} loading={packBusy === pack.id} onPress={() => purchasePack(pack)} />;
+  }
+
   function lockReason(item: WardrobeItem): string {
     if (item.unlockLandId) return copy.wardrobe.lockedLand(landNames.get(item.unlockLandId) ?? '');
     if (item.unlockQuestId) return copy.wardrobe.lockedQuest(questTitles.get(item.unlockQuestId) ?? '');
@@ -114,6 +168,21 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
             <Button variant="secondary" label={copy.editProfile.lookButton} onPress={() => router.push('/avatar')} />
           </View>
         </View>
+
+        {gift && !gift.owned ? (
+          <View style={styles.giftCard}>
+            <AvatarFigure look={{ ...look, [gift.slot]: gift.id }} size={64} pose="wave" shadow={false} />
+            <View style={styles.giftText}>
+              <Text style={styles.giftKicker}>{copy.pass.giftTitle}</Text>
+              <Text style={styles.cardTitle}>{gift.name}</Text>
+              <Button
+                label={wardrobe.hasPass ? copy.pass.claim : copy.pass.unlock}
+                loading={claimGift.isPending}
+                onPress={claim}
+              />
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.tabs} accessibilityRole="tablist">
           {SLOTS.map((s) => (
@@ -143,7 +212,18 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
                 <Text style={styles.hint}>{copy.wardrobe.dressHint(landNames.get(selected.landId) ?? '')}</Text>
               </View>
             ) : null}
-            {selected.owned ? (
+            {!selected.owned && selected.packId && packs.get(selected.packId) ? (
+              <>
+                <Text style={styles.locked}>{copy.packs.inPack(packs.get(selected.packId)?.name ?? '')}</Text>
+                {packButton(packs.get(selected.packId) as OutfitPack)}
+              </>
+            ) : !selected.owned && selected.passMonth ? (
+              <Button
+                label={wardrobe.hasPass ? copy.pass.claim : copy.pass.unlock}
+                loading={claimGift.isPending}
+                onPress={claim}
+              />
+            ) : selected.owned ? (
               wearing(selected) ? (
                 selected.slot === 'outfit' ? (
                   <Text style={styles.state}>{copy.wardrobe.wearing}</Text>
@@ -176,7 +256,11 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
               ? wearing(item)
                 ? copy.wardrobe.wearing
                 : copy.wardrobe.owned
-              : !item.unlocked
+              : item.packId
+                ? copy.packs.tile
+                : item.passMonth
+                  ? copy.packs.passGift
+                  : !item.unlocked
                 ? copy.wardrobe.locked
                 : copy.wardrobe.price(item.price);
             const tryLook = { ...look, [item.slot]: item.id };
@@ -197,14 +281,45 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
                   {item.name}
                 </Text>
                 <View style={styles.tileState}>
-                  {!item.owned && !item.unlocked ? <Ionicons name="lock-closed" size={12} color={colors.inkMuted} /> : null}
-                  {!item.owned && item.unlocked ? <Ionicons name="star" size={12} color={colors.storybookGold} /> : null}
+                  {!item.owned && item.packId ? <Ionicons name="bag-handle-outline" size={12} color={colors.midnight} /> : null}
+                  {!item.owned && item.passMonth ? <Ionicons name="gift-outline" size={12} color={colors.midnight} /> : null}
+                  {!item.owned && !item.packId && !item.passMonth && !item.unlocked ? (
+                    <Ionicons name="lock-closed" size={12} color={colors.inkMuted} />
+                  ) : null}
+                  {!item.owned && !item.packId && !item.passMonth && item.unlocked ? (
+                    <Ionicons name="star" size={12} color={colors.storybookGold} />
+                  ) : null}
                   <Text style={[styles.tileStateText, wearing(item) && styles.wearingText]}>{state}</Text>
                 </View>
               </Pressable>
             );
           })}
         </View>
+
+        {wardrobe.packs.length > 0 ? (
+          <View style={styles.packs}>
+            <Text style={styles.cardTitle} accessibilityRole="header">
+              {copy.packs.title}
+            </Text>
+            <Text style={styles.note}>{copy.packs.intro}</Text>
+            {wardrobe.packs.map((pack) => {
+              const packItems = wardrobe.items.filter((i) => i.packId === pack.id && ITEM_ART[i.id]);
+              return (
+                <View key={pack.id} style={[styles.packCard, pack.owned && styles.packOwned]}>
+                  <Text style={styles.packName}>{pack.name}</Text>
+                  <Text style={styles.detailBody}>{pack.description}</Text>
+                  {pack.story ? <Text style={styles.detailStory}>{copy.wardrobe.fromStory(pack.story)}</Text> : null}
+                  <View style={styles.packItems} accessible accessibilityLabel={copy.packs.items(packItems.length)}>
+                    {packItems.map((i) => (
+                      <AvatarFigure key={i.id} look={{ ...look, [i.slot]: i.id, ...(i.slot === 'hat' ? {} : { hat: null }) }} size={52} shadow={false} />
+                    ))}
+                  </View>
+                  {packButton(pack)}
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
 
         <View style={styles.card}>
           <Text style={styles.cardTitle} accessibilityRole="header">
@@ -369,6 +484,48 @@ const styles = StyleSheet.create({
   },
   wearingText: {
     color: colors.fernText,
+  },
+  giftCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: colors.storybookGold,
+    backgroundColor: '#FBF3DD',
+  },
+  giftText: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  giftKicker: {
+    ...type.caption,
+    color: colors.midnight,
+    letterSpacing: 1,
+  },
+  packs: {
+    gap: spacing.sm,
+  },
+  packCard: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  packOwned: {
+    borderColor: colors.fern,
+  },
+  packName: {
+    ...type.heading,
+    color: colors.midnight,
+  },
+  packItems: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
   card: {
     gap: spacing.sm,

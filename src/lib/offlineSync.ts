@@ -10,7 +10,8 @@ export type CheckInReason =
   | 'too_far'
   | 'location_required'
   | 'wrong_answer'
-  | 'photo_required';
+  | 'photo_required'
+  | 'pass_required';
 
 export type CheckInResult =
   | { ok: true; questComplete: boolean; badgeSlug: string | null }

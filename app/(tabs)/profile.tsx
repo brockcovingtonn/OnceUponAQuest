@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -20,6 +21,7 @@ import { usePreferences } from '@/lib/preferences';
 import { getPermissionStatuses, type PermissionStatuses } from '@/lib/permissions';
 import { useDeleteAccount, useFieldWalk, useIsAdmin, useOpenReports, useProfile, useWardrobe } from '@/lib/queries';
 import { fieldToolsEnabled } from '@/lib/fieldTools';
+import { usePassStatus } from '@/lib/purchases';
 import { supabase } from '@/lib/supabase';
 import { colors, spacing, type } from '@/theme';
 
@@ -55,6 +57,7 @@ export default function ProfileScreen() {
   const walkDone = walkSpots.filter((s) => s.pinned && s.hasPhoto && s.verified).length;
   const [signingOut, setSigningOut] = useState(false);
   const wardrobe = useWardrobe(userId);
+  const pass = usePassStatus(userId);
 
   if (profile.isPending) return <StateView kind="loading" />;
   if (profile.isError || !profile.data) {
@@ -91,6 +94,12 @@ export default function ProfileScreen() {
             {p.display_name ?? p.username}
           </Text>
           {p.display_name ? <Text style={styles.username}>@{p.username}</Text> : null}
+          {pass.data?.active ? (
+            <View style={styles.passRibbon} accessible accessibilityLabel={copy.pass.name}>
+              <Ionicons name="ribbon" size={14} color={colors.midnight} />
+              <Text style={styles.passRibbonText}>{copy.pass.chip}</Text>
+            </View>
+          ) : null}
           <Text style={styles.since}>{copy.profile.exploringSince(p.created_at)}</Text>
           {wardrobe.data ? (
             <StarCount
@@ -125,6 +134,12 @@ export default function ProfileScreen() {
           <Text style={styles.sectionHeader} accessibilityRole="header">
             {copy.profile.settings}
           </Text>
+          <SettingsRow
+            icon="ribbon-outline"
+            label={copy.pass.profileRow}
+            value={pass.data?.active ? copy.pass.profileActive : copy.pass.profileGet}
+            onPress={() => router.push('/quest-pass')}
+          />
           <SettingsSwitchRow
             icon="musical-notes-outline"
             label={copy.profile.sounds}
@@ -249,6 +264,19 @@ const styles = StyleSheet.create({
   since: {
     ...type.label,
     color: colors.inkMuted,
+  },
+  passRibbon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: colors.storybookGold,
+  },
+  passRibbonText: {
+    ...type.caption,
+    color: colors.midnight,
   },
   stars: {
     alignSelf: 'center',

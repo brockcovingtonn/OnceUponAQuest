@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from '@/components/Banner';
+import { Button } from '@/components/Button';
 import { BadgeStamp } from '@/components/BadgeStamp';
 import { OfflineStatus } from '@/components/OfflineStatus';
 import { Flourish } from '@/components/Flourish';
@@ -76,6 +77,30 @@ export default function QuestDetailScreen() {
   const anyPaused = rows.some((r) => r.state === 'paused');
   const badgeEarned = badge ? badgeIds.has(badge.id) : false;
   const isSaved = Boolean(saved.data?.includes(questId));
+
+  // A Quest Pass quest you can't open yet: show the story and how to unlock it.
+  if (quest.data.is_premium && spots.length === 0) {
+    return (
+      <>
+        <Stack.Screen options={{ title: '' }} />
+        <ScrollView contentContainerStyle={styles.content}>
+          <QuestCover slug={slug} coverPhotoPath={coverPhotoPath} height={180} style={styles.cover} />
+          <View style={styles.passChip}>
+            <Ionicons name="ribbon" size={14} color={colors.midnight} />
+            <Text style={styles.passChipText}>{copy.pass.chip}</Text>
+          </View>
+          <Text style={styles.title} accessibilityRole="header">
+            {title}
+          </Text>
+          <Flourish width={160} />
+          {story ? <Text style={styles.story}>{story}</Text> : null}
+          <Text style={styles.minutes}>{copy.questDetail.minutes(estMinutes)}</Text>
+          <Banner tone="info" message={copy.pass.lockedBody} />
+          <Button label={copy.pass.unlock} onPress={() => router.push('/quest-pass')} />
+        </ScrollView>
+      </>
+    );
+  }
 
   return (
     <>
@@ -152,6 +177,20 @@ export default function QuestDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  passChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.round,
+    backgroundColor: colors.storybookGold,
+  },
+  passChipText: {
+    ...type.caption,
+    color: colors.midnight,
+  },
   saveButton: {
     flexDirection: 'row',
     alignItems: 'center',

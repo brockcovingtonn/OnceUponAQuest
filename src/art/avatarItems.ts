@@ -460,4 +460,129 @@ export const ITEM_ART: Record<string, ItemArt> = {
       extra: `<path d="M50 87Q60 93 70 87" stroke="${PARCHMENT}" stroke-width="2.2" stroke-dasharray="0.1 3.2" stroke-linecap="round" fill="none"/>`,
     },
   },
+
+  // -------------------------------------------------------------------------
+  // Sleepy Hollow Pack (Washington Irving, 1820)
+  // -------------------------------------------------------------------------
+  'schoolmaster-coat': {
+    slot: 'outfit',
+    outfit: {
+      shirt: PARCHMENT,
+      sleeves: 'long',
+      sleeveColor: '#23232B',
+      lower: { kind: 'robe', color: '#23232B' },
+      legs: '#23232B',
+      shoes: INK,
+      extra: `<path d="M43 93C43 87 48 85 52 85H56L55 106H44Z" fill="#23232B"/><path d="M77 93C77 87 72 85 68 85H64L65 106H76Z" fill="#23232B"/><path d="M55 85L60 92L65 85L62 98H58Z" fill="${PARCHMENT}"/><path d="M57 88H63" stroke="#D8CDB8" stroke-width="1.6"/>${buttons(55, [99, 104], '#8E8A9A')}${buttons(65, [99, 104], '#8E8A9A')}`,
+    },
+  },
+  'pumpkin-cap': {
+    slot: 'hat',
+    svg: `<ellipse cx="60" cy="28" rx="24" ry="12" fill="#E58A3A"/><path d="M48 18Q44 28 48 38M60 16V40M72 18Q76 28 72 38" stroke="#C96F28" stroke-width="1.4" fill="none"/><rect x="57.5" y="10" width="5" height="8" rx="2" fill="#4F7A3A"/><path d="M62 13C68 8 74 10 76 14C70 15 66 15 62 13Z" fill="#6E9A57"/>`,
+  },
+  'horseman-cloak': {
+    slot: 'back',
+    svg: `<path d="M44 84C34 96 26 112 22 130L32 126L38 133L46 127L54 134L60 128L66 134L74 127L82 133L88 126L98 130C94 112 86 96 76 84Z" fill="#1E2240"/><path d="M44 84C38 92 33 102 30 112M76 84C82 92 87 102 90 112" stroke="#7A2E3E" stroke-width="2" fill="none"/>`,
+    front: `<path d="M44 86L50 78H70L76 86L66 84H54Z" fill="#1E2240"/>`,
+  },
+
+  // -------------------------------------------------------------------------
+  // Holiday Lights Pack
+  // -------------------------------------------------------------------------
+  'snowflake-sweater': {
+    slot: 'outfit',
+    outfit: {
+      shirt: '#B9373F',
+      sleeves: 'long',
+      lower: { kind: 'pants', color: '#2E3A63' },
+      shoes: '#6B4A3A',
+      extra: `<rect x="44" y="94" width="32" height="7" fill="${PARCHMENT}"/>${[49, 56, 63, 70]
+        .map((x) => `<path d="M${x} 95V100M${x - 2.5} 97.5H${x + 2.5}M${x - 1.8} 95.7L${x + 1.8} 99.3M${x + 1.8} 95.7L${x - 1.8} 99.3" stroke="#B9373F" stroke-width="0.9"/>`)
+        .join('')}<path d="M54 85Q60 89 66 85" stroke="${PARCHMENT}" stroke-width="2.4" fill="none"/>`,
+    },
+  },
+  'pom-beanie': {
+    slot: 'hat',
+    svg: `<path d="M35 40C35 24 46 20 60 20C74 20 85 24 85 40Z" fill="#B9373F"/><path d="M38 30H82M36 35H84" stroke="${PARCHMENT}" stroke-width="2.6"/><rect x="33" y="37" width="54" height="7" rx="3.5" fill="${PARCHMENT}"/><circle cx="60" cy="17" r="6" fill="${PARCHMENT}"/>`,
+  },
+  'gingerbread-friend': {
+    slot: 'held',
+    svg: `<g transform="translate(6 -14)"><circle cx="0" cy="-8" r="5" fill="#B9774A"/><path d="M-4 -4H4L10 -1L9 2L4 0L5 9L8 14L5 16L0 10L-5 16L-8 14L-5 9L-4 0L-9 2L-10 -1Z" fill="#B9774A"/><circle cx="-1.8" cy="-9" r="0.8" fill="${INK}"/><circle cx="1.8" cy="-9" r="0.8" fill="${INK}"/><path d="M-2 -6.5Q0 -5 2 -6.5" stroke="#fff" stroke-width="0.8" fill="none"/><circle cx="0" cy="1" r="1" fill="${ROSE}"/><circle cx="0" cy="5" r="1" fill="${FERN}"/><path d="M-8 0.5L-6 -0.5M8 0.5L6 -0.5" stroke="#fff" stroke-width="0.8"/></g>`,
+  },
+  'twinkle-cape': {
+    slot: 'back',
+    svg: `<path d="M44 84C32 98 24 114 22 130H98C96 114 88 98 76 84Z" fill="#2E3A63"/><path d="M30 112Q38 118 46 112M74 112Q82 118 90 112M25 124Q35 130 46 124M74 124Q85 130 95 124" stroke="#5A5A6A" stroke-width="0.8" fill="none"/>${[
+      [31, 114, '#F6D58E'],
+      [38, 116.5, ROSE],
+      [45, 114, '#9FC4F0'],
+      [75, 114, FERN],
+      [82, 116.5, '#F6D58E'],
+      [89, 114, ROSE],
+      [27, 126, '#9FC4F0'],
+      [36, 128.5, '#F6D58E'],
+      [44, 126, ROSE],
+      [76, 126, '#F6D58E'],
+      [84, 128.5, '#9FC4F0'],
+      [93, 126, FERN],
+    ]
+      .map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="${c}"/>`)
+      .join('')}`,
+  },
+
+  // -------------------------------------------------------------------------
+  // Pirate Captain Pack (Treasure Island, 1883)
+  // -------------------------------------------------------------------------
+  'captains-greatcoat': {
+    slot: 'outfit',
+    outfit: {
+      shirt: PARCHMENT,
+      sleeves: 'long',
+      sleeveColor: '#22305A',
+      lower: { kind: 'robe', color: '#22305A' },
+      legs: '#F3EBDD',
+      shoes: INK,
+      extra: `<path d="M43 93C43 87 48 85 52 85H56L55 108H44Z" fill="#22305A"/><path d="M77 93C77 87 72 85 68 85H64L65 108H76Z" fill="#22305A"/><path d="M56 85L55 128M64 85L65 128" stroke="${GOLD}" stroke-width="1.6"/><path d="M42 89H50M70 89H78" stroke="${GOLD}" stroke-width="3" stroke-linecap="round"/>${buttons(52, [94, 100, 106])}${buttons(68, [94, 100, 106])}<path d="M57 86L60 90L63 86" fill="#E6DED0"/>`,
+    },
+  },
+  'plumed-hat': {
+    slot: 'hat',
+    svg: `<path d="M24 34C34 28 86 28 96 34C86 38 34 38 24 34Z" fill="#22305A"/><path d="M42 33C42 20 50 16 60 16C70 16 78 20 78 33Z" fill="#22305A"/><path d="M42 30H78" stroke="${GOLD}" stroke-width="2"/><path d="M70 30C74 16 86 8 98 10C92 14 88 18 84 26C88 22 92 22 96 22C88 28 80 32 72 32Z" fill="${GOLD}"/><path d="M72 31C78 24 86 16 96 12" stroke="#C99A3A" stroke-width="0.9" fill="none"/>`,
+  },
+  spyglass: {
+    slot: 'held',
+    svg: `<g transform="rotate(-35)"><rect x="-4" y="-5" width="14" height="10" rx="2" fill="#C9963F"/><rect x="9" y="-4" width="10" height="8" rx="1.6" fill="#E2B04A"/><rect x="18" y="-3" width="8" height="6" rx="1.4" fill="#C9963F"/><circle cx="26" cy="0" r="2.8" fill="#9FC4F0" stroke="#A87A2E" stroke-width="1"/><path d="M-1 -5V5M12 -4V4" stroke="#A87A2E" stroke-width="1"/></g>`,
+  },
+  'crossed-swords-flag': {
+    slot: 'back',
+    svg: `<path d="M30 132V14" stroke="#6B4A3A" stroke-width="2.4" stroke-linecap="round"/><circle cx="30" cy="13" r="2.2" fill="${GOLD}"/><path d="M29 16H2C4 22 4 28 2 34H29Z" fill="${INK}"/><path d="M8 19L23 31M23 19L8 31" stroke="${PARCHMENT}" stroke-width="2" stroke-linecap="round"/><path d="M7 21L10 18M24 21L21 18" stroke="${GOLD}" stroke-width="1.6"/>`,
+  },
+
+  // -------------------------------------------------------------------------
+  // Quest Pass monthly gifts
+  // -------------------------------------------------------------------------
+  'lantern-bearer': {
+    slot: 'held',
+    svg: `<path d="M0 0C0 -4 4 -6 6 -6" stroke="#8E7A6A" stroke-width="1.2" fill="none"/><circle cx="6" cy="-8" r="2.2" fill="none" stroke="${GOLD}" stroke-width="1.2"/><circle cx="6" cy="-20" r="11" fill="#FFE9A8" opacity="0.35"/><path d="M0 -10H12L13 -12H-1Z" fill="${GOLD}"/><rect x="0.5" y="-27" width="11" height="15" rx="1.5" fill="#F6D58E" stroke="${GOLD}" stroke-width="1.6"/><path d="M6 -27V-12M0.5 -19.5H11.5" stroke="${GOLD}" stroke-width="0.9"/><path d="M-1 -27L6 -33L13 -27Z" fill="${MIDNIGHT}"/><ellipse cx="6" cy="-18.5" rx="1.8" ry="2.8" fill="#FFF4CF"/>`,
+  },
+  'autumn-leaf-cape': {
+    slot: 'back',
+    svg: `<path d="M44 84C32 98 24 114 22 130H98C96 114 88 98 76 84Z" fill="#B9583A"/>${[
+      [36, 104, '#E2B04A', -30],
+      [84, 104, '#C9463A', 15],
+      [32, 116, '#D9673A', 10],
+      [42, 112, '#E2B04A', -20],
+      [78, 112, '#D9673A', 25],
+      [88, 116, '#E2B04A', -15],
+      [27, 127, '#C9463A', 20],
+      [38, 125, '#E2B04A', -10],
+      [82, 125, '#C9463A', 10],
+      [93, 127, '#E2B04A', -25],
+    ]
+      .map(([x, y, c, r]) => `<path d="M${x} ${Number(y) - 5}C${Number(x) + 5} ${Number(y) - 2} ${Number(x) + 4} ${Number(y) + 4} ${x} ${Number(y) + 5}C${Number(x) - 4} ${Number(y) + 4} ${Number(x) - 5} ${Number(y) - 2} ${x} ${Number(y) - 5}Z" fill="${c}" transform="rotate(${r} ${x} ${y})"/>`)
+      .join('')}`,
+  },
+  'snow-globe': {
+    slot: 'held',
+    svg: `<rect x="-3" y="-4" width="18" height="6" rx="2" fill="#8A5A3C"/><circle cx="6" cy="-14" r="10" fill="#CFE3F6" opacity="0.85" stroke="#FFFFFF" stroke-width="1"/><path d="M1 -8V-13L6 -17L11 -13V-8Z" fill="${ROSE}"/><path d="M0 -13L6 -18L12 -13" stroke="${PARCHMENT}" stroke-width="1.2" fill="none"/><rect x="5" y="-12" width="2.4" height="4" fill="${GOLD}"/><path d="M-3 -8H15" stroke="#FFFFFF" stroke-width="1.6"/><g fill="#FFFFFF"><circle cx="0" cy="-19" r="0.8"/><circle cx="10" cy="-21" r="0.8"/><circle cx="13" cy="-15" r="0.7"/><circle cx="3" cy="-22" r="0.6"/></g><path d="M1 -19A7 7 0 0 1 5 -22" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="0.8"/>`,
+  },
 };

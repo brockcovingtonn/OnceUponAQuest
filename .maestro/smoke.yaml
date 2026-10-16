@@ -140,6 +140,13 @@ name: Smoke test
     visible: 'Straw Boater is yours!'
     timeout: 15000
 - tapOn: 'Back'
+
+# Quest Pass screen opens from Profile
+- tapOn: 'Quest Pass.*'
+- extendedWaitUntil:
+    visible: 'More stories to find, every visit.'
+    timeout: 10000
+- tapOn: 'Back'
 - scrollUntilVisible:
     element: 'Sounds'
     direction: DOWN

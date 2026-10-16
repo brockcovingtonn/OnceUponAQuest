@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "avatar_items": {
                   Row: {
-                    "description": string,"id": string,"is_active": boolean,"is_starter": boolean,"land_id": string | null,"name": string,"price": number,"slot": Database["public"]['Enums']["avatar_slot"],"sort_order": number,"story": string | null,"unlock_land_id": string | null,"unlock_quest_id": string | null
+                    "description": string,"id": string,"is_active": boolean,"is_starter": boolean,"land_id": string | null,"name": string,"pack_id": string | null,"pass_month": string | null,"price": number,"slot": Database["public"]['Enums']["avatar_slot"],"sort_order": number,"story": string | null,"unlock_land_id": string | null,"unlock_quest_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "description": string,"id": string,"is_active"?: boolean,"is_starter"?: boolean,"land_id"?: string | null,"name": string,"price"?: number,"slot": Database["public"]['Enums']["avatar_slot"],"sort_order"?: number,"story"?: string | null,"unlock_land_id"?: string | null,"unlock_quest_id"?: string | null
+                    "description": string,"id": string,"is_active"?: boolean,"is_starter"?: boolean,"land_id"?: string | null,"name": string,"pack_id"?: string | null,"pass_month"?: string | null,"price"?: number,"slot": Database["public"]['Enums']["avatar_slot"],"sort_order"?: number,"story"?: string | null,"unlock_land_id"?: string | null,"unlock_quest_id"?: string | null
                   }
                   Update: {
-                    "description"?: string,"id"?: string,"is_active"?: boolean,"is_starter"?: boolean,"land_id"?: string | null,"name"?: string,"price"?: number,"slot"?: Database["public"]['Enums']["avatar_slot"],"sort_order"?: number,"story"?: string | null,"unlock_land_id"?: string | null,"unlock_quest_id"?: string | null
+                    "description"?: string,"id"?: string,"is_active"?: boolean,"is_starter"?: boolean,"land_id"?: string | null,"name"?: string,"pack_id"?: string | null,"pass_month"?: string | null,"price"?: number,"slot"?: Database["public"]['Enums']["avatar_slot"],"sort_order"?: number,"story"?: string | null,"unlock_land_id"?: string | null,"unlock_quest_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -40,6 +40,12 @@ export type Database = {
       columns: ["land_id"]
 isOneToOne: false
       referencedRelation: "lands"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "avatar_items_pack_id_fkey"
+      columns: ["pack_id"]
+isOneToOne: false
+      referencedRelation: "outfit_packs"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "avatar_items_unlock_land_id_fkey"
@@ -135,6 +141,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"entitlements": {
+                  Row: {
+                    "expires_at": string,"kind": string,"product_id": string,"updated_at": string,"user_id": string,"will_renew": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "expires_at": string,"kind": string,"product_id": string,"updated_at"?: string,"user_id": string,"will_renew"?: boolean
+                  }
+                  Update: {
+                    "expires_at"?: string,"kind"?: string,"product_id"?: string,"updated_at"?: string,"user_id"?: string,"will_renew"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "entitlements_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"friendships": {
                   Row: {
                     "addressee": string,"created_at": string,"requester": string,"status": Database["public"]['Enums']["friendship_status"]
@@ -218,6 +244,46 @@ isOneToOne: false
       columns: ["landmark_id"]
 isOneToOne: false
       referencedRelation: "landmarks"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outfit_packs": {
+                  Row: {
+                    "description": string,"id": string,"is_active": boolean,"name": string,"product_id": string,"sort_order": number,"story": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description": string,"id": string,"is_active"?: boolean,"name": string,"product_id": string,"sort_order"?: number,"story"?: string | null
+                  }
+                  Update: {
+                    "description"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"product_id"?: string,"sort_order"?: number,"story"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"pack_owned": {
+                  Row: {
+                    "pack_id": string,"purchased_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "pack_id": string,"purchased_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "pack_id"?: string,"purchased_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pack_owned_pack_id_fkey"
+      columns: ["pack_id"]
+isOneToOne: false
+      referencedRelation: "outfit_packs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pack_owned_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -486,6 +552,9 @@ isOneToOne: false
 "am_i_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"apply_store_event":
+{ Args: { "p_event": Json }; Returns: string
+                           },
 "block_user":
 { Args: { "p_user_id": string }; Returns: undefined
                            },
@@ -494,6 +563,9 @@ isOneToOne: false
                            },
 "check_in":
 { Args: { "p_answer"?: string,"p_found_at"?: string,"p_lat"?: number,"p_lng"?: number,"p_parade_mode"?: boolean,"p_photo_path"?: string,"p_spot_id": string }; Returns: Json
+                           },
+"claim_pass_gift":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: undefined

@@ -19,6 +19,7 @@ import '@/lib/network';
 import { OfflineQueueProvider } from '@/lib/offlineQueue';
 import { ParadeModeProvider } from '@/lib/paradeMode';
 import { PreferencesProvider } from '@/lib/preferences';
+import { usePurchasesUser } from '@/lib/purchases';
 import { useProfile } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { legalInfo } from '@/legal/info';
@@ -81,6 +82,7 @@ export default function RootLayout() {
  */
 function RootNavigator() {
   const { session, initialized } = useAuth();
+  usePurchasesUser(session?.user.id);
   const profile = useProfile(session?.user.id);
   const restoring = useIsRestoring();
 
@@ -157,6 +159,7 @@ function RootNavigator() {
           />
           <Stack.Screen name="avatar" options={{ presentation: 'modal', title: copy.avatar.previewLabel }} />
           <Stack.Screen name="wardrobe" options={{ title: copy.wardrobe.title }} />
+          <Stack.Screen name="quest-pass" options={{ title: copy.pass.name }} />
           <Stack.Screen name="safety" options={{ title: copy.safety.title }} />
           <Stack.Screen name="about" options={{ title: copy.about.title }} />
         <Stack.Screen name="blocked" options={{ title: copy.blocked.title }} />

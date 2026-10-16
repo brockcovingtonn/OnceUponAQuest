@@ -36,11 +36,13 @@ Quests take place in busy, real-world places. Your safety, and the safety of tho
 
 You understand that visiting theme parks and other public places involves risks, including crowds, weather, uneven surfaces and physical exertion. You voluntarily choose to take part in quests and assume all risks of doing so. We do not operate, control or inspect any park or location shown in the App.
 
-## 5. No buying or selling
+## 5. No buying or selling between people
 
-The App is for fun and exploration only. You may not use the App to buy, sell, trade for money, advertise, or arrange any paid service, tour, or meetup on park property or elsewhere. Logging a snack in the Snack Passport is not an endorsement of any vendor, and we are not paid by any vendor or park.
+The App is for fun and exploration. You may not use the App to buy, sell, trade for money, advertise, or arrange any paid service, tour, or meetup on park property or elsewhere. Logging a snack in the Snack Passport is not an endorsement of any vendor, and we are not paid by any vendor or park. The only things sold in the App are our own digital extras (the Quest Pass and outfit packs), described below.
 
-Wishing Stars and wardrobe items are just for fun. You earn stars only by playing (finding spots, finishing quests and lands, stamping Storybook Lens pages and dressing the part); they cannot be bought with real money, sold, traded, transferred or exchanged for anything outside the App, and they have no cash value. We may change how many stars things earn or cost, add or retire items, and correct mistakes in balances. Stars and items end when your account ends.
+Quest Pass and outfit packs. You can buy optional digital extras from us through the Apple App Store or Google Play: the Quest Pass (premium quests, a monthly outfit gift and a Pass ribbon) and outfit packs for your explorer. All free quests stay free. Purchases are processed by Apple or Google under their terms, and payment is charged to your store account. Monthly and yearly Quest Passes renew automatically until you cancel at least 24 hours before the end of the current period in your store account settings; the Trip Pass lasts 3 days from purchase and does not renew. Refunds are handled by Apple or Google under their policies. Outfit packs and claimed monthly gifts are yours to keep while your account exists, but they are a license to use digital items in the App, not property, and they have no cash value. Premium quests are researched in good faith but, like all quests, may change or be unavailable when parks change; if a premium quest becomes unavailable, we may replace it. Deleting your account does not cancel a subscription.
+
+Wishing Stars and wardrobe items are just for fun. You earn stars only by playing (finding spots, finishing quests and lands, stamping Storybook Lens pages and dressing the part); they are never sold (not even as part of the Quest Pass or outfit packs), and they cannot be bought, sold, traded, transferred or exchanged for anything outside the App, and they have no cash value. We may change how many stars things earn or cost, add or retire items, and correct mistakes in balances. Stars and items end when your account ends.
 
 ## 6. Your content
 

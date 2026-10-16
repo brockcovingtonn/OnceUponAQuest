@@ -62,8 +62,15 @@ Wrong answer: friendly retry message, unlimited tries, "Need a hint?" reveals th
 - Your explorer appears on stamp and badge screens, share cards, and the Map (live position plus a compass arrow, foreground only, never shared with others).
 - **Lantern Keep**: our own original castle on the Map (see hard rule 2 for castle rules).
 
+### 8. Quest Pass and outfit packs (added October 2026)
+- **Quest Pass** (in-app purchase through Apple / Google via RevenueCat): monthly ($3.99), yearly ($24.99, auto-renewing) or a 3-day Trip Pass ($4.99, non-renewing); store prices are set in App Store Connect / Play Console. Unlocks premium quests (`quests.is_premium`, first: Hollow Haunts in New Orleans Square), a free outfit gift each month (`avatar_items.pass_month`, claimed once and kept), and a Pass ribbon on the profile.
+- All free quests stay free. Premium quests never count toward finishing a land, so land bonuses and land-locked items stay reachable for free.
+- **Outfit packs**: non-consumable purchases (about $1.99 to $2.99): Sleepy Hollow, Holiday Lights, Pirate Captain. Pack items are never sold for stars.
+- Server is the source of truth: RevenueCat's webhook → `revenuecat-webhook` Edge Function → `apply_store_event()` updates `entitlements` and `pack_owned`, ignores repeats, and handles renewals, cancellations and refunds. Premium spots are hidden by RLS without the Pass, and `check_in` returns `pass_required`.
+- Wishing Stars are never sold.
+
 ## Not in Phase 1
-Pins and trading, outfit closet, audio tours, camera recognition, meetups, payments, push notifications, Walt Disney World content, other lands. Leave a `is_premium` flag on quests but do not build payments.
+Pins and trading, outfit closet, audio tours, camera recognition, meetups, push notifications, Walt Disney World content, other lands.
 
 ## Data model (see `supabase/migrations/`)
 - `parks`, `lands` — locations.

@@ -30,6 +30,7 @@ export const privacy: LegalDocument = {
         'Camera — when you tap a button to take a photo, and while the Storybook Lens is open to show a live view. The Lens view is never recorded, saved or sent anywhere.',
         'Compass direction — while the Storybook Lens is open, to show which landmarks you are facing, and while "Show me" is on in the Map, to point your explorer\'s arrow. It stays on your phone.',
         'Wishing Stars and wardrobe — the stars you earn and spend, and the outfit items you own. Only you can see your stars and wardrobe; others see only what your explorer is wearing.',
+        'Purchases — if you buy the Quest Pass or an outfit pack, which product you bought, when, when your Pass expires or renews, and refunds. Apple or Google handle payment; we never see your card or payment details.',
         'Storybook Lens stamps — which landmark stories you have stamped, and when.',
         'Saved quests — quests you save for your next visit. Only you can see them.',
         'Photo library — only through your phone\'s system picker, and only for the single photo you choose as your profile photo.',
@@ -66,7 +67,7 @@ export const privacy: LegalDocument = {
         'We share information only in these cases:',
       ],
       bullets: [
-        'Service providers who process data for us under contract: Supabase (database, sign-in and file storage, hosted in ' + L.dataLocation + '), our email delivery provider (to send sign-in codes), and Apple and Google (to distribute the App).',
+        'Service providers who process data for us under contract: Supabase (database, sign-in and file storage, hosted in ' + L.dataLocation + '), our email delivery provider (to send sign-in codes), Apple and Google (to distribute the App and process purchases), and RevenueCat (to keep track of Quest Pass and outfit pack purchases; it receives your account ID and purchase details, never your email, location or photos).',
         'When required by law, or to protect the safety, rights or property of our users, the public, or us.',
         'As part of a merger, acquisition or sale of assets, in which case this Policy will continue to apply to your information.',
         'With your permission.',
@@ -88,7 +89,7 @@ export const privacy: LegalDocument = {
     {
       heading: '7. How long we keep information',
       paragraphs: [
-        'We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile (including your explorer avatar), check-ins, Storybook Lens stamps, Wishing Stars, wardrobe items, saved quests, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.',
+        'We keep your information while your account is active. When you delete your account (Profile → Delete my account), we immediately delete your profile (including your explorer avatar), check-ins, Storybook Lens stamps, Wishing Stars, wardrobe items, outfit packs, Quest Pass records, saved quests, badges, friendships, blocks, problem reports, reports you made or that were made about you, check-in photos and profile photo. We keep a record of store purchase events for up to 7 years where tax or accounting law requires it. Copies may remain in encrypted backups for a limited time (typically no more than 30 days) before they are overwritten. Server logs are kept for a short period set by our hosting provider. We may keep information longer if the law requires it.',
       ],
     },
     {

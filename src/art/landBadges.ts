@@ -257,6 +257,21 @@ export const landBadgeGlyphs: Record<string, Shape[]> = {
     ...twinkle(26, 50, 3),
     ...twinkle(74, 28, 3),
   ],
+
+  // Premium: Hollow Haunts — a lantern for a polite midnight visit.
+  badge_lantern: [
+    { kind: 'path', d: 'M50 18 C46 18 44 21 44 24 M50 18 C54 18 56 21 56 24', fill: 'none', stroke: 'line', strokeWidth: 2.5 },
+    { kind: 'polygon', points: '36,32 64,32 58,24 42,24', fill: 'line' },
+    { kind: 'rect', x: 38, y: 32, w: 24, h: 34, rx: 3, fill: 'accent', stroke: 'line', strokeWidth: 3 },
+    { kind: 'line', x1: 50, y1: 32, x2: 50, y2: 66, stroke: 'line', strokeWidth: 2 },
+    { kind: 'line', x1: 38, y1: 49, x2: 62, y2: 49, stroke: 'line', strokeWidth: 2 },
+    { kind: 'path', d: 'M50 40 C47 44 47 48 50 51 C53 48 53 44 50 40 Z', fill: 'soft' },
+    { kind: 'rect', x: 34, y: 66, w: 32, h: 6, rx: 2, fill: 'line' },
+    { kind: 'path', d: 'M68 30 C74 30 76 36 72 40 C76 42 74 48 70 46 C70 50 66 50 66 46', fill: 'none', stroke: 'line', strokeWidth: 2 },
+    { kind: 'circle', cx: 70, cy: 34, r: 1.2, fill: 'line' },
+    ...twinkle(28, 30, 4),
+    ...twinkle(30, 74, 3),
+  ],
 };
 
 /** Storybook Lens page stamp: an open page under a magnifying lens, with a sparkle. */
