@@ -13,12 +13,13 @@ import { LensButton } from '@/components/LensButton';
 import type { StoryMapStamp, StoryMarkerData } from '@/components/MapMarkers';
 import { ParkMap } from '@/components/ParkMap';
 import { ZoomableCanvas } from '@/components/ZoomableCanvas';
-import { PARK_CANVAS, PARK_LANDS } from '@/art/parkMap';
 import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
 import { getLocationPermission, requestLocationPermission } from '@/lib/location';
-import { approxLandmarkCoords, PARK_REGION, parkPlaceholderPoint, regionForView, toParkPoint } from '@/lib/mapGeometry';
+import { approxLandmarkCoords, parkPlaceholderPoint, parkRegion, regionForView, toParkPoint } from '@/lib/mapGeometry';
+import { PARK_IDS, PARK_MAPS, parkOfLand } from '@/lib/parks';
+import { usePreferences } from '@/lib/preferences';
 import { useIsOnline } from '@/lib/network';
 import { useParadeMode } from '@/lib/paradeMode';
 import { type MapSpot, useMapSpots, useMyProgress, useProfile } from '@/lib/queries';
@@ -31,7 +32,6 @@ const ALL = 'all';
 const PARK = 'park';
 /** Pixels per map meter the storybook map is drawn at (crisp up to about this zoom). */
 const RENDER_SCALE = 2.2;
-const WHOLE_PARK = { x: 0, y: 0, w: PARK_CANVAS.width, h: PARK_CANVAS.height };
 
 type Chip = { id: string; label: string };
 
@@ -68,10 +68,15 @@ export default function MapScreen() {
   const [locateMessage, setLocateMessage] = useState<string>();
   const [showUserOnRealMap, setShowUserOnRealMap] = useState(false);
 
+  // Which park: shared with the Quests tab and saved on the phone.
+  const { park, setPreference } = usePreferences();
+  const parkMap = PARK_MAPS[park];
+
   const { lands, quests } = useMemo(() => {
     const landMap = new Map<string, MapSpot['land']>();
     const questMap = new Map<string, MapSpot['quest'] & { landId: string }>();
     for (const s of spots.data ?? []) {
+      if (s.land.parkId !== park) continue;
       landMap.set(s.land.id, s.land);
       questMap.set(s.quest.id, { ...s.quest, landId: s.land.id });
     }
@@ -79,7 +84,7 @@ export default function MapScreen() {
       lands: [...landMap.values()].sort((a, b) => a.order - b.order),
       quests: [...questMap.values()].sort((a, b) => a.order - b.order),
     };
-  }, [spots.data]);
+  }, [spots.data, park]);
 
   if (spots.isPending || progress.isPending) return <StateView kind="loading" />;
   if (spots.isError || progress.isError) {
@@ -96,14 +101,15 @@ export default function MapScreen() {
   }
 
   const { foundSpots } = progress.data;
-  const all = spots.data;
+  const all = spots.data.filter((s) => s.land.parkId === park);
 
   const questFound = (questId: string) => all.filter((s) => s.quest.id === questId && foundSpots.has(s.id)).length;
   const questTotal = (questId: string) => all.filter((s) => s.quest.id === questId).length;
   const inProgress = (q: { id: string }) => questFound(q.id) > 0 && questFound(q.id) < questTotal(q.id);
 
   // Open on the land of the quest you're partway through, else the whole park.
-  const landId = chosenLand ?? quests.find(inProgress)?.landId ?? PARK;
+  const chosen = chosenLand === PARK || lands.some((l) => l.id === chosenLand) ? chosenLand : null;
+  const landId = chosen ?? quests.find(inProgress)?.landId ?? PARK;
   const landQuests = quests.filter((q) => q.landId === landId);
   // Within a land: the chosen quest, else the one you're partway through, else the first not finished.
   const questId =
@@ -115,9 +121,9 @@ export default function MapScreen() {
         ALL);
   const inLand = landId === PARK ? [] : all.filter((s) => s.land.id === landId);
   const shown = questId === ALL ? inLand : inLand.filter((s) => s.quest.id === questId);
-  const parkLand = PARK_LANDS.find((l) => l.id === landId) ?? null;
-  const focusView = parkLand?.view ?? WHOLE_PARK;
-  const me = myCoords ? toParkPoint(myCoords.lat, myCoords.lng) : null;
+  const parkLand = parkMap.lands.find((l) => l.id === landId) ?? null;
+  const focusView = parkLand?.view ?? { x: 0, y: 0, w: parkMap.canvas.width, h: parkMap.canvas.height };
+  const me = myCoords ? toParkPoint(myCoords.lat, myCoords.lng, park) : null;
 
   const stateOf = (s: MapSpot): StoryMapStamp['state'] =>
     foundSpots.has(s.id) ? 'found' : paradeMode && s.pauseDuringParades ? 'paused' : 'open';
@@ -126,12 +132,12 @@ export default function MapScreen() {
   const stamps: StoryMapStamp[] = shown.map((s) => {
     const qIndex = landQuests.findIndex((q) => q.id === s.quest.id);
     const hasPin = s.lat !== null && s.lng !== null;
-    const pinned = hasPin ? toParkPoint(s.lat ?? 0, s.lng ?? 0) : null;
+    const pinned = hasPin ? toParkPoint(s.lat ?? 0, s.lng ?? 0, park) : null;
     return {
       id: s.id,
       order: s.order,
       name: nameOf(s),
-      point: pinned ?? parkPlaceholderPoint(landId, qIndex, s.order, questTotal(s.quest.id)),
+      point: pinned ?? parkPlaceholderPoint(landId, qIndex, s.order, questTotal(s.quest.id), park),
       state: stateOf(s),
       selected: s.id === selectedId,
     };
@@ -153,7 +159,7 @@ export default function MapScreen() {
   const storyMarkers: StoryMarkerData[] = landStories.map((l) => {
     // Pinned on site, else its approximate real-world spot, else the middle of its land.
     const coords = l.lat !== null && l.lng !== null ? { lat: l.lat, lng: l.lng } : approxLandmarkCoords(l.slug);
-    const pinned = coords ? toParkPoint(coords.lat, coords.lng) : null;
+    const pinned = coords ? toParkPoint(coords.lat, coords.lng, park) : null;
     return {
       id: l.id,
       title: l.title,
@@ -164,7 +170,9 @@ export default function MapScreen() {
   });
   const selectedStory = (landmarks.data ?? []).find((l) => l.id === selectedStoryId) ?? null;
   const pinnedStories = storiesOn
-    ? (landmarks.data ?? []).filter((l) => l.lat !== null && l.lng !== null && (landId === PARK || l.land.id === landId))
+    ? (landmarks.data ?? []).filter(
+        (l) => l.lat !== null && l.lng !== null && parkOfLand(l.land.id) === park && (landId === PARK || l.land.id === landId),
+      )
     : [];
   const openLens = () => router.push({ pathname: '/lens', params: landId !== PARK ? { land: landId } : {} });
   const selectSpot = (id: string) => {
@@ -222,6 +230,20 @@ export default function MapScreen() {
       </View>
 
       <ChipRow
+        label={copy.parks.label}
+        chips={PARK_IDS.map((id) => ({ id, label: copy.parks.names[id] }))}
+        activeId={park}
+        small
+        onPick={(id) => {
+          setPreference('park', id as typeof park);
+          setChosenLand(null);
+          setChosenQuest(null);
+          setSelectedId(null);
+          setSelectedStoryId(null);
+          setLocateMessage(undefined);
+        }}
+      />
+      <ChipRow
         label={copy.map.landsLabel}
         chips={landChips}
         activeId={landId}
@@ -249,15 +271,16 @@ export default function MapScreen() {
       <View style={styles.mapArea}>
         {view === 'storybook' ? (
           <ZoomableCanvas
-            contentWidth={PARK_CANVAS.width * RENDER_SCALE}
-            contentHeight={PARK_CANVAS.height * RENDER_SCALE}
+            contentWidth={parkMap.canvas.width * RENDER_SCALE}
+            contentHeight={parkMap.canvas.height * RENDER_SCALE}
             focus={{ x: focusView.x * RENDER_SCALE, y: focusView.y * RENDER_SCALE, w: focusView.w * RENDER_SCALE, h: focusView.h * RENDER_SCALE }}
-            focusKey={landId}
+            focusKey={`${park}:${landId}`}
             reduceMotion={reduced}>
             <ParkMap
               renderScale={RENDER_SCALE}
               land={landId === PARK ? null : parkLand}
-              lands={PARK_LANDS}
+              park={park}
+              lands={parkMap.lands}
               medallions={medallions}
               stamps={stamps}
               showRoute={questId !== ALL}
@@ -277,9 +300,9 @@ export default function MapScreen() {
           </ZoomableCanvas>
         ) : (
           <MapView
-            key={landId}
+            key={`${park}:${landId}`}
             style={StyleSheet.absoluteFill}
-            initialRegion={parkLand ? regionForView(parkLand.view) : PARK_REGION}
+            initialRegion={parkLand ? regionForView(parkLand.view, park) : parkRegion(park)}
             showsUserLocation={showUserOnRealMap}
             showsPointsOfInterests={false}
             showsCompass

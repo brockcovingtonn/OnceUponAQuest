@@ -57,10 +57,13 @@ export default function BadgeEarnedScreen() {
   const look = parseLook(profile.data?.avatar);
 
   // Your next adventure: a quest you've started, else the next one nearby.
-  const currentId = quests.data?.find((q) => q.slug === quest?.slug)?.id;
+  const current = quests.data?.find((q) => q.slug === quest?.slug);
+  const currentId = current?.id;
+  // Stay in the same park.
+  const samePark = (quests.data ?? []).filter((q) => !current || q.land.parkId === current.land.parkId);
   const next =
     quests.data && progress.data
-      ? suggestNextQuest(quests.data, currentId, progress.data.foundByQuest, progress.data.badgeIds)
+      ? suggestNextQuest(samePark, currentId, progress.data.foundByQuest, progress.data.badgeIds)
       : null;
   const nextSaved = next ? Boolean(saved.data?.includes(next.quest.id)) : false;
 

@@ -32,7 +32,8 @@ export const PARK_CANVAS = PARK_GEO_CANVAS;
 const W = PARK_CANVAS.width;
 const H = PARK_CANVAS.height;
 
-const M = {
+/** The map's palette (shared with the California Adventure map). */
+export const M = {
   paper: '#F3E9D2',
   edge: '#C9A86A',
   ink: '#1B2340',
@@ -112,7 +113,7 @@ export const PARK_TWINKLES: Pt[] = [
 // Little drawings
 // ---------------------------------------------------------------------------
 
-function sparkle(cx: number, cy: number, r: number, fill: Hex = M.gold): Shape {
+export function sparkle(cx: number, cy: number, r: number, fill: Hex = M.gold): Shape {
   const s = r * 0.28;
   return {
     kind: 'polygon',
@@ -121,7 +122,7 @@ function sparkle(cx: number, cy: number, r: number, fill: Hex = M.gold): Shape {
   };
 }
 
-function cloud(x: number, y: number, w: number): Shape {
+export function cloud(x: number, y: number, w: number): Shape {
   const h = w * 0.38;
   return {
     kind: 'path',
@@ -133,12 +134,12 @@ function cloud(x: number, y: number, w: number): Shape {
   };
 }
 
-function bird(x: number, y: number): Shape {
+export function bird(x: number, y: number): Shape {
   return { kind: 'path', d: `M${x - 5} ${y} Q${x - 2.5} ${y - 4} ${x} ${y} Q${x + 2.5} ${y - 4} ${x + 5} ${y}`, fill: 'none', stroke: M.ink, strokeWidth: 1.2, opacity: 0.6 };
 }
 
 /** A carousel seen from above: a striped canopy. */
-function carrousel(c: Pt, r: number): Shape[] {
+export function carrousel(c: Pt, r: number): Shape[] {
   const out: Shape[] = [{ kind: 'circle', cx: c.x, cy: c.y, r: r + 1.5, fill: M.walk, stroke: M.edge, strokeWidth: 0.8 }];
   for (let k = 0; k < 12; k++) {
     const a1 = (k * Math.PI) / 6;
@@ -166,7 +167,7 @@ function teacups(c: Pt): Shape[] {
 }
 
 /** A generic flying ride: a hub with arms and little round cars. */
-function spinner(c: Pt): Shape[] {
+export function spinner(c: Pt): Shape[] {
   const out: Shape[] = [{ kind: 'circle', cx: c.x, cy: c.y, r: 10, fill: M.walk, stroke: M.edge, strokeWidth: 0.8 }];
   for (let k = 0; k < 8; k++) {
     const a = (k * Math.PI) / 4;

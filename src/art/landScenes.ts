@@ -930,6 +930,182 @@ const hollowHaunts: Shape[] = [
   { kind: 'polygon', points: '331,150 353,150 342,140', fill: '#1B1A2E' },
 ];
 
+// ---------------------------------------------------------------------------
+// California Adventure: one vignette per land, all generic and original.
+// ---------------------------------------------------------------------------
+
+/** A stucco storefront with an arched door and a striped awning. */
+function stuccoShop(x: number, w: number, h: number, wall: Hex, awning: Hex): Shape[] {
+  const base = 196;
+  return [
+    { kind: 'rect', x, y: base - h, w, h, fill: wall, stroke: INK, strokeWidth: 1 },
+    { kind: 'path', d: `M${x - 4} ${base - h} H${x + w + 4} V${base - h + 6} H${x - 4} Z`, fill: '#B86A4A' },
+    { kind: 'path', d: `M${x + w / 2 - 9} ${base} V${base - 22} A9 9 0 0 1 ${x + w / 2 + 9} ${base - 22} V${base} Z`, fill: '#5A3E2A' },
+    { kind: 'path', d: `M${x + 6} ${base - 34} H${x + w - 6} L${x + w - 2} ${base - 26} H${x + 2} Z`, fill: awning },
+    { kind: 'rect', x: x + 10, y: base - h + 16, w: 12, h: 14, rx: 6, fill: GLOW },
+    { kind: 'rect', x: x + w - 22, y: base - h + 16, w: 12, h: 14, rx: 6, fill: GLOW },
+  ];
+}
+
+const buenaVista: Shape[] = [
+  sky('#F7C98A', '#FBE7C2'),
+  { kind: 'circle', cx: 330, cy: 46, r: 24, fill: '#FFF1C8', opacity: 0.8 },
+  ...cloud(60, 50, 0.9),
+  ...cloud(220, 34, 0.7),
+  // A theater with an eight-sided tower at the end of the street.
+  { kind: 'polygon', points: '186,60 214,60 222,72 222,120 178,120 178,72', fill: '#F3E3C8', stroke: INK, strokeWidth: 1.2 },
+  { kind: 'polygon', points: '182,60 200,44 218,60', fill: '#B86A4A' },
+  { kind: 'rect', x: 150, y: 120, w: 100, h: 76, fill: '#F3E3C8', stroke: INK, strokeWidth: 1.2 },
+  { kind: 'rect', x: 162, y: 128, w: 76, h: 12, fill: GOLD },
+  ...bulbRow(166, 234, 145, 8),
+  { kind: 'path', d: 'M188 196 V170 A12 12 0 0 1 212 170 V196 Z', fill: '#5A3E2A' },
+  ...stuccoShop(14, 90, 86, '#F0D2A8', '#C8475A'),
+  ...stuccoShop(296, 92, 80, '#E8C8A0', '#3F6B52'),
+  ...palm(122, 196, 110, '#3F6B52'),
+  ...palm(270, 196, 100, '#3F6B52'),
+  { kind: 'rect', x: 0, y: 196, w: 400, h: 44, fill: '#B9A68A' },
+  { kind: 'line', x1: 0, y1: 214, x2: 400, y2: 214, stroke: '#8E7A6A', strokeWidth: 2 },
+];
+
+const hollywoodBacklot: Shape[] = [
+  sky('#2A2456', '#B86A8A'),
+  ...stars(0.7),
+  // Searchlight beams.
+  { kind: 'polygon', points: '120,196 60,0 90,0', fill: BULB, opacity: 0.12 },
+  { kind: 'polygon', points: '290,196 330,0 360,0', fill: BULB, opacity: 0.12 },
+  // Art-deco facades.
+  { kind: 'path', d: 'M20 196 V100 L40 88 L60 100 V196 Z', fill: '#E8D6C8', stroke: INK, strokeWidth: 1 },
+  { kind: 'rect', x: 60, y: 120, w: 90, h: 76, fill: '#D9B8C8', stroke: INK, strokeWidth: 1 },
+  { kind: 'path', d: 'M150 196 V82 L175 64 L200 82 V196 Z', fill: '#F0E3D0', stroke: INK, strokeWidth: 1.2 },
+  { kind: 'line', x1: 175, y1: 70, x2: 175, y2: 196, stroke: GOLD, strokeWidth: 2 },
+  { kind: 'rect', x: 200, y: 110, w: 110, h: 86, fill: '#C8D6E8', stroke: INK, strokeWidth: 1 },
+  { kind: 'rect', x: 214, y: 122, w: 82, h: 14, rx: 3, fill: RED },
+  ...bulbRow(216, 294, 142, 7),
+  { kind: 'rect', x: 310, y: 130, w: 80, h: 66, fill: '#E8D6C8', stroke: INK, strokeWidth: 1 },
+  ...[76, 100, 124, 330, 354].map((x): Shape => ({ kind: 'rect', x, y: 140, w: 12, h: 16, fill: GLOW })),
+  { kind: 'rect', x: 0, y: 196, w: 400, h: 44, fill: '#3A3F52' },
+  { kind: 'line', x1: 0, y1: 212, x2: 400, y2: 212, stroke: GOLD, strokeWidth: 2, dash: '14 10', opacity: 0.6 },
+];
+
+const heroCampus: Shape[] = [
+  sky('#1E2A4A', '#5A7AA8'),
+  ...stars(0.6),
+  // A tall headquarters tower with glowing windows.
+  { kind: 'path', d: 'M170 196 V60 L200 40 L230 60 V196 Z', fill: '#C8CCD8', stroke: INK, strokeWidth: 1.2 },
+  ...[70, 90, 110, 130, 150, 170].map((y): Shape => ({ kind: 'rect', x: 184, y, w: 32, h: 8, fill: '#9FC4F0', opacity: 0.85 })),
+  { kind: 'circle', cx: 200, cy: 52, r: 4, fill: RED },
+  // Modern campus buildings.
+  { kind: 'rect', x: 20, y: 120, w: 130, h: 76, fill: '#A8B0C0', stroke: INK, strokeWidth: 1 },
+  { kind: 'rect', x: 30, y: 132, w: 110, h: 20, fill: '#5A6A8A' },
+  { kind: 'rect', x: 250, y: 110, w: 130, h: 86, fill: '#B8BEC8', stroke: INK, strokeWidth: 1 },
+  { kind: 'rect', x: 262, y: 124, w: 106, h: 12, fill: RED },
+  { kind: 'rect', x: 262, y: 144, w: 106, h: 30, fill: '#5A6A8A' },
+  // Banners.
+  ...[60, 110, 290, 340].map((x): Shape => ({ kind: 'path', d: `M${x} 70 H${x + 14} V104 L${x + 7} 98 L${x} 104 Z`, fill: x < 200 ? RED : GOLD })),
+  { kind: 'rect', x: 0, y: 196, w: 400, h: 44, fill: '#6A6E7A' },
+];
+
+const routeTown: Shape[] = [
+  sky('#E8885A', '#F7C98A'),
+  { kind: 'circle', cx: 200, cy: 96, r: 30, fill: '#FFE4A8', opacity: 0.85 },
+  // Red rock peaks shaped like old car tail fins.
+  { kind: 'path', d: 'M0 150 L40 112 L60 60 L74 112 L120 130 L160 96 L176 50 L190 98 L240 120 L290 92 L308 44 L322 96 L370 112 L400 100 V196 H0 Z', fill: '#B9583A' },
+  { kind: 'path', d: 'M60 60 L74 112 L66 112 Z M176 50 L190 98 L182 98 Z M308 44 L322 96 L314 96 Z', fill: '#8E3E2C' },
+  // Cone-shaped motel rooms.
+  ...[60, 110, 160].flatMap((x): Shape[] => [
+    { kind: 'polygon', points: `${x - 20},196 ${x},126 ${x + 20},196`, fill: '#F2A04A', stroke: INK, strokeWidth: 1.2 },
+    { kind: 'polygon', points: `${x - 11},160 ${x + 11},160 ${x + 14},170 ${x - 14},170`, fill: PARCHMENT },
+    { kind: 'path', d: `M${x - 6} 196 V184 A6 6 0 0 1 ${x + 6} 184 V196 Z`, fill: '#5A3E2A' },
+  ]),
+  // A neon arrow sign.
+  { kind: 'rect', x: 268, y: 120, w: 4, h: 76, fill: INK },
+  { kind: 'path', d: 'M236 110 H296 V100 L320 120 L296 140 V130 H236 Z', fill: '#3F5FA8', stroke: '#9FC4F0', strokeWidth: 2.5 },
+  ...bulbRow(244, 290, 120, 9),
+  { kind: 'rect', x: 0, y: 196, w: 400, h: 44, fill: '#4A4A52' },
+  { kind: 'line', x1: 0, y1: 214, x2: 400, y2: 214, stroke: GOLD, strokeWidth: 3, dash: '18 12' },
+];
+
+const harborTown: Shape[] = [
+  sky('#2A3A6A', '#E89A7A'),
+  ...stars(0.5),
+  ...water(176, '#2E4A6A', '#9FC4F0'),
+  // A red gate bridge over the water.
+  { kind: 'path', d: 'M40 176 C120 140 280 140 360 176', fill: 'none', stroke: RED, strokeWidth: 6 },
+  { kind: 'path', d: 'M140 92 C180 86 220 86 260 92 L258 100 C220 95 180 95 142 100 Z', fill: RED, stroke: INK, strokeWidth: 1 },
+  { kind: 'rect', x: 150, y: 110, w: 100, h: 6, fill: RED },
+  { kind: 'rect', x: 158, y: 98, w: 8, h: 62, fill: RED },
+  { kind: 'rect', x: 234, y: 98, w: 8, h: 62, fill: RED },
+  // Harbor buildings with sweeping roofs.
+  { kind: 'rect', x: 10, y: 126, w: 80, h: 50, fill: '#E8D6B8', stroke: INK, strokeWidth: 1 },
+  { kind: 'path', d: 'M2 128 C30 118 70 118 98 128 L90 120 H10 Z', fill: '#3F6B52' },
+  { kind: 'rect', x: 310, y: 120, w: 80, h: 56, fill: '#D9C4A8', stroke: INK, strokeWidth: 1 },
+  { kind: 'path', d: 'M302 122 C330 112 370 112 398 122 L390 114 H310 Z', fill: RED },
+  // Paper lanterns.
+  ...[30, 54, 330, 354, 378].map((x): Shape => ellipse(x, 146, 6, 8, { fill: '#F2A04A', stroke: INK, strokeWidth: 0.8 })),
+];
+
+const boardwalkPier: Shape[] = [
+  sky('#1E2456', '#6A4A8A'),
+  ...stars(0.8),
+  ...water(186, '#2E3A6A', '#9FC4F0'),
+  // A big wheel.
+  { kind: 'circle', cx: 120, cy: 110, r: 62, fill: 'none', stroke: GOLD, strokeWidth: 3 },
+  ...[0, 30, 60, 90, 120, 150].map((a): Shape => {
+    const r = (a * Math.PI) / 180;
+    return { kind: 'line', x1: 120 - Math.cos(r) * 62, y1: 110 - Math.sin(r) * 62, x2: 120 + Math.cos(r) * 62, y2: 110 + Math.sin(r) * 62, stroke: GOLD, strokeWidth: 1.2, opacity: 0.7 };
+  }),
+  ...[0, 45, 90, 135, 180, 225, 270, 315].map((a): Shape => {
+    const r = (a * Math.PI) / 180;
+    return { kind: 'rect', x: 120 + Math.cos(r) * 62 - 6, y: 110 + Math.sin(r) * 62 - 4, w: 12, h: 10, rx: 3, fill: ([RED, '#9FC4F0', GOLD, '#8FD3B0'] as Hex[])[(a / 45) % 4] };
+  }),
+  { kind: 'polygon', points: '120,110 96,186 144,186', fill: 'none', stroke: GOLD, strokeWidth: 2.5 },
+  // A coaster track along the water.
+  { kind: 'path', d: 'M200 186 C220 120 240 100 260 110 C280 120 290 160 310 150 C330 140 340 90 370 96 L400 100', fill: 'none', stroke: RED, strokeWidth: 4 },
+  ...[220, 260, 300, 340, 380].map((x): Shape => ({ kind: 'line', x1: x, y1: 186, x2: x, y2: 140, stroke: '#8E7A6A', strokeWidth: 2 })),
+  { kind: 'rect', x: 0, y: 182, w: 400, h: 6, fill: '#8A6A4A' },
+  ...bulbRow(4, 396, 180, 12),
+];
+
+const seasideGardens: Shape[] = [
+  sky('#7FB8D8', '#F3E9D2'),
+  ...cloud(40, 40, 0.8),
+  ...cloud(300, 30, 1),
+  ...water(184, '#4F7FB8', '#FFFFFF'),
+  // A bandstand with swings spinning out.
+  { kind: 'path', d: 'M150 70 L200 40 L250 70 Z', fill: RED, stroke: INK, strokeWidth: 1.2 },
+  { kind: 'rect', x: 156, y: 70, w: 88, h: 8, fill: PARCHMENT, stroke: INK, strokeWidth: 1 },
+  { kind: 'rect', x: 196, y: 78, w: 8, h: 106, fill: PARCHMENT, stroke: INK, strokeWidth: 1 },
+  ...[[120, 120], [150, 130], [250, 130], [280, 120]].flatMap(([x, y]): Shape[] => [
+    { kind: 'line', x1: 200, y1: 78, x2: x, y2: y, stroke: INK, strokeWidth: 1 },
+    { kind: 'rect', x: x - 6, y, w: 12, h: 6, rx: 2, fill: GOLD },
+  ]),
+  // Pennant flags and garden hedges.
+  { kind: 'path', d: 'M10 100 C80 110 130 104 160 96', fill: 'none', stroke: INK, strokeWidth: 1 },
+  ...[30, 60, 90, 120].map((x, i): Shape => ({ kind: 'polygon', points: `${x},${103 + i} ${x + 10},${103 + i} ${x + 5},${114 + i}`, fill: ([RED, GOLD, '#4F7FB8', '#8FD3B0'] as Hex[])[i] })),
+  ellipse(60, 176, 50, 12, { fill: '#5C8A48' }),
+  ellipse(340, 176, 54, 12, { fill: '#5C8A48' }),
+];
+
+const mountainTrail: Shape[] = [
+  sky('#8FC4E8', '#E8F0E0'),
+  ...cloud(250, 40, 0.8),
+  // A great rocky peak and a little plane overhead.
+  { kind: 'path', d: 'M60 196 L150 60 L176 40 L196 52 L230 70 L340 196 Z', fill: '#A86A4A' },
+  { kind: 'path', d: 'M150 60 L176 40 L196 52 L186 70 L170 62 Z', fill: '#8E5A3E' },
+  { kind: 'path', d: 'M330 40 h22 m-11 -6 v12 M322 40 h38', fill: 'none', stroke: INK, strokeWidth: 2 },
+  { kind: 'path', d: 'M336 40 C336 36 352 36 356 40 C352 44 336 44 336 40 Z', fill: RED },
+  // Pine forest.
+  ...[20, 48, 300, 332, 366].flatMap((x): Shape[] => [
+    { kind: 'polygon', points: `${x},110 ${x + 18},150 ${x - 18},150`, fill: '#2F5A3A' },
+    { kind: 'polygon', points: `${x},130 ${x + 22},180 ${x - 22},180`, fill: '#2F5A3A' },
+    { kind: 'rect', x: x - 3, y: 180, w: 6, h: 16, fill: '#5A3E2A' },
+  ]),
+  // A river rushing down.
+  { kind: 'path', d: 'M150 196 C170 170 200 168 220 150 C240 132 250 160 280 196 Z', fill: '#4F7FB8' },
+  { kind: 'path', d: 'M170 186 C190 176 210 172 226 160', fill: 'none', stroke: '#FFFFFF', strokeWidth: 2, opacity: 0.7 },
+  { kind: 'rect', x: 0, y: 196, w: 400, h: 44, fill: '#7A8866' },
+];
+
 /** Vignette per quest slug outside Main Street. */
 export const landQuestScenes: Record<string, Shape[]> = {
   'jungle-expedition': jungleExpedition,
@@ -937,6 +1113,24 @@ export const landQuestScenes: Record<string, Shape[]> = {
   'royal-street-secrets': royalStreet,
   'riverfront-and-rails': riverfrontRails,
   'hollow-haunts': hollowHaunts,
+  'welcome-to-1923': buenaVista,
+  'theatre-on-the-circle': buenaVista,
+  'lost-lands': buenaVista,
+  'backlot-boulevard': hollywoodBacklot,
+  'lunch-on-the-lot': hollywoodBacklot,
+  'campus-recruit': heroCampus,
+  'after-the-battle': heroCampus,
+  'roadside-stop': routeTown,
+  'neon-nights': routeTown,
+  'harbor-crossing': harborTown,
+  'bakery-row': harborTown,
+  'pier-pressure': boardwalkPier,
+  'midway-games': boardwalkPier,
+  'pier-lights': boardwalkPier,
+  'seaside-gardens': seasideGardens,
+  'bandstand-days': seasideGardens,
+  'grizzly-trail': mountainTrail,
+  'airfield-days': mountainTrail,
   'bayou-bend': bayouBend,
   'bayou-critters': bayouCritters,
   'frontier-fort': frontierFort,

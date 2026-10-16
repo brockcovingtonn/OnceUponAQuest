@@ -87,7 +87,7 @@ select is(pg_temp.balance(), 10 + 5 + 10 + 15, 'spots, the Main Street dress-the
 
 select pg_temp.as_postgres();
 insert into public.user_badges (user_id, badge_id)
-select 'a5000000-0000-0000-0000-000000000001', q.badge_id from public.quests q where q.land_id = 'dlp-main-street' and q.badge_id is not null;
+select 'a5000000-0000-0000-0000-000000000001', q.badge_id from public.quests q where q.land_id = 'dlp-main-street' and q.badge_id is not null and not q.is_premium;
 select pg_temp.act_as('a5000000-0000-0000-0000-000000000001');
 select is((select count(*) from public.star_ledger where reason = 'land'), 1::bigint, 'finishing a land earns the land bonus once');
 select is(pg_temp.balance(), 40 + 4 * 50 + 200, 'badges and the land bonus add up');

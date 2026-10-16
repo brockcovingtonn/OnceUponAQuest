@@ -390,6 +390,14 @@ const LAND_SCENES: Record<string, string> = {
   'dlp-fantasyland': 'knights-and-carrousel',
   'dlp-toontown': 'toontown-town-tour',
   'dlp-tomorrowland': 'retro-rockets',
+  'dca-buena-vista-street': 'welcome-to-1923',
+  'dca-hollywood-land': 'backlot-boulevard',
+  'dca-avengers-campus': 'campus-recruit',
+  'dca-cars-land': 'roadside-stop',
+  'dca-san-fransokyo-square': 'harbor-crossing',
+  'dca-pixar-pier': 'pier-pressure',
+  'dca-paradise-gardens-park': 'seaside-gardens',
+  'dca-grizzly-peak': 'grizzly-trail',
 };
 
 export function sceneForLand(landId: string | null | undefined): Shape[] {

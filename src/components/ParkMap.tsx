@@ -5,19 +5,7 @@ import Svg, { Circle, Path, Polyline, Rect, SvgXml } from 'react-native-svg';
 
 import { Artwork } from '@/art/Artwork';
 import { lockedPalette } from '@/art/palettes';
-import {
-  PARK_BALLOON,
-  PARK_CANVAS,
-  PARK_FOUNTAIN,
-  PARK_KEEP,
-  PARK_TWINKLES,
-  type ParkLand,
-  parkMap,
-  parkMapLabels,
-  RIVERBOAT_PATH,
-  ROCKET_SPINNER,
-  TRAIN_PATH,
-} from '@/art/parkMap';
+import { PARK_BALLOON, PARK_FOUNTAIN, PARK_KEEP, type ParkLand, RIVERBOAT_PATH, ROCKET_SPINNER, TRAIN_PATH } from '@/art/parkMap';
 import type { AvatarLook } from '@/art/avatar';
 import { LANTERN_KEEP_BOX, lanternKeepSvg } from '@/art/lanternKeep';
 import { MapStamp, ME_BOX, MeAvatar, MeDot, StoryMarker, type StoryMapStamp, type StoryMarkerData } from '@/components/MapMarkers';
@@ -25,12 +13,15 @@ import { CounterScaled } from '@/components/ZoomableCanvas';
 import { Twinkle } from '@/components/Twinkle';
 import { copy } from '@/copy';
 import type { MapPoint } from '@/lib/mapGeometry';
+import { PARK_MAPS, type ParkId } from '@/lib/parks';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { colors, fonts } from '@/theme';
 
 export type LandMedallion = { landId: string; name: string; found: number; total: number };
 
 type Props = {
+  /** Which park's map to draw. */
+  park?: ParkId;
   /** Pixels per map meter to draw at (the zoomable canvas scales it from there). */
   renderScale: number;
   /** The chosen land, or null for the whole park (medallions instead of stamps). */
@@ -163,10 +154,11 @@ function PathRider({
  * chosen it shows a progress medallion per land; with a land chosen it shows
  * that land's spot stamps and story markers. Markers keep their size at any zoom.
  */
-export function ParkMap({ renderScale: R, land, lands, medallions, stamps, showRoute, me, myLook, heading = null, onSelect, onSelectLand, stories = [], onSelectStory }: Props) {
+export function ParkMap({ park = 'disneyland-park', renderScale: R, land, lands, medallions, stamps, showRoute, me, myLook, heading = null, onSelect, onSelectLand, stories = [], onSelectStory }: Props) {
   const reduced = useReducedMotion();
-  const width = PARK_CANVAS.width * R;
-  const height = PARK_CANVAS.height * R;
+  const config = PARK_MAPS[park];
+  const width = config.canvas.width * R;
+  const height = config.canvas.height * R;
   const project = (p: { x: number; y: number }) => ({ x: p.x * R, y: p.y * R });
   const train = useCycle(60000, reduced);
   const boat = useCycle(36000, reduced);
@@ -186,134 +178,139 @@ export function ParkMap({ renderScale: R, land, lands, medallions, stamps, showR
 
   return (
     <View style={{ width, height }}>
-      <Artwork shapes={parkMap} palette={lockedPalette} size={width} canvas={PARK_CANVAS} />
+      <Artwork shapes={config.shapes} palette={lockedPalette} size={width} canvas={config.canvas} />
 
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.shimmer,
-          {
-            left: fountain.x - 10 * R,
-            top: fountain.y - 10 * R,
-            width: 20 * R,
-            height: 20 * R,
-            borderRadius: 10 * R,
-            borderWidth: Math.max(1, R),
-            opacity: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.7] }),
-            transform: [{ scale: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.25] }) }],
-          },
-        ]}
-      />
+      {/* Disneyland's moving pieces and Lantern Keep. */}
+      {park === 'disneyland-park' ? (
+        <>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.shimmer,
+              {
+                left: fountain.x - 10 * R,
+                top: fountain.y - 10 * R,
+                width: 20 * R,
+                height: 20 * R,
+                borderRadius: 10 * R,
+                borderWidth: Math.max(1, R),
+                opacity: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.7] }),
+                transform: [{ scale: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.25] }) }],
+              },
+            ]}
+          />
 
-      {/* Lantern Keep, our own castle, standing on the castle footprint. */}
-      <View
-        pointerEvents="none"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        style={{
-          position: 'absolute',
-          left: (PARK_KEEP.x - PARK_KEEP.width / 2) * R,
-          top: (PARK_KEEP.y - (PARK_KEEP.width * LANTERN_KEEP_BOX.height) / LANTERN_KEEP_BOX.width) * R,
-        }}>
-        <SvgXml
-          xml={lanternKeepSvg}
-          width={PARK_KEEP.width * R}
-          height={((PARK_KEEP.width * LANTERN_KEEP_BOX.height) / LANTERN_KEEP_BOX.width) * R}
-        />
-      </View>
-
-      {/* Rocket ride: arms spin around the hub. */}
-      <Animated.View
-        pointerEvents="none"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        style={{
-          position: 'absolute',
-          left: spinnerAt.x - spinner / 2,
-          top: spinnerAt.y - spinner / 2,
-          width: spinner,
-          height: spinner,
-          transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }],
-        }}>
-        <Svg width={spinner} height={spinner} viewBox="-32 -32 64 64">
-          <Path d="M-24 0 L24 0 M0 -24 L0 24" stroke={colors.storybookGold} strokeWidth={2} />
-          {[
-            [24, 0, 90],
-            [-24, 0, -90],
-            [0, 24, 180],
-            [0, -24, 0],
-          ].map(([x, y, r]) => (
-            <Path
-              key={`${x},${y}`}
-              d="M0 -6 C3 -3 3 3 2 5 L-2 5 C-3 3 -3 -3 0 -6 Z"
-              fill={colors.white}
-              stroke={colors.midnight}
-              strokeWidth={0.8}
-              transform={`translate(${x} ${y}) rotate(${r})`}
+          {/* Lantern Keep, our own castle, standing on the castle footprint. */}
+          <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+              position: 'absolute',
+              left: (PARK_KEEP.x - PARK_KEEP.width / 2) * R,
+              top: (PARK_KEEP.y - (PARK_KEEP.width * LANTERN_KEEP_BOX.height) / LANTERN_KEEP_BOX.width) * R,
+            }}>
+            <SvgXml
+              xml={lanternKeepSvg}
+              width={PARK_KEEP.width * R}
+              height={((PARK_KEEP.width * LANTERN_KEEP_BOX.height) / LANTERN_KEEP_BOX.width) * R}
             />
+          </View>
+
+          {/* Rocket ride: arms spin around the hub. */}
+          <Animated.View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+              position: 'absolute',
+              left: spinnerAt.x - spinner / 2,
+              top: spinnerAt.y - spinner / 2,
+              width: spinner,
+              height: spinner,
+              transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }],
+            }}>
+            <Svg width={spinner} height={spinner} viewBox="-32 -32 64 64">
+              <Path d="M-24 0 L24 0 M0 -24 L0 24" stroke={colors.storybookGold} strokeWidth={2} />
+              {[
+                [24, 0, 90],
+                [-24, 0, -90],
+                [0, 24, 180],
+                [0, -24, 0],
+              ].map(([x, y, r]) => (
+                <Path
+                  key={`${x},${y}`}
+                  d="M0 -6 C3 -3 3 3 2 5 L-2 5 C-3 3 -3 -3 0 -6 Z"
+                  fill={colors.white}
+                  stroke={colors.midnight}
+                  strokeWidth={0.8}
+                  transform={`translate(${x} ${y}) rotate(${r})`}
+                />
+              ))}
+              <Circle r={7} fill={colors.storybookGold} stroke={colors.midnight} strokeWidth={1} />
+              <Circle r={2.5} fill={colors.rose} />
+            </Svg>
+          </Animated.View>
+
+          {/* Riverboat looping the island. */}
+          <PathRider progress={boat} path={RIVERBOAT_PATH} project={project} w={riverboat.w} h={riverboat.h}>
+            <Svg width={riverboat.w} height={riverboat.h} viewBox="0 0 20 11">
+              <Path d="M1 3 L16 3 L19 5.5 L16 8 L1 8 Z" fill={colors.white} stroke={colors.midnight} strokeWidth={0.8} />
+              <Rect x={4} y={4} width={8} height={3} fill="#F6D58E" />
+              <Rect x={0} y={2} width={2.5} height={7} rx={1} fill={colors.rose} />
+              <Circle cx={9} cy={5.5} r={1.2} fill={colors.midnight} />
+            </Svg>
+          </PathRider>
+
+          {/* Train: an engine and two cars on the berm. */}
+          {[2, 1].map((k) => (
+            <PathRider key={`car${k}`} progress={train} path={TRAIN_PATH} lag={k * 0.008} project={project} w={car.w} h={car.h}>
+              <Svg width={car.w} height={car.h} viewBox="0 0 15 9">
+                <Rect x={0.5} y={0.5} width={14} height={8} rx={2} fill={k === 1 ? '#F6D58E' : colors.rose} stroke={colors.midnight} strokeWidth={0.8} />
+                <Rect x={3} y={2.5} width={9} height={4} rx={1} fill={colors.white} opacity={0.8} />
+              </Svg>
+            </PathRider>
           ))}
-          <Circle r={7} fill={colors.storybookGold} stroke={colors.midnight} strokeWidth={1} />
-          <Circle r={2.5} fill={colors.rose} />
-        </Svg>
-      </Animated.View>
+          <PathRider progress={train} path={TRAIN_PATH} project={project} w={engine.w} h={engine.h}>
+            <Svg width={engine.w} height={engine.h} viewBox="0 0 18 10">
+              <Rect x={0.5} y={0.5} width={17} height={9} rx={2.5} fill={colors.midnight} />
+              <Rect x={1.5} y={2} width={6} height={6} rx={1} fill={colors.rose} />
+              <Circle cx={14} cy={5} r={2} fill="#F6D58E" />
+            </Svg>
+          </PathRider>
 
-      {/* Riverboat looping the island. */}
-      <PathRider progress={boat} path={RIVERBOAT_PATH} project={project} w={riverboat.w} h={riverboat.h}>
-        <Svg width={riverboat.w} height={riverboat.h} viewBox="0 0 20 11">
-          <Path d="M1 3 L16 3 L19 5.5 L16 8 L1 8 Z" fill={colors.white} stroke={colors.midnight} strokeWidth={0.8} />
-          <Rect x={4} y={4} width={8} height={3} fill="#F6D58E" />
-          <Rect x={0} y={2} width={2.5} height={7} rx={1} fill={colors.rose} />
-          <Circle cx={9} cy={5.5} r={1.2} fill={colors.midnight} />
-        </Svg>
-      </PathRider>
-
-      {/* Train: an engine and two cars on the berm. */}
-      {[2, 1].map((k) => (
-        <PathRider key={`car${k}`} progress={train} path={TRAIN_PATH} lag={k * 0.008} project={project} w={car.w} h={car.h}>
-          <Svg width={car.w} height={car.h} viewBox="0 0 15 9">
-            <Rect x={0.5} y={0.5} width={14} height={8} rx={2} fill={k === 1 ? '#F6D58E' : colors.rose} stroke={colors.midnight} strokeWidth={0.8} />
-            <Rect x={3} y={2.5} width={9} height={4} rx={1} fill={colors.white} opacity={0.8} />
-          </Svg>
-        </PathRider>
-      ))}
-      <PathRider progress={train} path={TRAIN_PATH} project={project} w={engine.w} h={engine.h}>
-        <Svg width={engine.w} height={engine.h} viewBox="0 0 18 10">
-          <Rect x={0.5} y={0.5} width={17} height={9} rx={2.5} fill={colors.midnight} />
-          <Rect x={1.5} y={2} width={6} height={6} rx={1} fill={colors.rose} />
-          <Circle cx={14} cy={5} r={2} fill="#F6D58E" />
-        </Svg>
-      </PathRider>
-
-      {/* Balloon drifting in the corner. */}
-      <Animated.View
-        pointerEvents="none"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        style={{
-          position: 'absolute',
-          left: balloonAt.x - balloon.w / 2,
-          top: balloonAt.y - balloon.h / 2,
-          transform: [
-            { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [-5 * R, 5 * R] }) },
-            { rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) },
-          ],
-        }}>
-        <Svg width={balloon.w} height={balloon.h} viewBox="-14 -18 28 36">
-          <Path d="M0 -16 C11 -16 13 -4 7 4 L3 9 L-3 9 L-7 4 C-13 -4 -11 -16 0 -16 Z" fill="#7FA6E8" stroke={colors.midnight} strokeWidth={1} />
-          <Path d="M0 -16 C4 -12 4 0 2 9 M0 -16 C-4 -12 -4 0 -2 9" fill="none" stroke={colors.parchment} strokeWidth={1} opacity={0.8} />
-          <Path d="M-3 9 L-3 12 M3 9 L3 12" stroke={colors.midnight} strokeWidth={0.8} />
-          <Rect x={-3.5} y={12} width={7} height={5} rx={1} fill="#8A6A4A" />
-        </Svg>
-      </Animated.View>
+          {/* Balloon drifting in the corner. */}
+          <Animated.View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+              position: 'absolute',
+              left: balloonAt.x - balloon.w / 2,
+              top: balloonAt.y - balloon.h / 2,
+              transform: [
+                { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [-5 * R, 5 * R] }) },
+                { rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) },
+              ],
+            }}>
+            <Svg width={balloon.w} height={balloon.h} viewBox="-14 -18 28 36">
+              <Path d="M0 -16 C11 -16 13 -4 7 4 L3 9 L-3 9 L-7 4 C-13 -4 -11 -16 0 -16 Z" fill="#7FA6E8" stroke={colors.midnight} strokeWidth={1} />
+              <Path d="M0 -16 C4 -12 4 0 2 9 M0 -16 C-4 -12 -4 0 -2 9" fill="none" stroke={colors.parchment} strokeWidth={1} opacity={0.8} />
+              <Path d="M-3 9 L-3 12 M3 9 L3 12" stroke={colors.midnight} strokeWidth={0.8} />
+              <Rect x={-3.5} y={12} width={7} height={5} rx={1} fill="#8A6A4A" />
+            </Svg>
+          </Animated.View>
+        </>
+      ) : null}
 
       {!reduced
-        ? PARK_TWINKLES.map((p, i) => {
+        ? config.twinkles.map((p, i) => {
             const at = project(p);
             return <Twinkle key={`${p.x},${p.y}`} size={12 * R} delay={i * 450} style={{ left: at.x - 6 * R, top: at.y - 6 * R }} />;
           })
         : null}
 
-      {parkMapLabels.map((label) => {
+      {config.labels.map((label) => {
         const at = project(label);
         return (
           <Text

@@ -3,9 +3,16 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 
 const STORAGE_KEY = 'once-upon-a-quest:preferences';
 
-export type Preferences = { sounds: boolean; vibration: boolean };
+export type ParkId = 'disneyland-park' | 'california-adventure';
 
-const DEFAULTS: Preferences = { sounds: true, vibration: true };
+export type Preferences = {
+  sounds: boolean;
+  vibration: boolean;
+  /** The park shown on the Quests and Map tabs. */
+  park: ParkId;
+};
+
+const DEFAULTS: Preferences = { sounds: true, vibration: true, park: 'disneyland-park' };
 
 type PreferencesState = Preferences & {
   setPreference: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void;
@@ -13,7 +20,7 @@ type PreferencesState = Preferences & {
 
 const PreferencesContext = createContext<PreferencesState>({ ...DEFAULTS, setPreference: () => {} });
 
-/** Per-device settings (Sounds, Vibration), saved on the phone. */
+/** Per-device settings (Sounds, Vibration, which park), saved on the phone. */
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<Preferences>(DEFAULTS);
 

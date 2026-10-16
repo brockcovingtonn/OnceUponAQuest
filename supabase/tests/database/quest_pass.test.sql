@@ -62,7 +62,7 @@ select is(pg_temp.event('e2', 'INITIAL_PURCHASE', 'oq_pass_monthly', '$RCAnonymo
 select is(pg_temp.event('e3', 'INITIAL_PURCHASE', 'something_else', 'a6000000-0000-0000-0000-000000000001'), 'ignored: unknown product', 'unknown products are ignored');
 
 select pg_temp.act_as('a6000000-0000-0000-0000-000000000001');
-select is((select count(*) from public.spots where quest_id = (select id from public.quests where slug = 'hollow-haunts')), 4::bigint,
+select is((select count(*) from public.spots where quest_id = (select id from public.quests where slug = 'hollow-haunts')), 6::bigint,
   'Pass holders see premium spots');
 select is(public.check_in((select haunt_spot from t), null, null, null, 'a6000000-0000-0000-0000-000000000001/x.jpg') ->> 'ok',
   'true', 'Pass holders can check in on premium quests');

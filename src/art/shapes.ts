@@ -6,6 +6,7 @@
  * Hard rule: no characters, castles or three-circle "head and ears" shapes.
  */
 import { landBadgeGlyphs } from './landBadges';
+import { moreBadgeGlyphs } from './moreBadges';
 
 /** Semantic colors, resolved per variant at render time. */
 export type Tone = 'bg' | 'frame' | 'line' | 'soft' | 'accent' | 'none';
@@ -156,5 +157,6 @@ export const badgeGlyphs: Record<string, Shape[]> = {
   ],
 
   ...landBadgeGlyphs,
+  ...moreBadgeGlyphs,
 };
 

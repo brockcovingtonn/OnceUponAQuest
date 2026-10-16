@@ -12,7 +12,8 @@ import { Twinkle } from '@/components/Twinkle';
 import { QuestCard } from '@/components/QuestCard';
 import { UpdateBanner } from '@/components/UpdateBanner';
 import { StateView } from '@/components/StateView';
-import { mainStreetNight } from '@/art/scenes';
+import { mainStreetNight, sceneForLand } from '@/art/scenes';
+import { ParkSwitch } from '@/components/ParkSwitch';
 import { StarCount } from '@/components/StarCount';
 import { copy } from '@/copy';
 import { useAppUpdate } from '@/lib/appUpdates';
@@ -27,6 +28,7 @@ import {
   useToggleSavedQuest,
   useWardrobe,
 } from '@/lib/queries';
+import { usePreferences } from '@/lib/preferences';
 import { prefetchStorageImages } from '@/lib/storageImage';
 import { hasSeenWalkthrough } from '@/lib/walkthrough';
 import { colors, minTouchTarget, radius, spacing, type } from '@/theme';
@@ -47,6 +49,7 @@ export default function QuestsScreen() {
   const { session } = useAuth();
   const userId = session?.user.id;
   const wardrobe = useWardrobe(userId);
+  const { park } = usePreferences();
   const profile = useProfile(userId);
   const quests = useQuests();
   const progress = useMyProgress(userId);
@@ -91,7 +94,7 @@ export default function QuestsScreen() {
   } else if (quests.isError || progress.isError) {
     body = <StateView kind="error" message={copy.quests.loadError} onRetry={refresh} />;
   } else {
-    const sections = groupByLand(quests.data);
+    const sections = groupByLand(quests.data.filter((q) => q.land.parkId === park));
     body = (
       <ScrollView
         ref={scrollRef}
@@ -125,7 +128,7 @@ export default function QuestsScreen() {
           </Pressable>
         </View>
         <View style={styles.header}>
-          <Scene shapes={mainStreetNight} height={150} />
+          <Scene shapes={park === 'california-adventure' ? sceneForLand('dca-buena-vista-street') : mainStreetNight} height={150} />
           <Twinkle size={12} style={{ top: 58, right: '16%' }} />
           <Twinkle size={9} delay={700} style={{ top: 74, left: '46%' }} color={colors.parchment} />
         </View>
@@ -133,6 +136,7 @@ export default function QuestsScreen() {
         {appUpdate.ready ? <UpdateBanner onRestart={appUpdate.restart} /> : null}
         <OfflineStatus />
         <ParadeModeToggle />
+        <ParkSwitch onChange={() => scrollRef.current?.scrollTo({ y: 0, animated: false })} />
         {(() => {
           // Saved for your next visit (finished quests drop off on their own).
           const savedQuests = (saved.data ?? [])

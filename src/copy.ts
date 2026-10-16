@@ -859,6 +859,11 @@ export const copy = {
     landTip: (land: string) => `Outfits from ${land} earn bonus stars here`,
   },
 
+  parks: {
+    label: 'Park',
+    names: { 'disneyland-park': 'Disneyland', 'california-adventure': 'California Adventure' } as Record<string, string>,
+  },
+
   pass: {
     name: 'Quest Pass',
     tagline: 'More stories to find, every visit.',

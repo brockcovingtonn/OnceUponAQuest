@@ -17,6 +17,7 @@ import { copy } from '@/copy';
 import { useAuth } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { useLandmarks, useMyLensStamps } from '@/lib/landmarks';
+import { parkOfLand } from '@/lib/parks';
 import { computeMilestones, countParkDays } from '@/lib/milestones';
 import { useMyProgress, usePassportContent, useProfile } from '@/lib/queries';
 import { colors, minTouchTarget, spacing, type } from '@/theme';
@@ -171,12 +172,20 @@ export default function PassportScreen() {
           </View>
         ) : null}
 
-        {lands.map((land) => {
+        {lands.map((land, i) => {
           const progress = landProgress.find((l) => l.id === land.id);
           const found = progress?.found ?? 0;
           const total = progress?.total ?? 0;
+          // A heading where each park's pages begin.
+          const park = parkOfLand(land.id);
+          const parkHeading = i === 0 || parkOfLand(lands[i - 1].id) !== park;
           return (
           <View key={land.id} style={styles.section}>
+            {parkHeading ? (
+              <Text style={styles.parkHeading} accessibilityRole="header">
+                {copy.parks.names[park]}
+              </Text>
+            ) : null}
             <View
               style={styles.landHeader}
               accessible
@@ -254,6 +263,11 @@ export default function PassportScreen() {
 }
 
 const styles = StyleSheet.create({
+  parkHeading: {
+    ...type.title,
+    color: colors.midnight,
+    marginBottom: spacing.xs,
+  },
   safe: {
     flex: 1,
     backgroundColor: colors.parchment,
