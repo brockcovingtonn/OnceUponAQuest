@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse, Path } from 'react-native-svg';
 
-import type { AvatarLook } from '@/art/avatar';
+import { AVATAR_CANVAS, AVATAR_FEET_Y, type AvatarLook } from '@/art/avatar';
 import { AvatarFigure } from '@/components/Avatar';
 import { copy } from '@/copy';
 import type { MapPoint } from '@/lib/mapGeometry';
@@ -84,7 +84,7 @@ export function MeDot() {
 }
 
 /** Size of the "you are here" avatar marker's box; your position is its center. */
-export const ME_BOX = 100;
+export const ME_BOX = 124;
 const C = ME_BOX / 2;
 const TILT = 0.4; // squash for drawing on the ground
 
@@ -100,8 +100,7 @@ function ground(r: number, a: number): string {
  */
 export function MeAvatar({ look, heading }: { look: AvatarLook; heading: number | null }) {
   const figure = 44;
-  const figureHeight = (figure * 140) / 120;
-  const feet = (figureHeight * 129) / 140;
+  const feet = (figure * AVATAR_FEET_Y) / AVATAR_CANVAS.width;
   return (
     <View
       style={{ width: ME_BOX, height: ME_BOX }}

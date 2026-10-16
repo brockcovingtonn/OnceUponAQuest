@@ -5,7 +5,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 set local role postgres;
 
-select plan(22);
+select plan(24);
 
 create function pg_temp.act_as(p_uid uuid) returns void language plpgsql as $$
 begin
@@ -55,6 +55,12 @@ select throws_ok(
 select throws_ok(
   $$ update public.profiles set avatar = avatar || '{"skin":"green"}' where id = auth.uid() $$,
   '22023', null, 'a bad look is rejected');
+select lives_ok(
+  $$ update public.profiles set avatar = avatar || '{"eyeColor":"e4"}' where id = auth.uid() $$,
+  'explorer picks an eye color');
+select throws_ok(
+  $$ update public.profiles set avatar = avatar || '{"eyeColor":"e9"}' where id = auth.uid() $$,
+  '22023', null, 'an unknown eye color is rejected');
 select throws_ok(
   $$ update public.profiles set avatar = avatar || '{"outfit":"explorer-cap"}' where id = auth.uid() $$,
   '42501', null, 'an item only goes in its own slot');

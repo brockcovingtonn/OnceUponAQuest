@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   type AvatarLook,
+  EYE_COLORS,
   EYE_STYLES,
   HAIR_COLORS,
   HAIR_STYLES,
@@ -36,6 +37,7 @@ export function AvatarMaker({ look, onChange, withStarterOutfit }: Props) {
       hair: randomFrom(HAIR_STYLES),
       hairColor: randomFrom(Object.keys(HAIR_COLORS) as AvatarLook['hairColor'][]),
       eyes: randomFrom(EYE_STYLES),
+      eyeColor: randomFrom(Object.keys(EYE_COLORS) as AvatarLook['eyeColor'][]),
       freckles: Math.random() < 0.35,
       ...(withStarterOutfit ? { outfit: randomFrom(STARTER_OUTFITS) } : null),
     });
@@ -92,6 +94,18 @@ export function AvatarMaker({ look, onChange, withStarterOutfit }: Props) {
           <Thumb key={eyes} label={copy.avatar.eyeStyles[eyes]} selected={look.eyes === eyes} onPress={() => set({ eyes })}>
             <AvatarBust look={{ ...look, eyes }} size={56} />
           </Thumb>
+        ))}
+      </Group>
+
+      <Group title={copy.avatar.eyeColor}>
+        {(Object.keys(EYE_COLORS) as AvatarLook['eyeColor'][]).map((key) => (
+          <Swatch
+            key={key}
+            color={EYE_COLORS[key]}
+            label={copy.avatar.eyeColors[key]}
+            selected={look.eyeColor === key}
+            onPress={() => set({ eyeColor: key })}
+          />
         ))}
       </Group>
 

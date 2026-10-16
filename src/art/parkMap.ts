@@ -102,7 +102,7 @@ export const PARK_FOUNTAIN: Pt = PARK_GEO_FEATURES.hub;
 /** Hot-air balloon drifting in the empty top-right corner. */
 export const PARK_BALLOON: Pt = { x: W - 70, y: 80 };
 /** Lantern Keep stands on the castle footprint: base center and width, in map meters. */
-export const PARK_KEEP = { x: 478, y: 421, width: 52 };
+export const PARK_KEEP = { x: 478, y: 424, width: 84 };
 /** Painted sparkles that twinkle. */
 export const PARK_TWINKLES: Pt[] = [
   { x: W - 40, y: 170 }, { x: 40, y: H - 150 }, { x: W - 140, y: H - 30 }, { x: 330, y: 40 }, { x: 60, y: 120 },
@@ -329,5 +329,5 @@ export const PARK_LANDS: ParkLand[] = Object.entries(PARK_GEO_LANDS).map(([id, l
 export const parkMapLabels = [
   { text: 'The Park Atlas', x: 126, y: H - 58, size: 12, style: 'title' },
   { text: 'N', x: W - 62, y: H - 110, size: 10, style: 'plain' },
-  { text: 'Lantern Keep', x: 478, y: 428, size: 5, style: 'title' },
+  { text: 'Lantern Keep', x: 478, y: 431, size: 6, style: 'title' },
 ] as const;

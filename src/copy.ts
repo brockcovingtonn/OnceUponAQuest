@@ -813,6 +813,8 @@ export const copy = {
     hairColors: { h1: 'Black', h2: 'Brown', h3: 'Auburn', h4: 'Golden', h5: 'Silver', h6: 'Rose', h7: 'Blue' },
     eyes: 'Eyes',
     eyeStyles: { dot: 'Bright eyes', happy: 'Happy eyes', sparkle: 'Sparkly eyes' },
+    eyeColor: 'Eye color',
+    eyeColors: { e1: 'Brown', e2: 'Hazel', e3: 'Green', e4: 'Blue', e5: 'Gray' },
     freckles: 'Freckles',
     outfit: 'Starter outfit',
     starterOutfits: { 'explorer-tee': "Explorer's Tee", 'picnic-overalls': 'Picnic Overalls', 'cozy-sweater': 'Cozy Sweater' },
