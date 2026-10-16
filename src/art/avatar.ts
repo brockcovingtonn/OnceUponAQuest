@@ -1,7 +1,8 @@
 /**
  * The explorer avatar, in a feature-film style: a big-headed kid (about
- * 1 : 3) lit like a 3D render, with large glossy eyes under heavy lids,
- * thick brows, a button nose, an open grin, glossy hair and chunky sneakers. All original artwork, drawn as plain SVG on a 120 × 168 canvas so
+ * 1 : 3) lit like a 3D render: almond eyes with matte irises, full brows, a
+ * small sculpted nose, full lips in a closed smile, a sturdy neck, glossy
+ * hair and chunky sneakers. All original artwork, drawn as plain SVG on a 120 × 168 canvas so
  * the same drawing works in the app (SvgXml), on the map, on share cards, and
  * in preview scripts.
  *
@@ -117,8 +118,9 @@ const HY = 48;
 const RX = 27; // face half-width
 const RY = 28.5; // face half-height
 const EYE_Y = HY + 4;
-const EYE_GAP = 12;
-const EYE_R = 7.4;
+const EYE_GAP = 11.5;
+const EYE_W = 7; // half-width of an eye
+const EYE_H = 5.5; // half-height of an open eye
 const T = 86; // top of the torso (shoulders)
 const B = 116; // waist
 const F = AVATAR_FEET_Y; // soles
@@ -179,8 +181,8 @@ function mix(a: string, b: string, t: number): string {
   return `#${[0, 1, 2].map((i) => Math.round(ch(a, i) + (ch(b, i) - ch(a, i)) * t).toString(16).padStart(2, '0')).join('')}`;
 }
 
-/** The face outline: round cheeks and a soft chin. */
-const FACE_PATH = `M${HX - RX} ${HY - 2} C${HX - RX} ${HY - RY - 2} ${HX + RX} ${HY - RY - 2} ${HX + RX} ${HY - 2} C${HX + RX} ${HY + RY * 0.7} ${HX + RX * 0.45} ${HY + RY} ${HX} ${HY + RY} C${HX - RX * 0.45} ${HY + RY} ${HX - RX} ${HY + RY * 0.7} ${HX - RX} ${HY - 2} Z`;
+/** The face outline: full cheeks that taper to a soft, defined chin. */
+const FACE_PATH = `M${HX - RX} ${HY - 2} C${HX - RX} ${HY - RY - 2} ${HX + RX} ${HY - RY - 2} ${HX + RX} ${HY - 2} C${HX + RX} ${HY + 10} ${HX + RX * 0.8} ${HY + RY * 0.62} ${HX + RX * 0.42} ${HY + RY * 0.9} C${HX + RX * 0.22} ${HY + RY * 1.02} ${HX - RX * 0.22} ${HY + RY * 1.02} ${HX - RX * 0.42} ${HY + RY * 0.9} C${HX - RX * 0.8} ${HY + RY * 0.62} ${HX - RX} ${HY + 10} ${HX - RX} ${HY - 2} Z`;
 
 // ---------------------------------------------------------------------------
 // Hair: a back layer (behind the head/body) and a front layer (over the head).
@@ -264,84 +266,111 @@ function hairFront(style: AvatarLook['hair'], fill: string, dark: string): strin
 // Face.
 // ---------------------------------------------------------------------------
 
+/**
+ * One eye: an almond shape with a matte iris tucked under the upper lid, a
+ * dark lash line with a small flick, a lid crease and one soft catchlight.
+ * 'happy' lifts the lower lid into a smile; 'sparkle' (shown as "Wide eyes")
+ * opens the eye a little more.
+ */
+function eye(look: AvatarLook, s: -1 | 1, skin: string, id: string): string {
+  const sk2 = shade(skin, -0.2);
+  const cx = HX + s * EYE_GAP;
+  const ey = EYE_Y;
+  const w = EYE_W;
+  const h = look.eyes === 'sparkle' ? EYE_H * 1.18 : EYE_H;
+  const inner = cx - s * w;
+  const outer = cx + s * w;
+  const lower = look.eyes === 'happy' ? ey + h * 0.2 : ey + h * 1.05;
+  const top = `M${inner} ${ey + 0.5} C${inner + s * w * 0.4} ${ey - h * 1.3} ${outer - s * w * 0.4} ${ey - h * 1.3} ${outer} ${ey + 0.1}`;
+  const shape = `${top} Q${cx} ${lower + h * 0.3} ${inner} ${ey + 0.5} Z`;
+  const clip = `${id}e${s}`;
+  const ir = h * 1.12;
+  const iy = ey + h * 0.15;
+  let out = `<defs><clipPath id="${clip}"><path d="${shape}"/></clipPath></defs>`;
+  // A soft socket shadow and the lid crease above.
+  out += `<ellipse cx="${cx}" cy="${ey - h * 0.4}" rx="${w * 1.25}" ry="${h * 1.35}" fill="${sk2}" opacity="0.09"/>`;
+  out += `<path d="M${inner + s * w * 0.15} ${ey - h * 0.95} C${inner + s * w * 0.6} ${ey - h * 2.05} ${outer - s * w * 0.35} ${ey - h * 1.95} ${outer + s * w * 0.08} ${ey - h * 0.85}" stroke="${shade(skin, -0.32)}" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round"/>`;
+  out += `<path d="${shape}" fill="#F3EDE6"/>`;
+  out += `<g clip-path="url(#${clip})">`;
+  out += `<circle cx="${cx}" cy="${iy}" r="${ir}" fill="url(#${id}i)"/>`;
+  out += `<circle cx="${cx}" cy="${iy}" r="${ir}" fill="none" stroke="#1A1418" stroke-opacity="0.55" stroke-width="0.6"/>`;
+  out += `<circle cx="${cx}" cy="${iy}" r="${ir * 0.44}" fill="#120E12"/>`;
+  // The upper lid casts a shadow across the top of the eye.
+  out += `<ellipse cx="${cx}" cy="${ey - h * 1.05}" rx="${w * 1.3}" ry="${h * 0.95}" fill="#2A1A1E" opacity="0.18"/>`;
+  out += '</g>';
+  out += `<circle cx="${cx + w * 0.22}" cy="${iy - ir * 0.38}" r="${ir * 0.2}" fill="#FFFFFF" opacity="0.75"/>`;
+  // Lash line, thicker toward the outer corner, with a small flick.
+  out += `<path d="${top}" stroke="#1E1820" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+  out += `<path d="M${cx + s * w * 0.2} ${ey - h * 0.97} C${cx + s * w * 0.65} ${ey - h * 0.9} ${outer} ${ey - h * 0.35} ${outer + s * 1.1} ${ey - h * 0.55} C${outer - s * 0.2} ${ey + 0.3} ${cx + s * w * 0.6} ${ey - h * 0.62} ${cx + s * w * 0.2} ${ey - h * 0.84} Z" fill="#1E1820"/>`;
+  out += `<path d="M${outer - s * 0.3} ${ey + 0.2} Q${cx} ${lower + h * 0.3} ${inner + s * 0.6} ${ey + 0.6}" stroke="${shade(skin, -0.34)}" stroke-width="0.55" fill="none" opacity="0.7"/>`;
+  if (look.eyes === 'happy') {
+    // Smiling cheeks push up under the eye.
+    out += `<path d="M${inner} ${lower + 1.6} Q${cx} ${lower + 0.6} ${outer} ${lower + 1}" stroke="${sk2}" stroke-width="0.8" fill="none" opacity="0.6"/>`;
+  }
+  return out;
+}
+
 function face(look: AvatarLook, skin: string, id: string): string {
   const sk2 = shade(skin, -0.2);
   const sk3 = shade(skin, -0.36);
+  const lips = mix(skin, '#B04452', 0.5);
   let out = '';
   // Small human ears at the sides, level with the eyes (never on top).
   for (const s of [-1, 1]) {
     out += `<ellipse cx="${HX + s * (RX - 1)}" cy="${EYE_Y + 3}" rx="3.9" ry="5.8" fill="${skin}"/>`;
     out += `<ellipse cx="${HX + s * (RX - 0.4)}" cy="${EYE_Y + 3}" rx="2" ry="3.4" fill="${sk2}"/>`;
   }
-  // Face, lit from the upper left, with a soft shadow under the hairline,
-  // shade down the right side and a warm rim light on the right edge.
+  // Face, lit from the upper left with warm shading (skin lets light through),
+  // a soft shadow under the hairline and a gentle rim light on the right.
   out += `<path d="${FACE_PATH}" fill="url(#${id}s)"/>`;
   out += `<g clip-path="url(#${id}c)">`;
   out += `<ellipse cx="${HX}" cy="${HY - RY * 0.82}" rx="${RX * 1.2}" ry="${RY * 0.55}" fill="url(#${id}a)"/>`;
-  out += `<path d="M${HX + RX * 0.55} ${HY - RY} C${HX + RX * 1.15} ${HY - RY * 0.2} ${HX + RX * 1.05} ${HY + RY * 0.7} ${HX + RX * 0.3} ${HY + RY} L${HX + RX * 1.2} ${HY + RY * 1.2} L${HX + RX * 1.2} ${HY - RY} Z" fill="${sk3}" opacity="0.2"/>`;
-  out += `<path d="M${HX + RX * 0.96} ${HY - RY * 0.35} C${HX + RX * 1.02} ${HY + RY * 0.2} ${HX + RX * 0.82} ${HY + RY * 0.7} ${HX + RX * 0.5} ${HY + RY * 0.9}" stroke="#FFF4D8" stroke-width="1.9" fill="none" opacity="0.3" stroke-linecap="round"/>`;
+  out += `<path d="M${HX + RX * 0.55} ${HY - RY} C${HX + RX * 1.15} ${HY - RY * 0.2} ${HX + RX * 1.05} ${HY + RY * 0.7} ${HX + RX * 0.3} ${HY + RY} L${HX + RX * 1.2} ${HY + RY * 1.2} L${HX + RX * 1.2} ${HY - RY} Z" fill="${mix(sk3, '#A04030', 0.2)}" opacity="0.18"/>`;
+  out += `<path d="M${HX + RX * 0.96} ${HY - RY * 0.35} C${HX + RX * 1.02} ${HY + RY * 0.2} ${HX + RX * 0.82} ${HY + RY * 0.7} ${HX + RX * 0.5} ${HY + RY * 0.88}" stroke="#FFF4D8" stroke-width="1.6" fill="none" opacity="0.22" stroke-linecap="round"/>`;
   out += '</g>';
-  // Rosy cheeks and freckles.
+  // Warm cheeks and freckles.
   for (const s of [-1, 1]) {
-    out += `<ellipse cx="${HX + s * (EYE_GAP + 2.5)}" cy="${EYE_Y + 11.5}" rx="7.6" ry="5" fill="url(#${id}k)"/>`;
+    out += `<ellipse cx="${HX + s * (EYE_GAP + 3)}" cy="${EYE_Y + 10}" rx="7.4" ry="5" fill="url(#${id}k)"/>`;
   }
   if (look.freckles) {
-    out += `<g fill="${sk3}" opacity="0.6">${[-1, 1]
-      .map((s) => [0, 1, 2, 3].map((i) => `<circle cx="${HX + s * (EYE_GAP - 4 + i * 2.8)}" cy="${EYE_Y + 9.6 + (i % 2) * 2}" r="0.7"/>`).join(''))
+    out += `<g fill="${sk3}" opacity="0.55">${[-1, 1]
+      .map((s) => [0, 1, 2, 3].map((i) => `<circle cx="${HX + s * (EYE_GAP - 4 + i * 2.8)}" cy="${EYE_Y + 7.6 + (i % 2) * 1.8}" r="0.65"/>`).join(''))
       .join('')}</g>`;
   }
-  // Big glossy eyes with heavy lids and lashes.
-  for (const s of [-1, 1]) {
-    const cx = HX + s * EYE_GAP;
-    const ey = EYE_Y;
-    const er = EYE_R;
-    if (look.eyes === 'happy') {
-      out += `<path d="M${cx - er * 0.9} ${ey + 1.2} Q${cx} ${ey - er * 0.95} ${cx + er * 0.9} ${ey + 1.2}" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-      out += `<path d="M${cx + s * er * 0.9} ${ey + 0.4} l${s * 2.6} -1.6" stroke="${INK}" stroke-width="1.3" stroke-linecap="round"/>`;
-      out += `<path d="M${cx - er * 0.7} ${ey + er * 0.75} Q${cx} ${ey + er * 0.4} ${cx + er * 0.7} ${ey + er * 0.75}" stroke="${sk2}" stroke-width="0.9" fill="none" opacity="0.8"/>`;
-      continue;
-    }
-    const ix = cx + s * er * 0.06;
-    const ir = er * 0.8;
-    out += `<ellipse cx="${cx}" cy="${ey}" rx="${er * 0.9}" ry="${er}" fill="#FFFFFF"/>`;
-    out += `<ellipse cx="${cx}" cy="${ey - er * 0.42}" rx="${er * 0.86}" ry="${er * 0.5}" fill="${sk3}" opacity="0.18"/>`;
-    out += `<circle cx="${ix}" cy="${ey + er * 0.1}" r="${ir}" fill="url(#${id}i)"/>`;
-    out += `<circle cx="${ix}" cy="${ey + er * 0.1}" r="${ir}" fill="none" stroke="#1A1A22" stroke-opacity="0.45" stroke-width="${er * 0.08}"/>`;
-    out += `<circle cx="${ix}" cy="${ey + er * 0.14}" r="${ir * 0.48}" fill="#14141C"/>`;
-    out += `<ellipse cx="${cx + er * 0.3}" cy="${ey - er * 0.22}" rx="${er * 0.26}" ry="${er * 0.3}" fill="#FFFFFF"/>`;
-    out += `<circle cx="${cx - er * 0.3}" cy="${ey + er * 0.45}" r="${er * 0.11}" fill="#FFFFFF" opacity="0.9"/>`;
-    if (look.eyes === 'sparkle') {
-      out += `<path d="M${cx - er * 0.32} ${ey - er * 0.02} l0.9 -2 0.9 2 2 0.9 -2 0.9 -0.9 2 -0.9 -2 -2 -0.9 Z" fill="#FFFFFF" opacity="0.9"/>`;
-    }
-    out += `<path d="M${cx - er} ${ey - er * 0.05} C${cx - er * 0.8} ${ey - er * 1.2} ${cx + er * 0.8} ${ey - er * 1.2} ${cx + er} ${ey - er * 0.15}" stroke="#2A2230" stroke-width="${er * 0.3}" fill="none" stroke-linecap="round"/>`;
-    out += `<path d="M${cx + s * er * 0.9} ${ey - er * 0.45} l${s * er * 0.45} ${-er * 0.28} M${cx + s * er * 0.65} ${ey - er * 0.78} l${s * er * 0.35} ${-er * 0.35}" stroke="#2A2230" stroke-width="${er * 0.14}" stroke-linecap="round"/>`;
-    out += `<path d="M${cx - er * 0.7} ${ey + er * 0.95} Q${cx} ${ey + er * 1.2} ${cx + er * 0.7} ${ey + er * 0.95}" stroke="${sk2}" stroke-width="${er * 0.12}" fill="none" opacity="0.7"/>`;
-  }
-  // A little button nose: soft shadow underneath, a highlight on top.
-  const ny = EYE_Y + EYE_R * 1.15;
-  const nz = 2.5;
-  out += `<path d="M${HX - nz} ${ny + nz * 0.9} Q${HX} ${ny + nz * 1.8} ${HX + nz} ${ny + nz * 0.9}" stroke="${sk3}" stroke-width="${nz * 0.35}" fill="none" stroke-linecap="round" opacity="0.6"/>`;
-  out += `<ellipse cx="${HX}" cy="${ny + nz * 0.5}" rx="${nz * 0.95}" ry="${nz * 0.75}" fill="${mix(skin, '#FFF2E6', 0.18)}"/>`;
-  out += `<ellipse cx="${HX - nz * 0.3}" cy="${ny + nz * 0.25}" rx="${nz * 0.3}" ry="${nz * 0.22}" fill="#FFFFFF" opacity="0.5"/>`;
-  // An open grin with teeth, tongue and dimpled corners.
-  const my = ny + nz * 2.4;
-  const mw = 6.2;
-  out += `<path d="M${HX - mw} ${my} Q${HX} ${my + mw * 1.25} ${HX + mw} ${my} Q${HX} ${my + mw * 0.3} ${HX - mw} ${my} Z" fill="#6E2A32"/>`;
-  out += `<path d="M${HX - mw * 0.72} ${my + mw * 0.12} Q${HX} ${my + mw * 0.38} ${HX + mw * 0.72} ${my + mw * 0.12} L${HX + mw * 0.6} ${my + mw * 0.32} Q${HX} ${my + mw * 0.5} ${HX - mw * 0.6} ${my + mw * 0.32} Z" fill="#FFFFFF"/>`;
-  out += `<ellipse cx="${HX + mw * 0.12}" cy="${my + mw * 0.8}" rx="${mw * 0.42}" ry="${mw * 0.2}" fill="#E07A86"/>`;
-  out += `<path d="M${HX - mw * 1.1} ${my - mw * 0.1} Q${HX - mw * 1.18} ${my + mw * 0.12} ${HX - mw} ${my + mw * 0.22} M${HX + mw * 1.1} ${my - mw * 0.1} Q${HX + mw * 1.18} ${my + mw * 0.12} ${HX + mw} ${my + mw * 0.22}" stroke="${sk2}" stroke-width="${mw * 0.12}" fill="none" stroke-linecap="round"/>`;
+  out += eye(look, -1, skin, id) + eye(look, 1, skin, id);
+  // A small sculpted nose: shade down the right side, a rounded tip, soft
+  // nostril wings and a shadow underneath.
+  const ny = EYE_Y + 8.6;
+  out += `<path d="M${HX + 1.6} ${EYE_Y + 0.5} C${HX + 2.4} ${EYE_Y + 3.5} ${HX + 2.8} ${ny - 2} ${HX + 2.6} ${ny}" stroke="${sk2}" stroke-width="1.8" fill="none" opacity="0.2" stroke-linecap="round"/>`;
+  out += `<ellipse cx="${HX}" cy="${ny + 2.5}" rx="3" ry="0.9" fill="${sk3}" opacity="0.32"/>`;
+  out += `<ellipse cx="${HX}" cy="${ny}" rx="2.7" ry="2.1" fill="${mix(skin, '#FFF2E6', 0.12)}"/>`;
+  out += `<path d="M${HX - 3.7} ${ny + 0.4} Q${HX - 3.5} ${ny + 2.2} ${HX - 1.5} ${ny + 2} M${HX + 3.7} ${ny + 0.4} Q${HX + 3.5} ${ny + 2.2} ${HX + 1.5} ${ny + 2}" stroke="${sk3}" stroke-width="0.75" fill="none" opacity="0.7" stroke-linecap="round"/>`;
+  out += `<ellipse cx="${HX - 0.7}" cy="${ny - 0.7}" rx="0.9" ry="0.6" fill="#FFFFFF" opacity="0.35"/>`;
+  // Full lips in a closed, warm smile with upturned corners.
+  const my = EYE_Y + 16;
+  const mw = 6.6;
+  out += `<path d="M${HX - 0.9} ${ny + 3.4} V${my - 2}M${HX + 0.9} ${ny + 3.4} V${my - 2}" stroke="${sk2}" stroke-width="0.5" opacity="0.4"/>`;
+  out += `<path d="M${HX - mw} ${my - 0.6} C${HX - mw * 0.6} ${my - 1.8} ${HX - 1.3} ${my - 2.4} ${HX} ${my - 1.5} C${HX + 1.3} ${my - 2.4} ${HX + mw * 0.6} ${my - 1.8} ${HX + mw} ${my - 0.6} Q${HX} ${my + 1.1} ${HX - mw} ${my - 0.6} Z" fill="${shade(lips, -0.12)}"/>`;
+  out += `<path d="M${HX - mw * 0.86} ${my - 0.1} Q${HX} ${my + 1.1} ${HX + mw * 0.86} ${my - 0.1} C${HX + mw * 0.55} ${my + 3.5} ${HX - mw * 0.55} ${my + 3.5} ${HX - mw * 0.86} ${my - 0.1} Z" fill="${lips}"/>`;
+  out += `<ellipse cx="${HX - 0.4}" cy="${my + 1.7}" rx="2" ry="0.55" fill="#FFFFFF" opacity="0.28"/>`;
+  out += `<path d="M${HX - mw - 0.8} ${my - 1.2} Q${HX} ${my + 1.4} ${HX + mw + 0.8} ${my - 1.2}" stroke="${shade(lips, -0.45)}" stroke-width="0.75" fill="none" stroke-linecap="round"/>`;
+  out += `<path d="M${HX - mw - 1.4} ${my - 1.9} Q${HX - mw - 1.2} ${my - 0.3} ${HX - mw - 0.4} ${my + 0.2} M${HX + mw + 1.4} ${my - 1.9} Q${HX + mw + 1.2} ${my - 0.3} ${HX + mw + 0.4} ${my + 0.2}" stroke="${sk2}" stroke-width="0.7" fill="none" opacity="0.6" stroke-linecap="round"/>`;
+  out += `<ellipse cx="${HX}" cy="${my + 5.2}" rx="3.4" ry="1.1" fill="${sk2}" opacity="0.22"/>`;
   return out;
 }
 
-/** Thick, tapered brows that sit high, for big expressions. */
+/** Full, defined brows with a gentle arch; wide eyes lift them a little. */
 function brows(look: AvatarLook, color: string): string {
   if (look.hair === 'shaved') color = shade(color, 0.1);
+  const lift = look.eyes === 'sparkle' ? 1.4 : 0;
   return [-1, 1]
     .map((s) => {
       const cx = HX + s * EYE_GAP;
-      const er = EYE_R;
-      const by = EYE_Y - er * 1.75;
-      return `<path d="M${cx - s * er * 0.95} ${by + er * 0.35} Q${cx - s * er * 0.1} ${by - er * 0.45} ${cx + s * er} ${by + er * 0.05} Q${cx - s * er * 0.1} ${by - er * 0.05} ${cx - s * er * 0.95} ${by + er * 0.35} Z" fill="${color}" stroke="${color}" stroke-width="${er * 0.32}" stroke-linejoin="round"/>`;
+      const w = EYE_W;
+      const y = EYE_Y - 8 - lift;
+      const inner = cx - s * w * 0.95;
+      const outer = cx + s * w * 1.18;
+      return `<path d="M${inner} ${y + 0.2} C${cx - s * w * 0.35} ${y - 3} ${cx + s * w * 0.5} ${y - 3.2} ${outer} ${y + 0.8} C${cx + s * w * 0.45} ${y - 1.4} ${cx - s * w * 0.3} ${y - 0.6} ${inner + s * 0.3} ${y + 2.6} Z" fill="${color}"/>`;
     })
     .join('');
 }
@@ -400,7 +429,9 @@ function lowerGarment(o: OutfitArt): string {
 
 function torso(o: OutfitArt, skin: string): string {
   const sk2 = shade(skin, -0.16);
-  let out = `<path d="M55.5 ${HY + RY - 8}H64.5V${T + 5}H55.5Z" fill="${sk2}"/>`;
+  let out = `<path d="M${HX - 7.5} ${HY + RY - 10} C${HX - 7.5} ${T - 6} ${HX - 8.5} ${T - 1} ${HX - 11} ${T + 5} H${HX + 11} C${HX + 8.5} ${T - 1} ${HX + 7.5} ${T - 6} ${HX + 7.5} ${HY + RY - 10} Z" fill="${skin}"/>`;
+  out += `<path d="M${HX - 7.5} ${HY + RY - 10} C${HX - 7.5} ${T - 6} ${HX - 8.5} ${T - 1} ${HX - 11} ${T + 5} H${HX + 11} C${HX + 8.5} ${T - 1} ${HX + 7.5} ${T - 6} ${HX + 7.5} ${HY + RY - 10} Z" fill="${sk2}" opacity="0.35"/>`;
+  out += `<ellipse cx="${HX}" cy="${HY + RY - 1}" rx="7.4" ry="5" fill="${mix(shade(skin, -0.38), '#8A3A2A', 0.15)}" opacity="0.4"/>`;
   out += `<path d="M43 ${T + 9}C43 ${T + 1} 50 ${T - 1} 54 ${T - 1}H66C70 ${T - 1} 77 ${T + 1} 77 ${T + 9}L76 ${B - 3}C68 ${B + 1} 52 ${B + 1} 44 ${B - 3}Z" fill="${o.shirt}"/>`;
   return out;
 }
@@ -468,13 +499,13 @@ export function avatarMarkup(look: AvatarLook, { pose = 'stand', shadow = true }
 
   let out =
     '<defs>' +
-    `<radialGradient id="${id}s" cx="36%" cy="32%" r="78%"><stop offset="0" stop-color="${mix(skin, '#FFF2E6', 0.3)}"/><stop offset="0.55" stop-color="${skin}"/><stop offset="1" stop-color="${shade(skin, -0.2)}"/></radialGradient>` +
+    `<radialGradient id="${id}s" cx="36%" cy="32%" r="78%"><stop offset="0" stop-color="${mix(skin, '#FFF2E6', 0.3)}"/><stop offset="0.55" stop-color="${skin}"/><stop offset="1" stop-color="${mix(shade(skin, -0.2), '#A04A3A', 0.12)}"/></radialGradient>` +
     `<radialGradient id="${id}a" cx="50%" cy="0%" r="60%"><stop offset="0" stop-color="${shade(skin, -0.36)}" stop-opacity="0.5"/><stop offset="1" stop-color="${shade(skin, -0.36)}" stop-opacity="0"/></radialGradient>` +
-    `<radialGradient id="${id}k" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#F08A9A" stop-opacity="0.5"/><stop offset="1" stop-color="#F08A9A" stop-opacity="0"/></radialGradient>` +
+    `<radialGradient id="${id}k" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#E8828A" stop-opacity="0.38"/><stop offset="1" stop-color="#F08A9A" stop-opacity="0"/></radialGradient>` +
     `<linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.22"/><stop offset="1" stop-color="#000000" stop-opacity="0.22"/></linearGradient>` +
     `<clipPath id="${id}c"><path d="${FACE_PATH}"/></clipPath>` +
     `<linearGradient id="${id}h" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="${shade(hairColor, 0.35)}"/><stop offset="0.55" stop-color="${hairColor}"/><stop offset="1" stop-color="${shade(hairColor, -0.2)}"/></linearGradient>` +
-    `<radialGradient id="${id}i" cx="50%" cy="68%" r="60%"><stop offset="0" stop-color="${mix(iris, '#FFFFFF', 0.45)}"/><stop offset="0.7" stop-color="${iris}"/><stop offset="1" stop-color="${shade(iris, -0.45)}"/></radialGradient>` +
+    `<radialGradient id="${id}i" cx="50%" cy="58%" r="55%"><stop offset="0" stop-color="${mix(iris, '#E8C89A', 0.25)}"/><stop offset="0.55" stop-color="${iris}"/><stop offset="1" stop-color="${shade(iris, -0.5)}"/></radialGradient>` +
     `<linearGradient id="${id}l" x1="0" y1="0" x2="1" y2="0.4"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/><stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.16"/></linearGradient>` +
     '</defs>';
   const hairFill = `url(#${id}h)`;

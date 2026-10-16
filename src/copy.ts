@@ -812,7 +812,7 @@ export const copy = {
     hairColor: 'Hair color',
     hairColors: { h1: 'Black', h2: 'Brown', h3: 'Auburn', h4: 'Golden', h5: 'Silver', h6: 'Rose', h7: 'Blue' },
     eyes: 'Eyes',
-    eyeStyles: { dot: 'Bright eyes', happy: 'Happy eyes', sparkle: 'Sparkly eyes' },
+    eyeStyles: { dot: 'Bright eyes', happy: 'Happy eyes', sparkle: 'Wide eyes' },
     eyeColor: 'Eye color',
     eyeColors: { e1: 'Brown', e2: 'Hazel', e3: 'Green', e4: 'Blue', e5: 'Gray' },
     freckles: 'Freckles',
