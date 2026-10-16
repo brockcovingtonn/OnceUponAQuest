@@ -1,16 +1,18 @@
 /**
  * "Fireworks over the park": the night skyline the intro flies into through
  * the logo's keyhole. Original artwork in our own storybook style: a snowy
- * alpine peak, red-rock buttes, a rocket ride, a Victorian station with a
- * clock tower on the railroad berm, and Main Street rooftops outlined in
- * lights. Deliberately no castle (or any castle-like towers), characters or
- * three-circle shapes.
+ * alpine peak, red-rock buttes, a rocket ride, our own Lantern Keep on the
+ * railroad berm, and Main Street rooftops outlined in lights. No characters or
+ * three-circle shapes. Lantern Keep here is an owner-approved exception to the
+ * castle rule (CLAUDE.md hard rule 2), pending attorney review.
  *
  * Drawn on a 400 × 860 portrait canvas; show it with
  * preserveAspectRatio "xMidYMax slice" so the skyline always sits on the
  * bottom edge. The train is separate (SKYLINE_TRAIN) so it can roll along
  * the berm at TRAIN_TRACK_Y.
  */
+
+import { lanternKeepSvg } from './lanternKeep';
 
 export const SKYLINE = { width: 400, height: 860 };
 /** Where the train's wheels sit, in skyline units. */
@@ -110,9 +112,28 @@ function rocket(x: number, y: number, dir: 1 | -1): string {
   );
 }
 
+// Lantern Keep at night, standing on the berm to the right of the snowy peak
+// (staggered so the peak and its snowcap stay in view). Its stone is recolored
+// for moonlight; the windows and the lantern stay lit.
+// Castle-rule exception: CLAUDE.md hard rule 2 (owner decision, pending attorney review).
+const NIGHT_STONE: [string, string][] = [
+  ['#EDE3CC', '#6E6A92'],
+  ['#D9CBAA', '#5E5A84'],
+  ['#C4B48E', '#4E4A74'],
+  ['#8E7A6A', '#2E2A50'],
+  ['#8E9A7A', '#2F4A4A'],
+  ['#7A8866', '#28403F'],
+  ['#9A8466', '#4A3E3A'],
+];
+const KEEP_SCALE = 0.5;
+const KEEP =
+  `<g transform="translate(176 ${700 - 212 * KEEP_SCALE}) scale(${KEEP_SCALE}) translate(-8 16)">` +
+  NIGHT_STONE.reduce((svg, [day, night]) => svg.split(day).join(night), lanternKeepSvg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')) +
+  '</g>';
+
 // A rocket ride: a mast with a golden orb and rockets on curved arms.
 const ROCKETS =
-  '<g transform="translate(300 0)">' +
+  '<g transform="translate(360 0)">' +
   '<path d="M-14 690L-9 668H9L14 690Z" fill="#3A3F72"/>' +
   '<rect x="-2.2" y="596" width="4.4" height="74" fill="#8F97C6"/>' +
   '<ellipse cx="0" cy="606" rx="31" ry="6" fill="none" stroke="#8F97C6" stroke-width="1.6"/>' +
@@ -127,31 +148,6 @@ const ROCKETS =
 const BERM =
   '<path d="M-10 704C70 694 140 694 200 694C260 694 330 694 410 704V830H-10Z" fill="#1F3446"/>' +
   '<path d="M-10 704C70 694 140 694 200 694C260 694 330 694 410 704" fill="none" stroke="#2F5A57" stroke-width="2"/>';
-
-// The Victorian station on the berm, with its clock tower.
-const STATION =
-  '<g>' +
-  '<rect x="150" y="652" width="100" height="40" fill="#2C2346"/>' +
-  '<path d="M144 654L154 636H246L256 654Z" fill="#3E2F55"/>' +
-  '<path d="M144 654H256" stroke="#E2B04A" stroke-width="1.2"/>' +
-  '<rect x="183" y="604" width="34" height="34" fill="#33284D"/>' +
-  '<path d="M179 606L188 584H212L221 606Z" fill="#45345C"/>' +
-  '<path d="M188 584L200 566L212 584Z" fill="#3E2F55"/>' +
-  '<path d="M200 566V552" stroke="#C9B48A" stroke-width="1.2"/>' +
-  '<path d="M200 553L210 556L200 559Z" fill="#D9677A"/>' +
-  '<circle cx="200" cy="619" r="9" fill="#FAF5EA"/>' +
-  '<circle cx="200" cy="619" r="9" fill="none" stroke="#E2B04A" stroke-width="1.6"/>' +
-  '<path d="M200 619V613.5M200 619L204 621" stroke="#2A2A33" stroke-width="1.1" stroke-linecap="round"/>' +
-  '<g fill="#F6D58E">' +
-  windows(158, 662, 4, 6, 10, 11) +
-  windows(213, 662, 4, 6, 10, 11) +
-  '</g>' +
-  '<path d="M192 692V672Q200 664 208 672V692Z" fill="#F6D58E"/>' +
-  '<g fill="#FFE7A8">' +
-  bulbs(154, 636, 246, 636, 18) +
-  bulbs(188, 584, 212, 584, 5) +
-  '</g>' +
-  '</g>';
 
 // Main Street rooftops in the foreground, outlined in lights.
 const STREET_LEFT =
@@ -223,7 +219,7 @@ export const skylineSvg =
   BUTTES +
   PEAK +
   ROCKETS +
-  STATION +
+  KEEP +
   BERM +
   STREET_LEFT +
   STREET_RIGHT +
