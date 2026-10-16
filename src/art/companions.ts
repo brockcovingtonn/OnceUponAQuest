@@ -180,6 +180,139 @@ export const COMPANIONS: Companion[] = [
       `<path d="M14 64C14 50 22 44 32 44S50 50 50 64Z" fill="#1E2A4A"/><circle cx="28" cy="52" r="1.4" fill="${GOLD}"/><circle cx="36" cy="52" r="1.4" fill="${GOLD}"/><circle cx="32" cy="32" r="13" fill="#D9A273"/>${eyes(31, 5, 1.8)}<path d="M20 34C20 48 44 48 44 34C40 40 24 40 20 34Z" fill="#5A4A3A"/><path d="M28 37Q32 39 36 37" stroke="${INK}" stroke-width="1.2" fill="none"/><path d="M18 24C18 16 46 16 46 24Z" fill="#1E2A4A"/><path d="M16 25H48" stroke="${INK}" stroke-width="2.4"/><circle cx="32" cy="20" r="2" fill="${GOLD}"/>`,
     ),
   },
+
+  // ---------------------------------------------------------------------------
+  // California Adventure
+  // ---------------------------------------------------------------------------
+  {
+    id: 'anne-shirley',
+    landId: 'dca-buena-vista-street',
+    name: 'Anne Shirley',
+    book: 'Anne of Green Gables (1908)',
+    quote: "Isn't it splendid to think of all the things there are to find out about?",
+    lines: [
+      'A whole street of brand-new old things! I could imagine stories about every window.',
+      'Look at the little details. That is where the romance of a place hides, I\'m sure of it.',
+      'Kindred spirits always stop to look closer. Shall we?',
+    ],
+    svg: frame(
+      '#F3D9B0',
+      `<path d="M14 64C14 50 22 44 32 44S50 50 50 64Z" fill="#6E8AB0"/><path d="M27 45L32 50L37 45" fill="#FAF5EA"/><path d="M19 30C16 40 16 50 18 56" stroke="#B9583A" stroke-width="4.5" stroke-linecap="round" fill="none"/><path d="M45 30C48 40 48 50 46 56" stroke="#B9583A" stroke-width="4.5" stroke-linecap="round" fill="none"/><circle cx="32" cy="32" r="13" fill="#F7DCC8"/>${eyes(32, 5, 1.8)}<g fill="#C98A5A" opacity="0.8"><circle cx="25" cy="36" r="0.7"/><circle cx="27" cy="37.2" r="0.7"/><circle cx="37" cy="37.2" r="0.7"/><circle cx="39" cy="36" r="0.7"/></g><path d="M28 38Q32 41 36 38" stroke="${INK}" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M19 27C20 18 44 18 45 27C40 23 24 23 19 27Z" fill="#B9583A"/><ellipse cx="32" cy="21" rx="16" ry="3.6" fill="#E8C870"/><path d="M22 21C22 13 42 13 42 21Z" fill="#E8C870"/><path d="M22 19H42" stroke="#4F7FB8" stroke-width="1.8"/>`,
+    ),
+  },
+  {
+    id: 'dorothy',
+    landId: 'dca-hollywood-land',
+    name: 'Dorothy of Kansas',
+    book: 'The Wonderful Wizard of Oz (1900)',
+    quote: 'There is no place like home.',
+    lines: [
+      'Toto, I have a feeling this street is a stage set. Everything is make-believe, and wonderful!',
+      'Follow the road and keep your eyes open. You never know what is behind a painted wall.',
+      'Every studio lot has a little magic in it. Let\'s find it.',
+    ],
+    svg: frame(
+      '#C9E3F0',
+      `<path d="M14 64C14 50 22 44 32 44S50 50 50 64Z" fill="#B8A8D8"/><path d="M27 44L32 49L37 44" fill="#FAF5EA"/><path d="M16 36C14 20 50 20 48 36C48 44 44 48 40 48H24C20 48 16 44 16 36Z" fill="#E98AA0"/><circle cx="32" cy="34" r="12" fill="#EDC4A0"/><path d="M21 30C22 23 42 23 43 30C38 27 26 27 21 30Z" fill="#5A3A28"/>${eyes(34, 4.6, 1.7)}<path d="M28.5 39.5Q32 42 35.5 39.5" stroke="${INK}" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M38 44L42 50" stroke="#E98AA0" stroke-width="2"/><g transform="translate(49 52)"><ellipse cx="0" cy="3" rx="7" ry="5" fill="#2A2A33"/><circle cx="-4" cy="-2" r="4" fill="#2A2A33"/><path d="M-7 -5L-8 -9L-5 -6Z" fill="#2A2A33"/><circle cx="-5" cy="-2.5" r="0.8" fill="#FFFFFF"/></g>`,
+    ),
+  },
+  {
+    id: 'sherlock-holmes',
+    landId: 'dca-avengers-campus',
+    name: 'Sherlock Holmes',
+    book: 'A Scandal in Bohemia (1891)',
+    quote: 'You see, but you do not observe.',
+    lines: [
+      'A campus of heroes, and every wall is full of evidence. Shall we observe?',
+      'Elementary: the clues to this place\'s past are written right on its walls.',
+      'Never trust the obvious. Look up, look down, look behind.',
+    ],
+    svg: frame(
+      '#D8CBAE',
+      `<path d="M14 64C14 50 22 44 32 44S50 50 50 64Z" fill="#6E5A46"/><path d="M14 52C22 46 42 46 50 52L50 56C42 50 22 50 14 56Z" fill="#8A6A4A"/><circle cx="32" cy="32" r="12.5" fill="#EDC4A0"/>${eyes(32, 4.8, 1.7)}<path d="M32 33L30 38H33" stroke="#B0724A" stroke-width="1.2" fill="none"/><path d="M28.5 40.5H35.5" stroke="${INK}" stroke-width="1.3" stroke-linecap="round"/><path d="M18 26C18 14 46 14 46 26Z" fill="#9A7A5A"/><path d="M18 26C18 14 46 14 46 26" fill="none" stroke="#6E5A46" stroke-width="1"/><path d="M22 18L42 26M28 15L46 24M18 22L36 30" stroke="#6E5A46" stroke-width="0.8" opacity="0.6"/><path d="M14 26H24L22 30H14Z M50 26H40L42 30H50Z" fill="#9A7A5A"/><g transform="translate(50 50)"><circle r="6" fill="#CFE3F6" stroke="#C9963F" stroke-width="2"/><path d="M4 4L10 10" stroke="#6E4630" stroke-width="3" stroke-linecap="round"/></g>`,
+    ),
+  },
+  {
+    id: 'the-tortoise',
+    landId: 'dca-cars-land',
+    name: 'The Tortoise',
+    book: "Aesop's Fables (translated by George Fyler Townsend, 1867)",
+    quote: 'Slow but steady wins the race.',
+    lines: [
+      'Everyone here is in such a hurry! I find more by going slowly.',
+      'Take your time on Route 66. The best sights are the ones the speedy ones miss.',
+      'Walk, don\'t race. That\'s how I won, you know.',
+    ],
+    svg: frame(
+      '#F3D9B0',
+      `<path d="M8 50Q32 40 56 50" stroke="#C9A07A" stroke-width="2" fill="none" stroke-dasharray="4 4"/><path d="M14 52C14 36 26 30 36 30C46 30 52 40 52 52Z" fill="#5C8A48"/><path d="M22 40L28 36L34 40L40 36L46 42M24 48L30 44L36 48L42 44" stroke="#3E6A32" stroke-width="1.6" fill="none"/><path d="M14 52H54" stroke="#3E6A32" stroke-width="2.5"/><ellipse cx="13" cy="40" rx="8" ry="7" fill="#8FB070"/><circle cx="11" cy="38" r="1.6" fill="${INK}"/><path d="M9 43Q12 45 15 43" stroke="${INK}" stroke-width="1.1" fill="none"/><path d="M18 52V58M30 52V58M42 52V58" stroke="#8FB070" stroke-width="4" stroke-linecap="round"/>`,
+    ),
+  },
+  {
+    id: 'kiku',
+    landId: 'dca-san-fransokyo-square',
+    name: 'Kiku the paper crane',
+    book: 'An original Once Upon a Quest story',
+    quote: 'Fold by fold, a plain square becomes a bird. Look closely, and a harbor becomes a story.',
+    lines: [
+      'Two cities folded into one! Can you see which corner came from where?',
+      'Follow the lanterns along the water. They always point somewhere good.',
+      'Smell that? Fresh bread. Every harbor has its own perfume.',
+    ],
+    svg: frame(
+      '#BFD8E8',
+      `<path d="M8 44L30 36L24 52Z" fill="#FAF5EA" stroke="#C8CCD8" stroke-width="0.8"/><path d="M30 36L56 26L40 50Z" fill="#FFFFFF" stroke="#C8CCD8" stroke-width="0.8"/><path d="M24 52L30 36L40 50Z" fill="#E6E6EE"/><path d="M30 36L36 16L40 20L34 38Z" fill="#FAF5EA" stroke="#C8CCD8" stroke-width="0.8"/><path d="M36 16L42 14L40 20Z" fill="#D9677A"/><circle cx="38.5" cy="17.5" r="0.9" fill="${INK}"/><path d="M14 56H50" stroke="#4F7FB8" stroke-width="2" opacity="0.6"/><circle cx="50" cy="44" r="3" fill="#F2A04A"/>`,
+    ),
+  },
+  {
+    id: 'skin-horse',
+    landId: 'dca-pixar-pier',
+    name: 'The Skin Horse',
+    book: 'The Velveteen Rabbit (1922)',
+    quote: 'Real isn\'t how you are made. It\'s a thing that happens to you.',
+    lines: [
+      'A whole boardwalk of toys and games! Some of them have been loved for a very long time.',
+      'Look for the rides that have stories inside them. The best toys always do.',
+      'When something is loved enough, it doesn\'t mind being a little worn.',
+    ],
+    svg: frame(
+      '#F3D9B0',
+      `<path d="M16 60C16 44 20 32 30 26L34 16L38 24C48 24 56 32 54 40C53 45 47 46 43 43L36 48L38 60Z" fill="#B9A08A"/><path d="M34 16L32 26L38 24Z" fill="#9A826C"/><path d="M30 26C26 30 22 36 20 44M28 30L22 32M26 36L19 37M24 42L17 42" stroke="#6E5A46" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="42" cy="30" r="2" fill="${INK}"/><circle cx="51" cy="39" r="1.2" fill="#6E5A46"/><path d="M38 34L50 30M40 40L48 44" stroke="#C8475A" stroke-width="1.6"/><ellipse cx="32" cy="46" rx="5" ry="3.6" fill="#D8CBAE"/><ellipse cx="44" cy="35" rx="3" ry="2" fill="#D8CBAE"/><path d="M27 52L29 54M31 52L33 54M35 52L37 54" stroke="#6E5A46" stroke-width="0.9"/>`,
+    ),
+  },
+  {
+    id: 'the-owl',
+    landId: 'dca-paradise-gardens-park',
+    name: 'The Owl (and the Pussy-cat)',
+    book: 'The Owl and the Pussy-cat (Edward Lear, 1871)',
+    quote: 'The Owl and the Pussy-cat went to sea in a beautiful pea-green boat.',
+    lines: [
+      'O lovely bay! O lovely bay! What a beautiful place for a boat.',
+      'Shall we stroll to the bandstand? I\'ll bring my guitar.',
+      'Look out over the water. Things always shine a little brighter by the sea.',
+    ],
+    svg: frame(
+      '#C9E3F0',
+      `<path d="M8 50H56L50 60H14Z" fill="#8FC07A"/><path d="M8 50H56" stroke="#5C8A48" stroke-width="2"/><ellipse cx="30" cy="38" rx="12" ry="13" fill="#9A7A5A"/><path d="M21 28L24 22L27 27M39 28L36 22L33 27" fill="#9A7A5A"/><circle cx="26" cy="35" r="5" fill="#FAF5EA"/><circle cx="34" cy="35" r="5" fill="#FAF5EA"/><circle cx="26" cy="35" r="2.4" fill="${INK}"/><circle cx="34" cy="35" r="2.4" fill="${INK}"/><path d="M30 38L28 41H32Z" fill="#E2B04A"/><ellipse cx="30" cy="45" rx="7" ry="4" fill="#C9A983"/><g transform="translate(45 40) rotate(-25)"><ellipse cx="0" cy="4" rx="5" ry="6" fill="#C99A5A"/><rect x="-1" y="-10" width="2" height="12" fill="#6E4630"/><circle cx="0" cy="4" r="1.6" fill="#6E4630"/></g>`,
+    ),
+  },
+  {
+    id: 'john-muir',
+    landId: 'dca-grizzly-peak',
+    name: 'John Muir, mountain naturalist',
+    book: 'A letter to his sister (1873)',
+    quote: 'The mountains are calling and I must go.',
+    lines: [
+      'Smell the pines! Even a mountain made by people can remind you of the real wild.',
+      'Listen to the river. Every rushing stream is singing its own song.',
+      'Walk softly on the trail and look for the little things: bark, stone, a hawk overhead.',
+    ],
+    svg: frame(
+      '#C9E3C0',
+      `<path d="M4 44L20 20L34 44Z M30 44L46 16L62 44Z" fill="#8FA88A"/><path d="M14 64C14 50 22 44 32 44S50 50 50 64Z" fill="#7A6A4A"/><circle cx="32" cy="30" r="11" fill="#D9A273"/>${eyes(29, 4.4, 1.6)}<path d="M21 32C21 48 43 48 43 32C40 38 24 38 21 32Z" fill="#B8B0A0"/><path d="M27 36Q32 38 37 36" stroke="#8E8676" stroke-width="1.2" fill="none"/><path d="M18 22C18 14 46 14 46 22Z" fill="#5A4A3A"/><path d="M14 23H50" stroke="#4A3A2A" stroke-width="2.4"/>`,
+    ),
+  },
+
 ];
 
 export function companionForLand(landId: string | null | undefined): Companion | null {
