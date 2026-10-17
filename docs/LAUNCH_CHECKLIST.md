@@ -119,6 +119,7 @@ The app and server are built; nothing can be sold until these are done. Until th
 - [ ] Intro on a real phone (added Oct 15, 2026): the camera should glide smoothly through the keyhole into the night park, and the fireworks shouldn't stutter. Try an older iPhone too. Tapping skips it.
 - [ ] Reduce Motion on: the intro should skip the camera move and fireworks, show the night park with the title for a moment, and fade.
 - [ ] Intro and sparkle animations feel smooth on an older phone.
+- [ ] **3D explorer preview (added Oct 17, 2026):** needs a new app build first: the 3D view uses a native module (`expo-gl`), so it can't arrive by over-the-air update; build d7df7338 doesn't have it. Then Profile → Wardrobe → "See me in 3D": the explorer should appear within a couple of seconds, turn smoothly as you drag (and coast when you let go), zoom toward the face as you pinch, gently breathe and look around while idle, and "Reset view" or a double-tap should glide back. Switch to "First blockout" and back. The iOS Simulator draws this 3D in software at about 1–3 s per frame, so judge smoothness only on a real phone (the viewer turns off the idle and easing when frames are that slow). Try an older iPhone too.
 
 ## 6. Small decisions you can make any time
 

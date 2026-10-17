@@ -139,6 +139,12 @@ name: Smoke test
 - extendedWaitUntil:
     visible: 'Straw Boater is yours!'
     timeout: 15000
+# The 3D explorer opens (the simulator draws 3D slowly, so just check the screen)
+- tapOn: 'See me in 3D'
+- extendedWaitUntil:
+    visible: 'Reset view'
+    timeout: 15000
+- tapOn: 'Back'
 - tapOn: 'Back'
 
 # Quest Pass screen opens from Profile

@@ -159,6 +159,7 @@ function RootNavigator() {
           />
           <Stack.Screen name="avatar" options={{ presentation: 'modal', title: copy.avatar.previewLabel }} />
           <Stack.Screen name="wardrobe" options={{ title: copy.wardrobe.title }} />
+          <Stack.Screen name="avatar-3d" options={{ title: copy.avatar3d.title }} />
           <Stack.Screen name="quest-pass" options={{ title: copy.pass.name }} />
           <Stack.Screen name="safety" options={{ title: copy.safety.title }} />
           <Stack.Screen name="about" options={{ title: copy.about.title }} />

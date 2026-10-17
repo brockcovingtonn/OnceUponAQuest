@@ -166,6 +166,12 @@ function WardrobeView({ profile, wardrobe, userId }: { profile: Profile; wardrob
             <StarCount count={wardrobe.balance} size="large" />
             {selected ? <Text style={styles.tryingOn}>{copy.wardrobe.tryingOn}</Text> : null}
             <Button variant="secondary" label={copy.editProfile.lookButton} onPress={() => router.push('/avatar')} />
+            <Button
+              variant="text"
+              label={copy.avatar3d.open}
+              accessibilityHint={copy.avatar3d.openHint}
+              onPress={() => router.push('/avatar-3d')}
+            />
           </View>
         </View>
 

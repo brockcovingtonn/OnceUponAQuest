@@ -922,6 +922,20 @@ export const copy = {
     items: (n: number) => `${n} items`,
   },
 
+  avatar3d: {
+    title: 'Your explorer in 3D',
+    open: 'See me in 3D',
+    openHint: 'Opens a 3D preview you can turn and zoom',
+    intro: 'A first look at 3D explorers. Drag to turn all the way around, pinch to zoom, double-tap to reset.',
+    viewerLabel: 'Your explorer in 3D',
+    viewerHint: 'Drag to turn, pinch to zoom, double-tap to reset',
+    reset: 'Reset view',
+    resetHint: 'Turns the explorer back to the starting view',
+    loading: 'Loading your 3D explorer',
+    loadError: "We couldn't open the 3D explorer. Try again.",
+    models: { sculpted: 'Sculpted', original: 'First blockout' },
+  },
+
   wardrobe: {
     title: 'Wardrobe',
     open: 'Wardrobe',
